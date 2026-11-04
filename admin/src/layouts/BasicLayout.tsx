@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Layout, Menu, Button, Tag, Space, Typography } from 'antd';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Layout, Menu, Button, Spin, Tag, Space, Typography } from 'antd';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   ApiOutlined,
@@ -8,31 +8,82 @@ import {
   DesktopOutlined,
   KeyOutlined,
   LogoutOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
   ThunderboltFilled,
+  UserSwitchOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import { adminApi } from '@/api/admin';
 import { useAuth } from '@/store/auth';
 
 const { Sider, Header, Content } = Layout;
 
-const items: MenuProps['items'] = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
-  { key: '/devices', icon: <DesktopOutlined />, label: '设备管理' },
-  { key: '/models', icon: <ApiOutlined />, label: '模型管理' },
-  { key: '/policy', icon: <ControlOutlined />, label: '运营策略' },
-  { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理' },
+interface MenuEntry {
+  key: string;
+  icon: ReactNode;
+  label: string;
+  permission: string;
+}
+
+const menuEntries: MenuEntry[] = [
+  { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘', permission: 'dashboard.view' },
+  { key: '/devices', icon: <DesktopOutlined />, label: '设备管理', permission: 'devices.view' },
+  { key: '/models', icon: <ApiOutlined />, label: '模型管理', permission: 'models.view' },
+  { key: '/policy', icon: <ControlOutlined />, label: '运营策略', permission: 'policy.view' },
+  { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理', permission: 'keyenvs.view' },
+  { key: '/users', icon: <TeamOutlined />, label: '用户管理', permission: 'users.view' },
+  { key: '/roles', icon: <UserSwitchOutlined />, label: '角色管理', permission: 'roles.view' },
 ];
 
 export default function BasicLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const identity = useAuth((s) => s.identity);
+  const token = useAuth((s) => s.token);
+  const key = useAuth((s) => s.key);
+  const can = useAuth((s) => s.can);
+  const setIdentity = useAuth((s) => s.setIdentity);
   const logout = useAuth((s) => s.logout);
   const [collapsed, setCollapsed] = useState(false);
 
-  const onLogout = () => {
+  useEffect(() => {
+    if (identity) return;
+    if (!token && !key) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    adminApi
+      .me()
+      .then(setIdentity)
+      .catch(() => {
+        logout();
+        navigate('/login', { replace: true });
+      });
+  }, [identity, token, key, navigate, setIdentity, logout]);
+
+  const onLogout = async () => {
+    try {
+      await adminApi.logout();
+    } catch {
+      // 会话已失效也继续清理本地状态
+    }
     logout();
     navigate('/login', { replace: true });
   };
+
+  if (!identity) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  const items: MenuProps['items'] = menuEntries
+    .filter((item) => can(item.permission))
+    .map((item) => ({ key: item.key, icon: item.icon, label: item.label }));
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -83,7 +134,13 @@ export default function BasicLayout() {
         >
           <Typography.Text strong>AI 助手运营控制台</Typography.Text>
           <Space>
-            <Tag color="green">管理密钥已连接</Tag>
+            {identity.source === 'key' && (
+              <Tag color="orange" icon={<SafetyCertificateOutlined />}>
+                应急密钥
+              </Tag>
+            )}
+            <Tag color="blue">{identity.displayName}</Tag>
+            <Tag>{identity.roleName}</Tag>
             <Button icon={<LogoutOutlined />} onClick={onLogout}>
               退出
             </Button>

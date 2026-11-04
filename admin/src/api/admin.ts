@@ -1,3 +1,4 @@
+import type { AdminIdentity } from '@/store/auth';
 import { del, get, post, put } from './request';
 
 export interface AdminTransaction {
@@ -61,6 +62,7 @@ export interface ModelSpec {
   maxContextChars: number;
   supportsVision: boolean;
   isEnabled: boolean;
+  isDeprecated: boolean;
   sortOrder: number;
   note: string;
 }
@@ -69,6 +71,8 @@ export type ModelUpdate = Partial<
   Pick<
     ModelSpec,
     | 'displayName'
+    | 'provider'
+    | 'upstreamModel'
     | 'inputRatePer1K'
     | 'outputRatePer1K'
     | 'maxContextChars'
@@ -78,6 +82,18 @@ export type ModelUpdate = Partial<
     | 'note'
   >
 >;
+
+export interface ModelCreate extends ModelUpdate {
+  modelId: string;
+  displayName: string;
+  provider: string;
+  upstreamModel: string;
+}
+
+export interface ModelProvider {
+  provider: string;
+  baseUrl: string;
+}
 
 export interface CreditPolicy {
   freeCredits: number;
@@ -143,7 +159,59 @@ export interface KeyEnvUpdate {
   note?: string;
 }
 
+export interface AdminUser {
+  id: number;
+  username: string;
+  displayName: string;
+  roleId: number;
+  roleName: string;
+  isDisabled: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface AdminUserCreate {
+  username: string;
+  displayName?: string;
+  roleId: number;
+  password: string;
+}
+
+export interface AdminUserUpdate {
+  displayName?: string;
+  roleId?: number;
+  password?: string;
+  isDisabled?: boolean;
+}
+
+export interface AdminRole {
+  id: number;
+  name: string;
+  description: string;
+  permissions: string[];
+  isSystem: boolean;
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminRoleInput {
+  name?: string;
+  description?: string;
+  permissions?: string[];
+}
+
 export const adminApi = {
+  login: (username: string, password: string) =>
+    post<{ token: string; expiresAt: string; user: AdminIdentity }>('/admin/auth/login', {
+      username,
+      password,
+    }),
+
+  me: () => get<AdminIdentity>('/admin/auth/me'),
+
+  logout: () => post<{ ok: boolean }>('/admin/auth/logout'),
+
   stats: () => get<AdminStats>('/admin/stats'),
 
   devices: (params: { q?: string; page: number; pageSize: number }) =>
@@ -163,8 +231,18 @@ export const adminApi = {
 
   models: () => get<ModelSpec[]>('/admin/models'),
 
+  modelProviders: () => get<ModelProvider[]>('/admin/model-providers'),
+
+  createModel: (data: ModelCreate) => post<ModelSpec>('/admin/models', data),
+
   updateModel: (modelId: string, data: ModelUpdate) =>
     put<ModelSpec>(`/admin/models/${encodeURIComponent(modelId)}`, data),
+
+  deleteModel: (modelId: string) =>
+    del<{ modelId: string; deleted: boolean }>(`/admin/models/${encodeURIComponent(modelId)}`),
+
+  deprecateModel: (modelId: string, deprecated: boolean) =>
+    post<ModelSpec>(`/admin/models/${encodeURIComponent(modelId)}/deprecate`, { deprecated }),
 
   policy: () => get<CreditPolicy>('/admin/policy'),
 
@@ -189,4 +267,20 @@ export const adminApi = {
 
   deprecateKeyEnv: (id: number, deprecated: boolean) =>
     post<KeyEnvEntry>(`/admin/keyenvs/${id}/deprecate`, { deprecated }),
+
+  users: () => get<AdminUser[]>('/admin/users'),
+
+  createUser: (data: AdminUserCreate) => post<AdminUser>('/admin/users', data),
+
+  updateUser: (id: number, data: AdminUserUpdate) => put<AdminUser>(`/admin/users/${id}`, data),
+
+  deleteUser: (id: number) => del<{ id: number; deleted: boolean }>(`/admin/users/${id}`),
+
+  roles: () => get<AdminRole[]>('/admin/roles'),
+
+  createRole: (data: AdminRoleInput) => post<AdminRole>('/admin/roles', data),
+
+  updateRole: (id: number, data: AdminRoleInput) => put<AdminRole>(`/admin/roles/${id}`, data),
+
+  deleteRole: (id: number) => del<{ id: number; deleted: boolean }>(`/admin/roles/${id}`),
 };
