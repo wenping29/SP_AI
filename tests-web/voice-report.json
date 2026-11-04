@@ -1,0 +1,811 @@
+{
+  "worldId": 50,
+  "pageVis": "visible",
+  "savedPrefs": {
+    "launcher": true,
+    "model": "glm-4v-flash"
+  },
+  "dockBox": {
+    "x": 813,
+    "y": 525
+  },
+  "docked": {
+    "id": "F427A3DB2480A73E232147D0E6EF8026",
+    "innerW": 382,
+    "mic": true,
+    "voice": {
+      "enabled": true,
+      "creditsPerCall": 3
+    }
+  },
+  "icons": {
+    "rail": [
+      {
+        "id": "chat",
+        "svg": true,
+        "text": "",
+        "tip": "聊天",
+        "nativeTitle": null,
+        "aria": "聊天",
+        "w": 33,
+        "h": 39,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "ask",
+        "svg": true,
+        "text": "",
+        "tip": "提问",
+        "nativeTitle": null,
+        "aria": "提问",
+        "w": 33,
+        "h": 39,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "translate",
+        "svg": true,
+        "text": "",
+        "tip": "翻译",
+        "nativeTitle": null,
+        "aria": "翻译",
+        "w": 33,
+        "h": 39,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "tools",
+        "svg": true,
+        "text": "",
+        "tip": "工具",
+        "nativeTitle": null,
+        "aria": "工具",
+        "w": 33,
+        "h": 39,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "settings",
+        "svg": true,
+        "text": "",
+        "tip": "设置",
+        "nativeTitle": null,
+        "aria": "设置",
+        "w": 33,
+        "h": 39,
+        "display": "flex",
+        "visible": true
+      }
+    ],
+    "controls": [
+      {
+        "id": "model",
+        "svg": false,
+        "text": "DeepSeek V3智谱 GLM-4V-Flash（视觉免费档）DeepSeek R1（思考模型）",
+        "tip": null,
+        "nativeTitle": "切换大模型",
+        "aria": null,
+        "w": 168,
+        "h": 26,
+        "display": "block",
+        "visible": true
+      },
+      {
+        "id": "btnShot",
+        "svg": true,
+        "text": "",
+        "tip": "截图：抓取可见区域发给模型",
+        "nativeTitle": null,
+        "aria": "截图：抓取可见区域发给模型",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "btnFile",
+        "svg": true,
+        "text": "",
+        "tip": "附加文件：图片或 txt/md 等文本",
+        "nativeTitle": null,
+        "aria": "附加文件：图片或 txt/md 等文本",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "btnVoice",
+        "svg": true,
+        "text": "",
+        "tip": "语音输入：说完自动转成文字（每次 3 积分）",
+        "nativeTitle": null,
+        "aria": "语音输入：说完自动转成文字",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "btnReadPage",
+        "svg": true,
+        "text": "",
+        "tip": "阅读此页：发送时带上本页正文",
+        "nativeTitle": null,
+        "aria": "阅读此页：发送时带上本页正文",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "newChat",
+        "svg": true,
+        "text": "",
+        "tip": "新聊天",
+        "nativeTitle": null,
+        "aria": "新聊天",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "openHistory",
+        "svg": true,
+        "text": "",
+        "tip": "聊天记录",
+        "nativeTitle": null,
+        "aria": "聊天记录",
+        "w": 30,
+        "h": 30,
+        "display": "flex",
+        "visible": true
+      }
+    ],
+    "sendbar": [
+      {
+        "id": "send",
+        "svg": true,
+        "text": "",
+        "tip": "发送",
+        "nativeTitle": null,
+        "aria": "发送",
+        "w": 34,
+        "h": 32,
+        "display": "flex",
+        "visible": true
+      },
+      {
+        "id": "stop",
+        "svg": true,
+        "text": "",
+        "tip": "停止生成",
+        "nativeTitle": null,
+        "aria": "停止生成",
+        "w": 0,
+        "h": 0,
+        "display": "none",
+        "visible": false
+      }
+    ],
+    "micHidden": false,
+    "stopDisplayWhenHidden": "none"
+  },
+  "toolsKeptNames": {
+    "view": "工具",
+    "tools": [
+      {
+        "svg": true,
+        "name": "总结全文",
+        "desc": "读整页正文"
+      },
+      {
+        "svg": true,
+        "name": "分段大纲",
+        "desc": "读整页正文"
+      },
+      {
+        "svg": true,
+        "name": "译成中文",
+        "desc": "需要划选文字"
+      },
+      {
+        "svg": true,
+        "name": "译成英文",
+        "desc": "需要划选文字"
+      },
+      {
+        "svg": true,
+        "name": "解释划线",
+        "desc": "需要划选文字"
+      },
+      {
+        "svg": true,
+        "name": "润色改写",
+        "desc": "需要划选文字"
+      },
+      {
+        "svg": true,
+        "name": "问这篇网页",
+        "desc": "读整页正文"
+      }
+    ]
+  },
+  "hoverBubbles": {
+    "navChat": {
+      "content": "\"聊天\"",
+      "opacity": 1,
+      "position": "absolute",
+      "writing": "horizontal-tb"
+    },
+    "history": {
+      "content": "\"聊天记录\"",
+      "opacity": 1,
+      "position": "absolute",
+      "writing": "horizontal-tb"
+    },
+    "send": {
+      "content": "\"发送\"",
+      "opacity": 1,
+      "position": "absolute",
+      "writing": "horizontal-tb"
+    },
+    "voice": {
+      "content": "\"语音输入：说完自动转成文字（每次 3 积分）\"",
+      "opacity": 1,
+      "position": "absolute",
+      "writing": "horizontal-tb"
+    }
+  },
+  "hoverLauncher": {
+    "content": "\"总结全文\"",
+    "opacity": 1,
+    "tip": "总结全文",
+    "nativeTitle": null,
+    "text": "",
+    "svg": true
+  },
+  "micCapability": {
+    "supported": true,
+    "granted": false,
+    "name": "NotAllowedError",
+    "message": "Permission dismissed"
+  },
+  "voiceFlow": {
+    "uploadOnly": {
+      "status": "已识别 27 字",
+      "value": "这是本地识别服务返回的测试文字，用来验证语音输入链路。"
+    }
+  },
+  "afterVoice": {
+    "balance": 781,
+    "top": [
+      "-3 voice qwen3-asr-flash",
+      "-8 chat deepseek-chat",
+      "-8 chat deepseek-chat"
+    ]
+  },
+  "afterAbort": {
+    "status": "已连接",
+    "stopTip": "停止生成",
+    "body": "是",
+    "summary": null,
+    "boxClass": "msg assistant",
+    "msgs": [
+      "user:总结全文",
+      "assistant:**结论：** 本次侧边栏插件更新新增国…",
+      "user:只回答一个字：猫是动物吗",
+      "assistant:是"
+    ],
+    "reasoningSaved": false
+  },
+  "afterAbortCredits": {
+    "balance": 761,
+    "top": [
+      "-20 chat deepseek-reasoner",
+      "-3 voice qwen3-asr-flash",
+      "-8 chat deepseek-chat"
+    ]
+  },
+  "abortTrace": [
+    {
+      "sec": 1,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 2,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 3,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 4,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 5,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 6,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 7,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 8,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 9,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 10,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 11,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 12,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 13,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 14,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 15,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 16,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 17,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 18,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 19,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 20,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 21,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 22,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 23,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 24,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 25,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 26,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 27,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 28,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 29,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 30,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 31,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 32,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 33,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 34,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 35,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 36,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 37,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 38,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 39,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 40,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 41,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 42,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 43,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 44,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    },
+    {
+      "sec": 45,
+      "status": "已连接",
+      "streaming": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "reasoningChars": 0,
+      "answer": "是",
+      "busy": false
+    }
+  ],
+  "completed": {
+    "busy": false,
+    "status": "已连接",
+    "summary": null,
+    "reasoningChars": 0,
+    "answer": "是",
+    "open": null,
+    "actions": [
+      {
+        "tip": "复制",
+        "svg": true,
+        "text": ""
+      },
+      {
+        "tip": "引用",
+        "svg": true,
+        "text": ""
+      },
+      {
+        "tip": "重新生成",
+        "svg": true,
+        "text": ""
+      }
+    ],
+    "meta": "deepseek-reasoner · 输入 290／输出 2 token"
+  },
+  "completedCredits": {
+    "balance": 741,
+    "top": [
+      "-20 chat deepseek-reasoner",
+      "-20 chat deepseek-reasoner",
+      "-3 voice qwen3-asr-flash"
+    ]
+  },
+  "modelNow": "deepseek-reasoner",
+  "shotPanel": true,
+  "shotPage": true,
+  "cleaned": {
+    "lastAnswer": "是"
+  },
+  "restoredPrefs": {
+    "launcher": true,
+    "model": "glm-4v-flash"
+  }
+}

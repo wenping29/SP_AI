@@ -1,0 +1,607 @@
+{
+  "panel": {
+    "innerW": 382,
+    "vis": "visible",
+    "focus": true
+  },
+  "before": {
+    "status": "已新建聊天",
+    "busy": false,
+    "model": "deepseek-reasoner",
+    "stopHidden": true,
+    "stopTip": "停止生成",
+    "boxClass": null,
+    "clickPoint": {
+      "x": 0,
+      "y": 0
+    },
+    "reasoningChars": 0,
+    "summary": null,
+    "body": "",
+    "meta": null,
+    "msgCount": 0,
+    "boxes": 0
+  },
+  "creditsBefore": {
+    "balance": 681,
+    "top": [
+      "-20 chat deepseek-reasoner",
+      "-20 chat deepseek-reasoner",
+      "-20 chat deepseek-reasoner"
+    ]
+  },
+  "abort": {
+    "clickA": null,
+    "note": "没等到思考流",
+    "traceTail": [
+      {
+        "sec": 46,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 47,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 48,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 49,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 50,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      }
+    ],
+    "trace": [
+      {
+        "sec": 1,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 2,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 3,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 4,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 5,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 6,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 7,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 8,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 9,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 10,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 11,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 12,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 13,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 14,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 15,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 16,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 17,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 18,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 19,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 20,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 21,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 22,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 23,
+        "busy": false,
+        "status": "已连接",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 24,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 25,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 26,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 27,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 28,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 29,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 30,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 31,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 32,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 33,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 34,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 35,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 36,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 37,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 38,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 39,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 40,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 41,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 42,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 43,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 44,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 45,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 46,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 47,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 48,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 49,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      },
+      {
+        "sec": 50,
+        "busy": false,
+        "status": "麦克风不可用",
+        "tip": "停止生成",
+        "r": 153,
+        "b": 61,
+        "boxes": 1
+      }
+    ],
+    "credits": {
+      "balance": 661,
+      "top": [
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner"
+      ]
+    },
+    "session": [
+      "user:9.11 和 9.9 哪个数更大？请说明理由…",
+      "assistant:**9.9 更大。**\n\n理由：把两个数按小…|R153"
+    ]
+  },
+  "completed": {
+    "snap": {
+      "status": "已连接",
+      "busy": false,
+      "model": "deepseek-reasoner",
+      "stopHidden": true,
+      "stopTip": "停止生成",
+      "boxClass": "msg assistant",
+      "clickPoint": {
+        "x": 0,
+        "y": 0
+      },
+      "reasoningChars": 101,
+      "summary": "思考过程",
+      "body": "**鸡 5 只，兔 3 只。**\n\n理由：  \n设鸡有 \\(x\\) 只，兔有 \\(y\\) 只：\n\n- \\(x+y=8\\)…",
+      "meta": "deepseek-reasoner · 输入 184／输出 224 token",
+      "msgCount": 4,
+      "boxes": 2
+    },
+    "trace": [
+      {
+        "sec": 1,
+        "busy": false,
+        "status": "已连接",
+        "r": 101,
+        "b": 61
+      },
+      {
+        "sec": 2,
+        "busy": false,
+        "status": "已连接",
+        "r": 101,
+        "b": 61
+      },
+      {
+        "sec": 3,
+        "busy": false,
+        "status": "已连接",
+        "r": 101,
+        "b": 61
+      }
+    ],
+    "credits": {
+      "balance": 641,
+      "top": [
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner"
+      ]
+    }
+  },
+  "rerender": {
+    "summary": "思考过程",
+    "reasoningChars": 101,
+    "answer": "**鸡 5 只，兔 3 只。**\n\n理由：  \n设鸡有 \\(…",
+    "meta": "deepseek-reasoner · 输入 184／输出 224 token",
+    "savedReasoning": 101
+  },
+  "shot": true
+}

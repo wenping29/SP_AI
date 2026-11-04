@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SP 侧边栏助手</title>
   <link rel="stylesheet" href="sidepanel.css">
+  <script>
+    // 首帧前落地主题，避免深色模式下打开面板先闪一下白底
+    try {
+      chrome.storage.local.get('theme').then((saved) => {
+        document.documentElement.dataset.theme = saved.theme || 'light';
+      });
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div class="layout">
@@ -84,6 +92,14 @@
             <span id="brandVersion" class="muted"></span>
           </div>
         </div>
+        <label>主题
+          <select id="themeSelect">
+            <option value="light">浅色</option>
+            <option value="dark">深色</option>
+            <option value="midnight">深夜</option>
+            <option value="follow">跟随浏览器</option>
+          </select>
+        </label>
         <label>服务器地址
           <input id="serverInput" type="text" spellcheck="false">
         </label>

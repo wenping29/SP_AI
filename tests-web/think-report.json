@@ -1,0 +1,84 @@
+{
+  "docked": {
+    "id": "F427A3DB2480A73E232147D0E6EF8026",
+    "innerW": 382,
+    "booted": true
+  },
+  "beforeAll": {
+    "balance": 741,
+    "top": [
+      "-20 chat deepseek-reasoner",
+      "-20 chat deepseek-reasoner",
+      "-3 voice qwen3-asr-flash"
+    ]
+  },
+  "abort": {
+    "at": null,
+    "after": {
+      "status": "麦克风不可用",
+      "busy": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "streaming": false,
+      "boxClass": null,
+      "reasoningChars": 0,
+      "summary": null,
+      "answer": "",
+      "meta": null
+    },
+    "credits": {
+      "balance": 721,
+      "top": [
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner"
+      ]
+    },
+    "session": {
+      "msgs": [],
+      "count": 0
+    }
+  },
+  "completed": {
+    "snap": {
+      "status": "已连接",
+      "busy": false,
+      "stopVisible": false,
+      "stopTip": "停止生成",
+      "streaming": false,
+      "boxClass": "msg assistant",
+      "reasoningChars": 86,
+      "summary": "思考过程",
+      "answer": "鸡有 **5 只**，兔有 **3 只**。\n\n验证：  \n- 共：5＋3＝8 只  \n- 腿：5×2＋3×4＝10＋12＝22 条",
+      "meta": "deepseek-reasoner · 输入 79／输出 115 token"
+    },
+    "credits": {
+      "balance": 701,
+      "top": [
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner",
+        "-20 chat deepseek-reasoner"
+      ]
+    }
+  },
+  "rerender": {
+    "summary": "思考过程",
+    "reasoningChars": 86,
+    "answer": "鸡有 **5 只**，兔有 **3 只**。\n\n验证：  \n- 共：5＋3＝8 …",
+    "savedReasoning": 86,
+    "actions": [
+      "复制/",
+      "引用/",
+      "重新生成/"
+    ]
+  },
+  "stored": "user:-,assistant:R86",
+  "emptyAbort": {
+    "at": null,
+    "countAfter": 4,
+    "countBefore": 2,
+    "boxes": 2
+  },
+  "shotPanel": true,
+  "logs": null
+}

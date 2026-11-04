@@ -1,0 +1,7 @@
+{
+  "4557E155654F9106D62704CC8D1008AE": {
+    "innerW": 382,
+    "abortPath": "\") {\n      const stopped = phase === \"thinking\" ? \"已终止思考\" : \"已手动停止\";\n      setStatus(stopped);\n      if (answer) {\n        appendMeta(box, stopped);\n        session.messages.push({ role: \"assistant\", content: answer, reasoning: clip(reasoning, 1600), note: stopped, at: Date.now() });\n        box.append(messageActions({ role: \"assistant\", content: answer }, session.messages.length - 1));\n        await saveSessions();\n      } else if (thinking) {\n        // 思考到一半被终止：气泡留着讲清楚，但不写进会话，免得历史里出现一条空回答\n        thinking.summary.textContent = \"思考过程（已终止）\";\n        body.textContent = \"已停止，未生成回答\";\n      } else {\n        box.remove();\n      }\n    } else {\n      const detail = err instanceof TypeError\n       ",
+    "boot": "function/function"
+  }
+}
