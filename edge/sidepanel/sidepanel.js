@@ -449,6 +449,88 @@ function currentModel() {
   return state.config?.models?.find((m) => m.modelId === state.model) || null;
 }
 
+// ---------- 模型切换：选中项与列表项都带厂商 logo ----------
+
+const MODEL_LOGOS = {
+  deepseek: {
+    bg: "#4D6BFE",
+    glyph:
+      '<path fill="#fff" d="M3.8 14.6c0-2.9 2.3-5.2 5.2-5.2h3.2c1.2 0 2.3.6 3 1.6l2.9-1.1c.9-.4 1.9.6 1.5 1.5l-1.9 4.5c-.3.8-1 1.3-1.8 1.3h-1.6c-.5 0-.9-.4-.9-.9v-.5h-1.6l-1.3 1.8H5.3a1.5 1.5 0 0 1-1.5-1.5z"/><circle cx="7.6" cy="12.4" r=".9" fill="#4D6BFE"/>',
+  },
+  zhipu: {
+    bg: "#3452FF",
+    glyph: '<path fill="#fff" d="M7 6.8h10v2.5l-5.3 5.4H17v2.5H7v-2.5l5.3-5.4H7z"/>',
+  },
+  dashscope: {
+    bg: "#7C5CFC",
+    glyph:
+      '<circle cx="12" cy="11.2" r="4.7" fill="none" stroke="#fff" stroke-width="2.3"/><path d="M14.6 14.3l2.9 2.9" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/>',
+  },
+  qianfan: {
+    bg: "#2932E1",
+    glyph:
+      '<path d="M12 5v.01M6.2 8.2h11.6M12 8.4l-4.7 9.4M12 11.4l4.7 6.4" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  siliconflow: {
+    bg: "#0FA47F",
+    glyph:
+      '<path d="M6.3 8.6c1.7-2.1 5.4-2 6.7.1 1 1.6.2 3.2-1.4 3.9l-2.1.9c-1.6.7-2.3 2.3-1.3 3.9 1.3 2.1 5 2.2 6.7.1" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+  },
+  unknown: {
+    bg: "#64748B",
+    glyph: '<path fill="#fff" d="M12 4.5l6 3.4v8.2l-6 3.4-6-3.4V7.9z"/>',
+  },
+};
+
+function providerOf(model) {
+  if (model?.provider) return model.provider;
+  const id = model?.modelId || "";
+  if (id.startsWith("glm")) return "zhipu";
+  if (id.startsWith("deepseek")) return "deepseek";
+  if (id.startsWith("qwen")) return "dashscope";
+  if (id.startsWith("ernie")) return "qianfan";
+  return "";
+}
+
+function logoMarkup(model) {
+  const logo = MODEL_LOGOS[providerOf(model)] || MODEL_LOGOS.unknown;
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="7" fill="${logo.bg}"/>${logo.glyph}</svg>`;
+}
+
+function modelTip(model) {
+  return `切换大模型：${model.displayName} · 输入 ${model.inputRatePer1K}／输出 ${model.outputRatePer1K} 积分每千 token${model.supportsVision ? " · 支持图片" : ""}`;
+}
+
+function openModelMenu() {
+  if (!state.config?.models?.length) return;
+  els.modelMenu.hidden = false;
+  els.modelButton.setAttribute("aria-expanded", "true");
+  const active = els.modelMenu.querySelector('[aria-selected="true"]') || els.modelMenu.firstElementChild;
+  active?.focus();
+}
+
+function closeModelMenu(refocus = false) {
+  if (els.modelMenu.hidden) return;
+  els.modelMenu.hidden = true;
+  els.modelButton.setAttribute("aria-expanded", "false");
+  if (refocus) els.modelButton.focus();
+}
+
+function toggleModelMenu() {
+  if (els.modelMenu.hidden) openModelMenu();
+  else closeModelMenu();
+}
+
+async function selectModel(modelId) {
+  const model = state.config?.models?.find((m) => m.modelId === modelId);
+  if (!model) return;
+  state.model = model.modelId;
+  closeModelMenu(true);
+  renderModels();
+  await saveState({ model: state.model });
+  setStatus(`已切换到 ${model.displayName}`);
+}
+
 // ---------- 存储与后端 ----------
 
 async function loadState() {
@@ -520,22 +602,44 @@ async function loadConfig() {
 }
 
 function renderModels() {
-  els.model.textContent = "";
-  if (!state.config?.models?.length) {
-    const option = document.createElement("option");
-    option.textContent = "后台未启用任何模型";
-    els.model.append(option);
-    els.model.disabled = true;
+  const models = state.config?.models || [];
+  els.modelMenu.textContent = "";
+  els.modelMenu.hidden = true;
+  els.modelButton.setAttribute("aria-expanded", "false");
+
+  if (!models.length) {
+    els.modelButton.disabled = true;
+    els.modelName.textContent = "后台未启用任何模型";
+    els.modelLogo.innerHTML = logoMarkup(null);
+    els.modelButton.dataset.tip = "后台未启用任何模型";
     return;
   }
-  els.model.disabled = false;
-  for (const model of state.config.models) {
-    const option = document.createElement("option");
-    option.value = model.modelId;
-    option.textContent = model.displayName;
-    option.selected = model.modelId === state.model;
-    option.title = `输入 ${model.inputRatePer1K}／输出 ${model.outputRatePer1K} 积分每千 token${model.supportsVision ? " · 支持图片" : ""}`;
-    els.model.append(option);
+
+  els.modelButton.disabled = false;
+  const selected = currentModel() || models[0];
+  els.modelLogo.innerHTML = logoMarkup(selected);
+  els.modelName.textContent = selected.displayName;
+  els.modelButton.dataset.tip = modelTip(selected);
+
+  for (const model of models) {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "model-option";
+    option.dataset.model = model.modelId;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", String(model.modelId === state.model));
+
+    const logo = document.createElement("span");
+    logo.className = "model-logo";
+    logo.setAttribute("aria-hidden", "true");
+    logo.innerHTML = logoMarkup(model);
+
+    const name = document.createElement("span");
+    name.className = "model-name";
+    name.textContent = model.displayName;
+
+    option.append(logo, name);
+    els.modelMenu.append(option);
   }
 }
 
@@ -561,7 +665,10 @@ function syncBusy() {
   els.send.disabled = state.busy;
   els.stop.hidden = !state.busy;
   els.btnAdd.disabled = state.busy;
-  if (state.busy) closeAddMenu();
+  if (state.busy) {
+    closeAddMenu();
+    closeModelMenu();
+  }
   els.btnShot.disabled = state.busy;
   els.btnFile.disabled = state.busy;
   els.btnVoice.disabled = state.busy;
@@ -588,6 +695,7 @@ async function refreshCredits() {
 function showView(name, { focusInput = false } = {}) {
   state.view = name;
   closeAddMenu();
+  closeModelMenu();
   for (const button of els.rail.querySelectorAll("button[data-view]")) {
     button.classList.toggle("active", button.dataset.view === name);
   }
@@ -1414,10 +1522,33 @@ els.rail.addEventListener("click", async (event) => {
   if (button.dataset.view === "translate" || button.dataset.view === "chat") await syncSelection();
 });
 
-els.model.addEventListener("change", async () => {
-  state.model = els.model.value;
-  await saveState({ model: state.model });
-  setStatus(`已切换到 ${currentModel()?.displayName || state.model}`);
+els.modelButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleModelMenu();
+});
+
+els.modelMenu.addEventListener("click", (event) => {
+  event.stopPropagation();
+  const option = event.target.closest(".model-option");
+  if (option) selectModel(option.dataset.model).catch(showError);
+});
+
+els.modelMenu.addEventListener("keydown", (event) => {
+  const options = [...els.modelMenu.querySelectorAll(".model-option")];
+  const index = options.indexOf(document.activeElement);
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const delta = event.key === "ArrowDown" ? 1 : -1;
+    const next = index < 0 ? options[0] : options[(index + delta + options.length) % options.length];
+    next?.focus();
+  } else if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    const option = document.activeElement.closest(".model-option");
+    if (option) selectModel(option.dataset.model).catch(showError);
+  } else if (event.key === "Escape") {
+    event.stopPropagation();
+    closeModelMenu(true);
+  }
 });
 
 els.btnReadPage.addEventListener("click", () => {
@@ -1471,6 +1602,7 @@ els.addMenu.addEventListener("keydown", (event) => {
 
 document.addEventListener("click", (event) => {
   if (!els.addMenu.contains(event.target) && !els.btnAdd.contains(event.target)) closeAddMenu();
+  if (!els.modelPicker.contains(event.target)) closeModelMenu();
 });
 
 window.addEventListener("resize", () => {
@@ -1646,6 +1778,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeAccountPop();
     closeAddMenu();
+    closeModelMenu();
   }
 });
 

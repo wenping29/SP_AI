@@ -71,7 +71,24 @@ html[data-theme="midnight"] {
 
 html[data-theme="dark"], html[data-theme="midnight"] { color-scheme: dark; }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  /* 面板内统一隐藏滚动条：滚轮/键盘仍可滚动，避免滚动条占位和横向条 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* 页面本身不滚动，所有滚动都发生在会话列表和各个面板内部 */
+html,
+body {
+  overflow: hidden;
+}
 
 /* 图标按钮用 display:inline-flex，会把 UA 的 [hidden] 覆盖掉，这里统一兜住 */
 [hidden] { display: none !important; }
@@ -575,14 +592,109 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
 
 .tool.danger { color: var(--danger); border-color: var(--danger-border); background: var(--danger-soft); }
 
-.model-select {
-  width: auto;
-  max-width: 84px;
-  padding: 5px 6px;
-  border-radius: 999px;
-  font-size: 12px;
-  color: var(--muted);
+.model-picker {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
 }
+
+.model-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 76px;
+  padding: 2px 6px 2px 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.model-current:hover,
+.model-current[aria-expanded="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.model-current[disabled] { opacity: .55; cursor: default; }
+
+/* 菜单展开时收起按钮气泡，避免盖住列表 */
+.model-current[aria-expanded="true"]::after { display: none; }
+
+.model-logo { flex: none; width: 14px; height: 14px; }
+.model-logo svg { display: block; width: 100%; height: 100%; }
+
+.model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-caret {
+  flex: none;
+  width: 0;
+  height: 0;
+  margin-left: 1px;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: .6;
+}
+
+.model-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 264px;
+  max-width: calc(100vw - 62px);
+  max-height: min(320px, 60vh);
+  padding: 5px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+}
+
+.model-menu[hidden] { display: none; }
+
+.model-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.model-option:hover,
+.model-option:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.model-option[aria-selected="true"] {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.model-option .model-name { flex: 1; }
 
 /* 已添加的技能 / 插件 / 计划 / 目标 */
 .picks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -830,13 +942,13 @@ button.ico {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   flex: none;
 }
 
-button.ico svg { width: 17px; height: 17px; display: block; }
+button.ico svg { width: 14px; height: 14px; display: block; }
 button.ico.lg { width: 34px; height: 32px; }
 button.ico.lg svg { width: 18px; height: 18px; }
 
