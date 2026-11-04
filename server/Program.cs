@@ -177,6 +177,43 @@ using (var scope = app.Services.CreateScope())
     }
 
     await db.SeedAsync();
+
+    // 首次启动且没有任何管理员时创建初始账号；用户表非空时不再执行，重启不会覆盖已改密码
+    var initialUsername = (app.Configuration["Admin:InitialUsername"] ?? "").Trim();
+    var initialPassword = app.Configuration["Admin:InitialPassword"] ?? "";
+    if (!await db.AdminUsers.AnyAsync())
+    {
+        if (initialUsername.Length == 0 || initialPassword.Length < 8)
+        {
+            logger.LogWarning("未配置 Admin:InitialUsername 或 Admin:InitialPassword，跳过初始管理员创建");
+        }
+        else
+        {
+            var role = await db.AdminRoles.FirstOrDefaultAsync(r => r.IsSystem)
+                ?? await db.AdminRoles.OrderBy(r => r.Id).FirstOrDefaultAsync();
+            if (role is null)
+            {
+                logger.LogWarning("内置角色缺失，跳过初始管理员创建");
+            }
+            else
+            {
+                var initialAdmin = new AdminUser
+                {
+                    Username = initialUsername,
+                    DisplayName = "初始管理员",
+                    RoleId = role.Id,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                initialAdmin.PasswordHash = scope.ServiceProvider
+                    .GetRequiredService<AdminAuth>()
+                    .HashPassword(initialAdmin, initialPassword);
+                db.AdminUsers.Add(initialAdmin);
+                await db.SaveChangesAsync();
+                logger.LogInformation("已创建初始管理员账号 {Username}", initialUsername);
+            }
+        }
+    }
+
     await scope.ServiceProvider.GetRequiredService<ProviderKey>().EnsureSeededAsync(CancellationToken.None);
 }
 

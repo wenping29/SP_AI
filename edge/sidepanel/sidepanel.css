@@ -964,7 +964,6 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
 .menu-body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 2px;
   min-height: 0;
   overflow-y: auto;
