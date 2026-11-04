@@ -7,7 +7,6 @@ const REASON_LABELS = {
   voice: "语音输入",
   admin_grant: "后台调整",
 };
-const VIEW_TITLES = { chat: "聊天", ask: "提问", translate: "翻译", tools: "工具", settings: "设置" };
 const QUICK_ASKS = [
   { text: "用三句话讲清楚这个页面在说什么", page: true },
   { text: "这个页面有哪些关键数据和结论？", page: true },
@@ -25,8 +24,6 @@ const els = {
   rail: document.getElementById("rail"),
   status: document.getElementById("status"),
   notice: document.getElementById("notice"),
-  viewTitle: document.getElementById("viewTitle"),
-  panelClose: document.getElementById("panelClose"),
   newChat: document.getElementById("newChat"),
   openHistory: document.getElementById("openHistory"),
   brandVersion: document.getElementById("brandVersion"),
@@ -161,7 +158,6 @@ const ICONS = {
   aZh: '<path d="M4 6h8"/><path d="M8 3.5V6"/><path d="M4.8 9.6c1.4 2.6 3.4 4.2 5.8 4.9"/><path d="M9.8 9.6C8.4 12.2 6.4 13.8 4 14.6"/><path d="M13.6 20l3.4-8 3.4 8"/><path d="M15 17h4"/>',
   coin: '<circle cx="12" cy="12" r="8.6"/><path d="M8.8 9.2h6.4M12 9.2v5.6M9.6 14.8h4.8"/>',
   wallet: '<rect x="3" y="6.6" width="18" height="12.8" rx="2.6"/><path d="M3 10.8h18"/><circle cx="16.6" cy="15" r="1.3"/>',
-  close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -341,7 +337,6 @@ function showView(name, { focusInput = false } = {}) {
   els.translateView.hidden = name !== "translate";
   els.toolsView.hidden = name !== "tools";
   els.settingsView.hidden = name !== "settings";
-  els.viewTitle.textContent = VIEW_TITLES[name] || "聊天";
 
   if (name === "settings") fillSettings();
   if (name === "translate") renderTranslatePane();
@@ -1233,8 +1228,6 @@ async function send() {
 }
 
 els.stop.addEventListener("click", () => state.controller?.abort());
-
-els.panelClose.addEventListener("click", () => window.close());
 
 els.newChat.addEventListener("click", () => newChat().catch(showError));
 

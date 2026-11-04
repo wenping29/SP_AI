@@ -19,13 +19,6 @@
     <div class="main">
       <div id="notice" class="notice" hidden></div>
 
-      <!-- <div class="titlebar">
-        <strong>SP 助手</strong>
-        <span id="viewTitle" class="view-title">聊天</span>
-        <span class="spacer"></span>
-        <button id="panelClose" class="tool ico tip-top tip-in" data-icon="close" data-tip="关闭侧边栏"></button>
-      </div> -->
-
       <div id="chatView" class="chat-view">
         <main id="thread" class="thread"></main>
 
@@ -124,9 +117,9 @@
       <button data-view="ask" class="tip-left" data-icon="sparkle" data-tip="提问"></button>
       <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>
       <button data-view="tools" class="tip-left" data-icon="grid" data-tip="工具"></button>
-    </nav>
-    <div class="rail avatar-dock" id="avatarDock">
       <button data-view="settings" class="tip-left" data-icon="gear" data-tip="设置"></button>
+      <div class="avatar-dock" id="avatarDock">
+
       <button id="avatar" class="avatar" aria-label="积分与账户" aria-haspopup="true" aria-expanded="false">
         <img src="../icons/icon32.png" alt="" width="22" height="22">
       </button>
@@ -150,6 +143,8 @@
         </div>
       </div>
     </div>
+    </nav>
+    
   </div>
 
   <dialog id="historyDialog">

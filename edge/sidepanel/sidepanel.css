@@ -767,8 +767,6 @@ button.ico.recording {
   position: relative;
   margin-top: auto;
   align-self: stretch;
-  display: flex;
-  height: 46px;
 }
 
 .rail .avatar {

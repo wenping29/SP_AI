@@ -20,7 +20,10 @@ function connect(t) {
         ws.send(JSON.stringify({ id: mid, method, params }));
       }),
       async evaluate(expr) {
-        const r = await this.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true });
+        const r = await Promise.race([
+          this.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("evaluate timeout")), 8000)),
+        ]);
         if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || "eval error");
         return r.result?.value;
       },
@@ -65,7 +68,6 @@ async function openPanelTab() {
 
 const out = { steps: [] };
 
-// 1) 找停靠面板；没有就开一个扩展页签
 let found = await findPanel();
 if (!found) {
   found = await openPanelTab();
@@ -73,27 +75,29 @@ if (!found) {
 }
 if (!found) { out.fatal = "无法打开面板"; }
 else {
-  const s = found.s;
-  // 面板可能还挂着旧文档：带 cache-buster 强制重新加载（扩展的文件服务直读磁盘，证明已返回新 HTML）
+  let s = found.s;
+  // 面板可能挂着旧文档：带 cache-buster 强制重新加载
   const url = await s.evaluate('location.origin + "/sidepanel/sidepanel.html?v=" + Date.now()');
   await s.send("Page.enable").catch(() => {});
   await s.send("Page.navigate", { url }).catch(() => {});
-  await sleep(1500);
-  const check1 = await s.evaluate(`(() => {
-    const bar = document.querySelector(".titlebar");
-    const close = document.getElementById("panelClose");
-    return {
-      titlebar: !!bar,
-      brand: bar?.querySelector("strong")?.textContent || null,
-      viewTitle: document.getElementById("viewTitle")?.textContent || null,
-      barBg: bar ? getComputedStyle(bar).backgroundColor : null,
-      closeTip: close?.dataset.tip || null,
-      closeIcon: !!close?.querySelector("svg"),
-    };
-  })()`);
-  out.titlebar = check1;
+  s.close();
+  await sleep(2000);
+  // 导航可能换掉目标，重连
+  found = await findPanel() || (await openPanelTab());
+  if (!found) { out.fatal = "导航后找不到面板"; await fs.writeFile("sider-layout-report.json", JSON.stringify(out, null, 2), "utf8"); process.exit(1); }
+  s = found.s;
 
-  // 3) 新建聊天 → 空会话应出现居中引导区
+  // 1) 面板加载健康：boot 跑完（状态不再是准备中）、无崩溃残留、无标题栏
+  out.health = await s.evaluate(`(() => ({
+    noTitlebar: !document.querySelector(".titlebar"),
+    status: document.getElementById("status")?.textContent || null,
+    hasRail: !!document.getElementById("rail"),
+    hasAvatar: !!document.getElementById("avatar"),
+    hasModel: !!document.getElementById("model"),
+    modelOptions: document.getElementById("model")?.options.length ?? 0,
+  }))()`);
+
+  // 2) 新建聊天 → 空会话应出现居中引导区
   await s.evaluate(`(() => { document.getElementById("newChat").click(); return 1; })()`);
   await sleep(250);
   out.hero = await s.evaluate(`(() => {
@@ -102,12 +106,11 @@ else {
       present: !!hero,
       h2: hero?.querySelector("h2")?.textContent || null,
       chipCount: hero?.querySelectorAll(".hero-chips button").length ?? 0,
-      chips: [...(hero?.querySelectorAll(".hero-chips button") || [])].map((b) => b.textContent),
       hintGone: !document.querySelector(".thread .hint"),
     };
   })()`);
 
-  // 4) 点第一条快捷提问：填输入框 + 自动开启阅读此页
+  // 3) 点第一条快捷提问：填输入框 + 自动开启阅读此页
   out.chipClick = await s.evaluate(`(() => {
     const chip = document.querySelector(".hero-chips button");
     if (!chip) return { clicked: false };
@@ -120,17 +123,8 @@ else {
     };
   })()`);
 
-  // 5) 关闭按钮的接线：stub window.close 再点，不真关面板
-  out.closeWired = await s.evaluate(`(() => {
-    let called = 0;
-    const orig = window.close;
-    window.close = () => { called += 1; };
-    document.getElementById("panelClose").click();
-    window.close = orig;
-    return called === 1;
-  })()`);
-
   s.close();
 }
 
-await fs.writeFile("sider-layout-report.json", JSON.stringify(out, null, 2), "utf8");console.log(JSON.stringify(out, null, 2));
+await fs.writeFile("sider-layout-report.json", JSON.stringify(out, null, 2), "utf8");
+console.log(JSON.stringify(out, null, 2));

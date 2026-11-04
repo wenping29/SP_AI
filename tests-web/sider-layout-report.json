@@ -1,4 +1,22 @@
 {
   "steps": [],
-  "fatal": "没有停靠的侧边栏面板"
+  "health": {
+    "noTitlebar": true,
+    "status": "已连接",
+    "hasRail": true,
+    "hasAvatar": true,
+    "hasModel": true,
+    "modelOptions": 3
+  },
+  "hero": {
+    "present": true,
+    "h2": "有什么可以帮你？",
+    "chipCount": 4,
+    "hintGone": true
+  },
+  "chipClick": {
+    "clicked": true,
+    "inputFilled": true,
+    "readPageOn": true
+  }
 }
