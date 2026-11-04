@@ -10,6 +10,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ModelSpec> Models => Set<ModelSpec>();
     public DbSet<CreditPolicy> Policies => Set<CreditPolicy>();
     public DbSet<ProviderCredential> ProviderCredentials => Set<ProviderCredential>();
+    public DbSet<KeyEnvEntry> KeyEnvs => Set<KeyEnvEntry>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
+    public DbSet<AdminRole> AdminRoles => Set<AdminRole>();
+    public DbSet<AdminSession> AdminSessions => Set<AdminSession>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -18,6 +22,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         model.Entity<Account>().HasIndex(a => a.Token).IsUnique();
         model.Entity<ModelSpec>().HasIndex(m => m.ModelId).IsUnique();
         model.Entity<CreditTransaction>().HasIndex(t => t.AccountId);
+        model.Entity<AdminUser>().HasIndex(u => u.Username).IsUnique();
+        model.Entity<AdminRole>().HasIndex(r => r.Name).IsUnique();
+        model.Entity<AdminSession>().HasIndex(s => s.TokenHash).IsUnique();
+        model.Entity<AdminSession>().HasIndex(s => s.UserId);
+        model.Entity<AdminSession>().HasIndex(s => s.ExpiresAt);
     }
 
     public async Task SeedAsync(CancellationToken ct = default)
@@ -25,6 +34,42 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         if (!await Policies.AnyAsync(ct))
         {
             Policies.Add(new CreditPolicy { Id = 1, FreeCredits = 1000, UpdatedAt = DateTime.UtcNow });
+        }
+
+        // 内置角色：超级管理员不可删除/改权限；运营与只读可改，也可另建角色
+        if (!await AdminRoles.AnyAsync(ct))
+        {
+            var now = DateTime.UtcNow;
+            AdminRoles.AddRange(
+                new AdminRole
+                {
+                    Name = "超级管理员",
+                    Description = "拥有全部模块权限，系统内置",
+                    Permissions = """["*"]""",
+                    IsSystem = true,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                },
+                new AdminRole
+                {
+                    Name = "运营",
+                    Description = "设备、模型、策略与 KeyEnv 的日常运营",
+                    Permissions = """
+                        ["dashboard.view","devices.view","devices.manage","models.view","models.manage","policy.view","policy.manage","keyenvs.view","keyenvs.manage"]
+                        """,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                },
+                new AdminRole
+                {
+                    Name = "只读",
+                    Description = "只能查看运营数据，不能修改",
+                    Permissions = """
+                        ["dashboard.view","devices.view","models.view","policy.view","keyenvs.view"]
+                        """,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                });
         }
 
         // 模型 ID 与扣分系数以各平台控制台实际值为准，后台 /api/admin/models 可改

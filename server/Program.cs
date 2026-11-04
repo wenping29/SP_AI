@@ -39,6 +39,8 @@ if (string.IsNullOrWhiteSpace(explicitUrls))
 var connectionString = builder.Configuration.GetConnectionString("Db") ?? "Data Source=sp.db";
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddScoped<CreditService>();
+builder.Services.AddScoped<AdminAuth>();
+builder.Services.AddScoped<AdminAccounts>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
@@ -62,7 +64,6 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    await db.SeedAsync();
     // EnsureCreated 只在建库时起作用，已有库不会补新表，这里幂等创建凭据表
     await db.Database.ExecuteSqlRawAsync("""
         CREATE TABLE IF NOT EXISTS "ProviderCredentials" (
@@ -72,6 +73,75 @@ using (var scope = app.Services.CreateScope())
             "UpdatedAt" TEXT NOT NULL
         );
         """);
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "KeyEnvs" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_KeyEnvs" PRIMARY KEY AUTOINCREMENT,
+            "Provider" TEXT NOT NULL,
+            "EnvName" TEXT NOT NULL,
+            "Cipher" TEXT NOT NULL,
+            "MaskedTail" TEXT NOT NULL,
+            "IsActive" INTEGER NOT NULL,
+            "IsDeprecated" INTEGER NOT NULL,
+            "Note" TEXT NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "UpdatedAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_KeyEnvs_Provider_EnvName"
+            ON "KeyEnvs" ("Provider", "EnvName" COLLATE NOCASE);
+        """);
+    // 每个提供商最多一条启用条目；EF 的 EnsureCreated 直接带上，老库靠这段补
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_KeyEnvs_ActiveProvider"
+                ON "KeyEnvs" ("Provider") WHERE "IsActive" = 1 AND "IsDeprecated" = 0;
+            """);
+    }
+    catch (Exception ex)
+    {
+        // 历史上如果已有多条启用记录（手工改库等），索引建不起来，运行时按最新一条兜底
+        logger.LogWarning(ex, "KeyEnvs 启用唯一索引创建失败，已有的重复启用条目需要人工清理");
+    }
+
+    // 管理员与角色表：老库同样靠这段补，SeedAsync 要在建表之后才能写内置角色
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "AdminRoles" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_AdminRoles" PRIMARY KEY AUTOINCREMENT,
+            "Name" TEXT NOT NULL,
+            "Description" TEXT NOT NULL,
+            "Permissions" TEXT NOT NULL,
+            "IsSystem" INTEGER NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "UpdatedAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_AdminRoles_Name" ON "AdminRoles" ("Name");
+
+        CREATE TABLE IF NOT EXISTS "AdminUsers" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_AdminUsers" PRIMARY KEY AUTOINCREMENT,
+            "Username" TEXT NOT NULL,
+            "DisplayName" TEXT NOT NULL,
+            "PasswordHash" TEXT NOT NULL,
+            "RoleId" INTEGER NOT NULL,
+            "IsDisabled" INTEGER NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "LastLoginAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_AdminUsers_Username" ON "AdminUsers" ("Username");
+
+        CREATE TABLE IF NOT EXISTS "AdminSessions" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_AdminSessions" PRIMARY KEY AUTOINCREMENT,
+            "UserId" INTEGER NOT NULL,
+            "TokenHash" TEXT NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "ExpiresAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_AdminSessions_TokenHash" ON "AdminSessions" ("TokenHash");
+        CREATE INDEX IF NOT EXISTS "IX_AdminSessions_UserId" ON "AdminSessions" ("UserId");
+        CREATE INDEX IF NOT EXISTS "IX_AdminSessions_ExpiresAt" ON "AdminSessions" ("ExpiresAt");
+        """);
+
+    await db.SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<ProviderKey>().EnsureSeededAsync(CancellationToken.None);
 }
 
 app.Use(async (context, next) =>
@@ -96,10 +166,14 @@ app.MapPost("/api/device/register", async (RegisterRequest req, AppDbContext db,
     return Results.Ok(new { token = account.Token, balance = account.Balance, deviceId = account.DeviceId });
 });
 
-app.MapGet("/api/config", async (AppDbContext db, CreditService credits, CancellationToken ct) =>
+app.MapGet("/api/config", async (AppDbContext db, CreditService credits, ProviderKey keys,
+    CancellationToken ct) =>
 {
     var policy = await credits.GetPolicyAsync(ct);
-    var models = await db.Models.Where(m => m.IsEnabled).OrderBy(m => m.SortOrder).ToListAsync(ct);
+    // 没有任何启用 KeyEnv 的提供商，其模型不下发，避免用户选中后才报错
+    var usable = await keys.UsableProvidersAsync(ct);
+    var models = await db.Models.Where(m => m.IsEnabled && usable.Contains(m.Provider))
+        .OrderBy(m => m.SortOrder).ToListAsync(ct);
 
     return Results.Ok(new
     {
@@ -145,7 +219,7 @@ app.MapGet("/api/credits", async (HttpContext http, AppDbContext db, CreditServi
 });
 
 app.MapPost("/api/chat", async (HttpContext http, ChatRequest req, AppDbContext db, CreditService credits,
-    ModelGateway gateway, IConfiguration config, CancellationToken ct) =>
+    ModelGateway gateway, ProviderKey keys, IConfiguration config, CancellationToken ct) =>
 {
     var account = await credits.AuthenticateAsync(Bearer(http.Request), ct);
     var policy = await credits.GetPolicyAsync(ct);
@@ -153,6 +227,11 @@ app.MapPost("/api/chat", async (HttpContext http, ChatRequest req, AppDbContext 
 
     var model = await db.Models.FirstOrDefaultAsync(m => m.ModelId == req.Model && m.IsEnabled, ct)
         ?? throw new ApiException(404, "model_not_found", "模型不可用，请重新选择");
+
+    if (!await keys.IsUsableAsync(model.Provider, ct))
+    {
+        throw new ApiException(503, "provider_unavailable", "该模型所属服务暂未开放，请选择其他模型");
+    }
 
     var messages = BuildMessages(req, model);
     var maxTokens = Math.Clamp(req.MaxTokens ?? config.GetValue("MaxOutputTokens", 1024), 128, 4096);
@@ -249,39 +328,94 @@ app.MapPost("/api/transcribe", async (HttpContext http, IFormFile? file, CreditS
 // 表单绑定会给端点加防伪要求，这里用 Bearer 令牌鉴权、不依赖 Cookie，明确关掉
 .DisableAntiforgery();
 
+// 登录入口必须放在鉴权组之外；Admin__Key 仍是应急总钥匙
+app.MapPost("/api/admin/auth/login", async (AdminLoginRequest req, AdminAuth auth, CancellationToken ct) =>
+{
+    var (token, expiresAt, identity) = await auth.LoginAsync(req.Username ?? "", req.Password ?? "", ct);
+    return Results.Ok(new { token, expiresAt, user = AdminAuth.ToView(identity) });
+});
+
 var admin = app.MapGroup("/api/admin");
 admin.AddEndpointFilter(async (context, next) =>
 {
-    var configured = app.Configuration["Admin:Key"];
     var http = context.HttpContext;
+    var auth = http.RequestServices.GetRequiredService<AdminAuth>();
+    var identity = await auth.ResolveAsync(http.Request, http.RequestAborted);
 
-    // 没配置管理密钥时直接拒绝，避免公网默认放行；密钥比较走定长，防止计时侧信道
-    if (string.IsNullOrWhiteSpace(configured))
+    if (identity is null)
     {
-        return Results.Json(new { code = "admin_not_configured", message = "管理接口未启用：请先配置 Admin:Key" },
-            statusCode: 503);
+        return Results.Json(new { code = "unauthorized", message = "未登录或登录已过期，请重新登录" },
+            statusCode: 401);
     }
 
-    var provided = http.Request.Headers["X-Admin-Key"].ToString();
-    if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(configured)))
+    var requirement = http.GetEndpoint()?.Metadata.GetMetadata<AdminPermission>();
+    if (requirement is { AnyOf.Length: > 0 } && !requirement.AnyOf.Any(identity.Has))
     {
-        return Results.Json(new { code = "bad_admin_key", message = "管理密钥不正确" }, statusCode: 401);
+        return Results.Json(new { code = "forbidden", message = "当前角色没有该模块的权限" }, statusCode: 403);
     }
 
+    http.Items[AdminAuth.IdentityItem] = identity;
     return await next(context);
 });
 
-admin.MapGet("/providers", async (ProviderKey keys, CancellationToken ct) =>
-    Results.Ok(await keys.ListAsync(ct)));
+admin.MapGet("/auth/me", (HttpContext http) =>
+    Results.Ok(AdminAuth.ToView((AdminIdentity)http.Items[AdminAuth.IdentityItem]!)));
 
-// 只写不读：接收明文，加密后落库，响应里只回尾号
+admin.MapPost("/auth/logout", async (HttpContext http, AdminAuth auth, CancellationToken ct) =>
+{
+    await auth.LogoutAsync(http.Request, ct);
+    return Results.Ok(new { ok = true });
+});
+
+admin.MapGet("/providers", async (ProviderKey keys, CancellationToken ct) =>
+    Results.Ok(await keys.ListProvidersAsync(ct))).RequireAdmin("keyenvs.view");
+
+// KeyEnv 条目：新增、修改、删除、废弃/恢复、切换启用
+admin.MapGet("/keyenvs", async (string? provider, bool? includeDeprecated, ProviderKey keys,
+    CancellationToken ct) =>
+    Results.Ok(await keys.ListEntriesAsync(provider, includeDeprecated ?? false, ct)))
+    .RequireAdmin("keyenvs.view");
+
+admin.MapPost("/keyenvs", async (KeyEnvCreateRequest req, ProviderKey keys, CancellationToken ct) =>
+{
+    var entry = await keys.CreateAsync(req.Provider ?? "", req.EnvName, req.Key, req.Note,
+        req.Activate ?? false, ct);
+    return Results.Ok(entry);
+}).RequireAdmin("keyenvs.manage");
+
+admin.MapPut("/keyenvs/{id:int}", async (int id, KeyEnvUpdateRequest req, ProviderKey keys,
+    CancellationToken ct) =>
+    Results.Ok(await keys.UpdateAsync(id, req.EnvName, req.Key, req.ClearKey ?? false, req.Note, ct)))
+    .RequireAdmin("keyenvs.manage");
+
+admin.MapDelete("/keyenvs/{id:int}", async (int id, ProviderKey keys, CancellationToken ct) =>
+{
+    await keys.DeleteAsync(id, ct);
+    return Results.Ok(new { id, deleted = true });
+}).RequireAdmin("keyenvs.manage");
+
+admin.MapPost("/keyenvs/{id:int}/activate", async (int id, ProviderKey keys, CancellationToken ct) =>
+    Results.Ok(await keys.ActivateAsync(id, ct))).RequireAdmin("keyenvs.manage");
+
+admin.MapPost("/keyenvs/{id:int}/deprecate", async (int id, DeprecateRequest req, ProviderKey keys,
+    CancellationToken ct) =>
+{
+    if (req.Deprecated is null) throw new ApiException(400, "invalid_deprecate", "缺少废弃状态");
+    return Results.Ok(await keys.SetDeprecatedAsync(id, req.Deprecated.Value, ct));
+}).RequireAdmin("keyenvs.manage");
+
+// 兼容旧的单密钥入口：写到当前启用条目，响应里只回尾号
 admin.MapPut("/providers/{provider}/key", async (string provider, ProviderKeyRequest req, ProviderKey keys,
-    CancellationToken ct) => Results.Ok(await keys.SaveAsync(provider, req.Key, ct)));
+    CancellationToken ct) => Results.Ok(await keys.SaveAsync(provider, req.Key, ct)))
+    .RequireAdmin("keyenvs.manage");
 
 admin.MapGet("/policy", async (CreditService credits, CancellationToken ct) =>
 {
     var policy = await credits.GetPolicyAsync(ct);
-    return Results.Ok(new { policy.FreeCredits, policy.ChatEnabled, policy.Notice, policy.UpdatedAt });
+    return Results.Ok(new
+    {
+        policy.FreeCredits, policy.ChatEnabled, policy.Notice, UpdatedAt = AsUtc(policy.UpdatedAt),
+    });
 });
 
 admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationToken ct) =>
@@ -298,7 +432,10 @@ admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationT
     policy.UpdatedAt = DateTime.UtcNow;
 
     await db.SaveChangesAsync(ct);
-    return Results.Ok(new { policy.FreeCredits, policy.ChatEnabled, policy.Notice, policy.UpdatedAt });
+    return Results.Ok(new
+    {
+        policy.FreeCredits, policy.ChatEnabled, policy.Notice, UpdatedAt = AsUtc(policy.UpdatedAt),
+    });
 });
 
 admin.MapGet("/models", async (AppDbContext db, CancellationToken ct) =>
@@ -316,6 +453,7 @@ admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDb
     if (req.MaxContextChars is { } maxChars) model.MaxContextChars = Math.Clamp(maxChars, 1000, 200000);
     if (req.SortOrder is { } sort) model.SortOrder = sort;
     if (req.SupportsVision is { } vision) model.SupportsVision = vision;
+    if (req.Note is { } note) model.Note = note;
 
     await db.SaveChangesAsync(ct);
     return Results.Ok(model);
@@ -328,13 +466,169 @@ admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService 
 
     var delta = req.Delta ?? 0;
     if (delta == 0) throw new ApiException(400, "invalid_delta", "调整数量不能为 0");
+    if (delta < 0 && account.Balance + delta < 0)
+    {
+        throw new ApiException(400, "balance_below_zero",
+            $"扣减后余额会变成 {account.Balance + delta}，请减少扣减数量");
+    }
 
     await credits.AdjustBalanceAsync(account.Id, delta, req.Reason ?? "admin_grant", ct);
     var balance = await db.Accounts.Where(a => a.Id == account.Id).Select(a => a.Balance).FirstAsync(ct);
     return Results.Ok(new { deviceId = account.DeviceId, delta, balance });
 });
 
+admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
+{
+    // 用近 24 小时而不是自然日，避免服务器 UTC 与国内时区不一致导致“今日”口径漂移
+    var since = DateTime.UtcNow.AddHours(-24);
+    var accounts = await db.Accounts.CountAsync(ct);
+    var totalBalance = await db.Accounts.SumAsync(a => (int?)a.Balance, ct) ?? 0;
+    var blocked = await db.Accounts.CountAsync(a => a.IsBlocked, ct);
+    var modelCount = await db.Models.CountAsync(ct);
+    var enabledModels = await db.Models.CountAsync(m => m.IsEnabled, ct);
+    // 只统计真实消耗；后台手工扣分不算用户消费
+    var calls24h = await db.Transactions
+        .CountAsync(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant", ct);
+    var consumed24h = -(await db.Transactions
+        .Where(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant")
+        .SumAsync(t => (int?)t.Delta, ct) ?? 0);
+    var active24h = await db.Accounts.CountAsync(a => a.LastUsedAt >= since, ct);
+
+    var recentRows = await (from t in db.Transactions.AsNoTracking()
+                            join a in db.Accounts.AsNoTracking() on t.AccountId equals a.Id
+                            orderby t.Id descending
+                            select new
+                            {
+                                t.Id, a.DeviceId, a.Label, t.Delta, t.Reason, t.ModelId,
+                                t.InputTokens, t.OutputTokens, t.CreatedAt,
+                            })
+                           .Take(10)
+                           .ToListAsync(ct);
+
+    var recent = recentRows.Select(t => new
+    {
+        t.Id, t.DeviceId, t.Label, t.Delta, t.Reason, t.ModelId,
+        t.InputTokens, t.OutputTokens, CreatedAt = AsUtc(t.CreatedAt),
+    });
+
+    return Results.Ok(new
+    {
+        accounts, totalBalance, blocked, modelCount, enabledModels,
+        calls24h, consumed24h, active24h, recent,
+    });
+});
+
+admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContext db,
+    CancellationToken ct) =>
+{
+    var query = db.Accounts.AsNoTracking();
+    var keyword = (q ?? "").Trim();
+    if (keyword.Length > 0)
+    {
+        query = query.Where(a => a.DeviceId.Contains(keyword) || a.Label.Contains(keyword));
+    }
+
+    var total = await query.CountAsync(ct);
+    var size = Math.Clamp(pageSize ?? 20, 1, 100);
+    var current = Math.Max(page ?? 1, 1);
+
+    var accounts = await query
+        .OrderByDescending(a => a.LastUsedAt)
+        .ThenByDescending(a => a.Id)
+        .Skip((current - 1) * size)
+        .Take(size)
+        .Select(a => new
+        {
+            a.Id, a.DeviceId, a.Label, a.Balance, a.IsBlocked, a.CreatedAt, a.LastUsedAt,
+        })
+        .ToListAsync(ct);
+
+    var ids = accounts.Select(a => a.Id).ToList();
+    var usage = await db.Transactions.AsNoTracking()
+        .Where(t => ids.Contains(t.AccountId) && t.Delta < 0 && t.Reason != "admin_grant")
+        .GroupBy(t => t.AccountId)
+        .Select(g => new { AccountId = g.Key, Spent = -g.Sum(t => t.Delta), Calls = g.Count() })
+        .ToDictionaryAsync(u => u.AccountId, ct);
+
+    return Results.Ok(new
+    {
+        total,
+        page = current,
+        pageSize = size,
+        items = accounts.Select(a =>
+        {
+            var spent = usage.TryGetValue(a.Id, out var u) ? u.Spent : 0;
+            var calls = usage.TryGetValue(a.Id, out var u2) ? u2.Calls : 0;
+            return new
+            {
+                a.DeviceId, a.Label, a.Balance, a.IsBlocked,
+                CreatedAt = AsUtc(a.CreatedAt), LastUsedAt = AsUtc(a.LastUsedAt), spent, calls,
+            };
+        }),
+    });
+});
+
+admin.MapGet("/devices/{deviceId}/transactions", async (string deviceId, int? take, AppDbContext db,
+    CancellationToken ct) =>
+{
+    var account = await db.Accounts.AsNoTracking()
+        .FirstOrDefaultAsync(a => a.DeviceId == deviceId, ct)
+        ?? throw new ApiException(404, "account_not_found", "设备不存在");
+
+    var rows = await db.Transactions.AsNoTracking()
+        .Where(t => t.AccountId == account.Id)
+        .OrderByDescending(t => t.Id)
+        .Take(Math.Clamp(take ?? 50, 1, 200))
+        .ToListAsync(ct);
+
+    var items = rows.Select(t => new
+    {
+        t.Id, t.Delta, t.Reason, t.ModelId, t.InputTokens, t.OutputTokens, CreatedAt = AsUtc(t.CreatedAt),
+    });
+
+    return Results.Ok(new
+    {
+        deviceId = account.DeviceId,
+        label = account.Label,
+        balance = account.Balance,
+        isBlocked = account.IsBlocked,
+        items,
+    });
+});
+
+admin.MapPost("/devices/{deviceId}/block", async (string deviceId, BlockRequest req, AppDbContext db,
+    CancellationToken ct) =>
+{
+    if (req.Blocked is null) throw new ApiException(400, "invalid_block", "缺少封禁状态");
+
+    var account = await db.Accounts.FirstOrDefaultAsync(a => a.DeviceId == deviceId, ct)
+        ?? throw new ApiException(404, "account_not_found", "设备不存在");
+
+    account.IsBlocked = req.Blocked.Value;
+    await db.SaveChangesAsync(ct);
+    return Results.Ok(new { deviceId = account.DeviceId, isBlocked = account.IsBlocked });
+});
+
+var adminIndex = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
+    "admin", "index.html");
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.MapFallback(async (HttpContext context) =>
+{
+    if (!context.Request.Path.StartsWithSegments("/admin") || !File.Exists(adminIndex))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(adminIndex);
+});
+
 app.Run();
+
+// SQLite 读出来的 DateTime 没有 Kind，统一按 UTC 输出，避免前端当成本地时间
+static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 
 static string? Bearer(HttpRequest request) =>
     request.Headers.Authorization.ToString().Replace("Bearer ", "").Trim() is { Length: > 0 } v ? v : null;
@@ -410,6 +704,10 @@ public record ChatMessageDto(string Role, string Content, List<string>? Images);
 public record ChatRequest(string Model, List<ChatMessageDto>? Messages, string? System, int? MaxTokens);
 public record PolicyRequest(int? FreeCredits, bool? ChatEnabled, string? Notice);
 public record ModelRequest(string? DisplayName, bool? IsEnabled, int? InputRatePer1K, int? OutputRatePer1K,
-    int? MaxContextChars, int? SortOrder, bool? SupportsVision);
+    int? MaxContextChars, int? SortOrder, bool? SupportsVision, string? Note);
 public record GrantRequest(string DeviceId, int? Delta, string? Reason);
+public record BlockRequest(bool? Blocked);
 public record ProviderKeyRequest(string? Key);
+public record KeyEnvCreateRequest(string? Provider, string? EnvName, string? Key, string? Note, bool? Activate);
+public record KeyEnvUpdateRequest(string? EnvName, string? Key, bool? ClearKey, string? Note);
+public record DeprecateRequest(bool? Deprecated);
