@@ -19,32 +19,19 @@ public class CreditService(AppDbContext db)
         var existing = await db.Accounts.FirstOrDefaultAsync(a => a.DeviceId == deviceId, ct);
         if (existing is not null) return existing;
 
-        var policy = await GetPolicyAsync(ct);
+        // 新设备不再赠送积分：免费额度只在邮箱验证注册成功后发放到用户账号
         var account = new Account
         {
             DeviceId = deviceId,
             Label = label,
             Token = Guid.NewGuid().ToString("N"),
-            Balance = policy.FreeCredits,
+            Balance = 0,
             CreatedAt = DateTime.UtcNow,
             LastUsedAt = DateTime.UtcNow,
         };
 
         db.Accounts.Add(account);
         await db.SaveChangesAsync(ct);
-
-        if (policy.FreeCredits > 0)
-        {
-            db.Transactions.Add(new CreditTransaction
-            {
-                AccountId = account.Id,
-                Delta = policy.FreeCredits,
-                Reason = "free_grant",
-                CreatedAt = DateTime.UtcNow,
-            });
-            await db.SaveChangesAsync(ct);
-        }
-
         return account;
     }
 

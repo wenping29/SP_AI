@@ -10,19 +10,20 @@ namespace SpServer.Services;
 
 public record UserProfile(string Email, string DisplayName);
 
-public record AuthResult(string Token, int Balance, int MergedCredits, UserProfile User, string AccountDeviceId);
+public record AuthResult(string Token, int Balance, int MergedCredits, int GiftCredits, UserProfile User,
+    string AccountDeviceId);
 
 public record MeView(bool LoggedIn, string? Email, string? DisplayName, int Balance, string AccountDeviceId);
 
 // 普通用户账号：邮箱 + 密码。积分归账号，设备只负责拿令牌登录
-public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
+public class UserAuth(AppDbContext db, EmailVerification verification, ILogger<UserAuth> logger)
 {
     private static readonly PasswordHasher<User> Hasher = new();
     private static readonly Regex EmailPattern =
         new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
     public async Task<AuthResult> RegisterAsync(string? email, string? password, string? displayName,
-        string? deviceId, string? label, CancellationToken ct)
+        string? deviceId, string? label, string? code, CancellationToken ct)
     {
         var normalized = NormalizeEmail(email);
         if (normalized.Length is 0 or > 120 || !EmailPattern.IsMatch(normalized))
@@ -39,6 +40,12 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
             throw new ApiException(409, "email_exists", "该邮箱已注册，请直接登录");
         }
 
+        // 验证码在事务外校验并消费，避免并发注册时长时间占用写锁
+        await verification.VerifyAndConsumeAsync(normalized, code, ct);
+
+        var gift = (await db.Policies.AsNoTracking().FirstOrDefaultAsync(ct))?.FreeCredits ?? 0;
+        gift = Math.Max(0, gift);
+
         var now = DateTime.UtcNow;
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
@@ -46,6 +53,7 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
         {
             Email = normalized,
             DisplayName = NormalizeName(displayName, normalized),
+            EmailVerified = true,
             CreatedAt = now,
             LastLoginAt = now,
         };
@@ -67,13 +75,24 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
             DeviceId = NewAccountId(),
             Token = NewToken(),
             Label = normalized,
-            Balance = 0,
+            Balance = gift,
             UserId = user.Id,
             CreatedAt = now,
             LastUsedAt = now,
         };
         db.Accounts.Add(account);
         await db.SaveChangesAsync(ct);
+
+        if (gift > 0)
+        {
+            db.Transactions.Add(new CreditTransaction
+            {
+                AccountId = account.Id,
+                Delta = gift,
+                Reason = "free_grant",
+                CreatedAt = now,
+            });
+        }
 
         var anon = await EnsureAnonAccountAsync(deviceId, now, ct);
         await db.SaveChangesAsync(ct);
@@ -82,8 +101,9 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 
-        logger.LogInformation("用户 {Email} 注册成功，合并本机积分 {Merged}", normalized, merged);
-        return new AuthResult(session.Token, account.Balance, merged, ProfileOf(user), account.DeviceId);
+        logger.LogInformation("用户 {Email} 注册成功，赠送 {Gift} 积分，合并本机积分 {Merged}", normalized, gift,
+            merged);
+        return new AuthResult(session.Token, account.Balance, merged, gift, ProfileOf(user), account.DeviceId);
     }
 
     public async Task<AuthResult> LoginAsync(string? email, string? password, string? deviceId, string? label,
@@ -100,6 +120,10 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
         if (user is null || user.IsDisabled)
         {
             throw new ApiException(401, "bad_credentials", "邮箱或密码不正确");
+        }
+        if (!user.EmailVerified)
+        {
+            throw new ApiException(403, "email_not_verified", "邮箱尚未验证，请重新注册或联系管理员");
         }
 
         var verification = Hasher.VerifyHashedPassword(user, user.PasswordHash, pwd);
@@ -141,7 +165,7 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
         await tx.CommitAsync(ct);
 
         logger.LogInformation("用户 {Email} 登录成功，合并本机积分 {Merged}", user.Email, merged);
-        return new AuthResult(session.Token, account.Balance, merged, ProfileOf(user), account.DeviceId);
+        return new AuthResult(session.Token, account.Balance, merged, 0, ProfileOf(user), account.DeviceId);
     }
 
     // 退出登录：会话回落到本机匿名账号，换一个令牌继续可用
@@ -163,7 +187,7 @@ public class UserAuth(AppDbContext db, ILogger<UserAuth> logger)
 
         await db.SaveChangesAsync(ct);
 
-        return new AuthResult(current.Token, anon.Balance, 0, new UserProfile("", ""), anon.DeviceId);
+        return new AuthResult(current.Token, anon.Balance, 0, 0, new UserProfile("", ""), anon.DeviceId);
     }
 
     public async Task<MeView> MeAsync(string? token, CancellationToken ct)

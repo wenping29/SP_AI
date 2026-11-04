@@ -145,11 +145,18 @@ if (!s) {
     document.querySelector('[data-auth-tab="register"]').click();
     document.getElementById("authEmail").value = ${JSON.stringify(emailA)};
     document.getElementById("authPassword").value = ${JSON.stringify(password)};
-    document.getElementById("authSubmit").click();
+    document.getElementById("authSendCode").click();
   })()`);
+  const codeFilled = await waitFor(s, `document.getElementById("authCode")?.value.length === 6`, 15000);
+  check("注册页显示并自动填入验证码", !!codeFilled &&
+    !(await s.evaluate(`document.getElementById("authCodeRow").hidden`)),
+    await s.evaluate(`document.getElementById("authError")?.hidden ? "ok" : document.getElementById("authError").textContent`));
+  await s.evaluate(`document.getElementById("authSubmit").click()`);
   const registered = await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`);
   check("注册成功", !!registered, await s.evaluate(`document.getElementById("authError")?.textContent`));
   await waitFor(s, `document.getElementById("status")?.textContent.includes("聊天记录已同步")`, 15000);
+  const regStatus = await s.evaluate(`document.getElementById("status")?.textContent || ""`);
+  check("注册提示赠送 1000 积分", regStatus.includes("已赠送 1000 积分"), regStatus);
 
   const serverList = async () => s.evaluate(`(async () => {
     const { token, server } = await chrome.storage.local.get(["token", "server"]);
@@ -276,8 +283,10 @@ if (!s) {
     document.querySelector('[data-auth-tab="register"]').click();
     document.getElementById("authEmail").value = ${JSON.stringify(emailB)};
     document.getElementById("authPassword").value = ${JSON.stringify(password)};
-    document.getElementById("authSubmit").click();
+    document.getElementById("authSendCode").click();
   })()`);
+  await waitFor(s, `document.getElementById("authCode")?.value.length === 6`, 15000);
+  await s.evaluate(`document.getElementById("authSubmit").click()`);
   await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`);
   await waitFor(s, `document.getElementById("status")?.textContent.includes("聊天记录已同步")`);
   const afterSwitch = await s.evaluate(`(async () => {

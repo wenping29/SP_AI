@@ -45,6 +45,8 @@ builder.Services.AddScoped<AdminAccounts>();
 builder.Services.AddScoped<UserAuth>();
 builder.Services.AddScoped<MemberAdmin>();
 builder.Services.AddScoped<ConversationStore>();
+builder.Services.AddScoped<EmailSender>();
+builder.Services.AddScoped<EmailVerification>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
@@ -171,6 +173,33 @@ using (var scope = app.Services.CreateScope())
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_DeviceSessions_Token" ON "DeviceSessions" ("Token");
         CREATE INDEX IF NOT EXISTS "IX_DeviceSessions_AccountId" ON "DeviceSessions" ("AccountId");
         """);
+
+    // 邮箱注册验证码：只存哈希；老用户补 EmailVerified 列并按已验证处理
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "EmailCodes" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_EmailCodes" PRIMARY KEY AUTOINCREMENT,
+            "Email" TEXT NOT NULL,
+            "CodeHash" TEXT NOT NULL,
+            "Salt" TEXT NOT NULL,
+            "RequestIp" TEXT NOT NULL,
+            "Attempts" INTEGER NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "ExpiresAt" TEXT NOT NULL,
+            "ConsumedAt" TEXT NULL
+        );
+        CREATE INDEX IF NOT EXISTS "IX_EmailCodes_Email" ON "EmailCodes" ("Email");
+        CREATE INDEX IF NOT EXISTS "IX_EmailCodes_CreatedAt" ON "EmailCodes" ("CreatedAt");
+        """);
+
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """ALTER TABLE "Users" ADD COLUMN "EmailVerified" INTEGER NOT NULL DEFAULT 1;""");
+    }
+    catch (Exception ex)
+    {
+        logger.LogDebug(ex, "Users.EmailVerified 列已存在，跳过补列");
+    }
 
     // 登录用户的聊天记录：客户端整段上传，仅按账号同步
     await db.Database.ExecuteSqlRawAsync("""
@@ -309,9 +338,14 @@ app.MapPost("/api/device/register", async (RegisterRequest req, AppDbContext db,
     return Results.Ok(new { token = account.Token, balance = account.Balance, deviceId = account.DeviceId });
 });
 
-// 普通用户账号：注册/登录时把本机匿名积分并入账号，退出后回落到本机匿名账号
+// 普通用户账号：注册需邮箱验证码，注册成功后积分归账号；退出后回落到本机匿名账号
+app.MapPost("/api/auth/email-code", async (EmailCodeRequest req, HttpContext http, EmailVerification email,
+    CancellationToken ct) =>
+    Results.Ok(await email.SendAsync(req.Email, http.Connection.RemoteIpAddress?.ToString(), ct)));
+
 app.MapPost("/api/auth/register", async (AuthRegisterRequest req, UserAuth auth, CancellationToken ct) =>
-    Results.Ok(await auth.RegisterAsync(req.Email, req.Password, req.DisplayName, req.DeviceId, req.Label, ct)));
+    Results.Ok(await auth.RegisterAsync(req.Email, req.Password, req.DisplayName, req.DeviceId, req.Label,
+        req.Code, ct)));
 
 app.MapPost("/api/auth/login", async (AuthLoginRequest req, UserAuth auth, CancellationToken ct) =>
     Results.Ok(await auth.LoginAsync(req.Email, req.Password, req.DeviceId, req.Label, ct)));
@@ -1128,7 +1162,8 @@ static string ClampLength(string text, int max) =>
 
 public record RegisterRequest(string DeviceId, string? Label);
 public record AuthRegisterRequest(string? Email, string? Password, string? DisplayName, string? DeviceId,
-    string? Label);
+    string? Label, string? Code);
+public record EmailCodeRequest(string? Email);
 public record AuthLoginRequest(string? Email, string? Password, string? DeviceId, string? Label);
 public record ChatMessageDto(string Role, string Content, List<string>? Images);
 public record ChatRequest(string Model, List<ChatMessageDto>? Messages, string? System, int? MaxTokens);

@@ -11,7 +11,7 @@
 - 读取当前页面正文、截图提问、图片问答、语音输入
 - 国产大模型切换，按「高性价比 / 高级 / 最智能」等分类分组展示
 - 积分余额与流水展示，模型不可用时明确提示
-- 邮箱账号登录/注册，积分和聊天记录跟随账号；未登录可匿名试用，登录后合并本机积分与本机聊天记录
+- 邮箱验证码注册与登录，积分和聊天记录跟随账号；未登录可匿名试用，登录后合并本机积分与本机聊天记录
 
 **服务端网关**
 - 统一代理智谱、DeepSeek、阿里云百炼、百度千帆、硅基流动
@@ -207,12 +207,50 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 
 ## 计费规则
 
-- 新设备注册赠送积分由“运营策略”里的 `FreeCredits` 决定（默认 1000）
+- 新设备注册不再赠送积分；邮箱验证码注册成功的新用户按“运营策略”里的 `FreeCredits` 发放一次（默认 1000）
 - 文本按千 token 向上取整计费：`ceil(tokens / 1000) × 单价`，输入与输出分别计算
 - 图片按约 800 token/张估算；语音转写按次固定扣分
 - 对话失败或用户中止时按实际用量结算，多预扣部分自动退回
 - 后台手工调分（增加/扣减/设为余额）计入流水，但不计入“累计消耗/调用次数”
 - 模型单价、上下文上限、启用状态与分类都在后台“模型管理”中维护
+
+## 邮箱验证
+
+注册账号需要先获取邮箱验证码：
+
+- 验证码为 6 位数字，默认 10 分钟有效，校验通过后立即作废
+- 同一邮箱 60 秒内只能发一次，每小时最多 5 次；同一 IP 每小时最多 20 次；单个验证码最多尝试 5 次
+- 验证码只存 SHA-256 哈希，不落明文
+- 新设备匿名账号余额为 0，注册成功后才发放赠送积分，避免反复换设备刷额度
+
+邮件通过 SMTP 发送，配置在 `server/appsettings.json` 的 `Email` 段，或使用 `Email__*` 环境变量覆盖：
+
+| 配置项 | 说明 | 默认 |
+| --- | --- | --- |
+| `Email:Enabled` | 是否启用 SMTP 发送 | `false` |
+| `Email:Host` | SMTP 服务器，如 `smtp.qq.com` | 空 |
+| `Email:Port` | 端口，常见 465 / 587 | `465` |
+| `Email:UseImplicitTls` | 465 隐式 TLS 设为 `true`；587/25 走 STARTTLS 设为 `false` | `true` |
+| `Email:User` | SMTP 登录账号 | 空 |
+| `Email:Password` | SMTP 密码或授权码，建议只用环境变量注入 | 空 |
+| `Email:From` | 发件地址，留空则用 `Email:User` | 空 |
+| `Email:FromName` | 发件人显示名 | `SP 助手` |
+| `Email:CodeMinutes` | 验证码有效期（分钟） | `10` |
+| `Email:ExposeDevCode` | 未配置 SMTP 时在接口响应里返回验证码，仅限本地开发 | `false` |
+
+示例（密码不要写进仓库）：
+
+```bash
+Email__Enabled=true \
+Email__Host=smtp.qq.com \
+Email__Port=465 \
+Email__User=you@qq.com \
+Email__Password=邮箱授权码 \
+Email__From=you@qq.com \
+dotnet run
+```
+
+未配置 SMTP 时 `/api/auth/email-code` 会返回 503 `email_not_configured`，注册不可用；本地联调可临时设置 `Email__ExposeDevCode=true`，接口会直接带回 `devCode`。
 
 ## 聊天记录同步
 
@@ -232,7 +270,8 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 | POST | `/api/device/register` | 设备注册，返回访问 token 与初始余额 |
 | GET | `/api/config` | 模型列表、费率、公告、语音配置 |
 | GET | `/api/credits` | 当前余额与最近流水 |
-| POST | `/api/auth/register`、`/api/auth/login`、`/api/auth/logout`、`/api/auth/me` | 账号注册、登录、退出与当前账号 |
+| POST | `/api/auth/email-code` | 发送邮箱注册验证码 |
+| POST | `/api/auth/register`、`/api/auth/login`、`/api/auth/logout`、`/api/auth/me` | 账号注册（需验证码）、登录、退出与当前账号 |
 | GET | `/api/conversations` | 当前账号的聊天记录列表（需账号登录，匿名设备不可用） |
 | GET / PUT / DELETE | `/api/conversations/{clientId}` | 读取、整段上传或删除单个会话 |
 | POST | `/api/chat` | 对话（SSE 流式） |

@@ -22,8 +22,24 @@ public class User
     public string PasswordHash { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public bool IsDisabled { get; set; }
+    // 老账号迁移时默认视为已验证；新注册必须通过邮箱验证码
+    public bool EmailVerified { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime LastLoginAt { get; set; }
+}
+
+// 邮箱注册验证码：只存哈希，限时有效，校验通过后标记已消费
+public class EmailCode
+{
+    public int Id { get; set; }
+    public string Email { get; set; } = "";
+    public string CodeHash { get; set; } = "";
+    public string Salt { get; set; } = "";
+    public string RequestIp { get; set; } = "";
+    public int Attempts { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public DateTime? ConsumedAt { get; set; }
 }
 
 // 设备登录态：令牌指向账号；退出登录时回落到该设备的匿名账号

@@ -34,9 +34,17 @@ const clientId = randomUUID();
 
 // 设备 A 注册账号
 const anonA = await api("/api/device/register", { method: "POST", body: { deviceId: dA, label: "设备 A" } });
+const codeA = await api("/api/auth/email-code", { method: "POST", body: { email: emailA } });
 const regA = await api("/api/auth/register", {
   method: "POST",
-  body: { email: emailA, password, displayName: "记录用户 A", deviceId: dA, label: "设备 A" },
+  body: {
+    email: emailA,
+    password,
+    displayName: "记录用户 A",
+    deviceId: dA,
+    label: "设备 A",
+    code: codeA.data?.devCode,
+  },
 });
 const tokenA = regA.data?.token;
 check("设备 A 注册账号", regA.status === 200 && !!tokenA, { status: regA.status });
@@ -102,9 +110,17 @@ check("更新后设备 A 看到新版本", listA2.data?.[0]?.title === "第一�
 
 // 账号 B 隔离
 await api("/api/device/register", { method: "POST", body: { deviceId: dC, label: "设备 C" } });
+const codeB = await api("/api/auth/email-code", { method: "POST", body: { email: emailB } });
 const regB = await api("/api/auth/register", {
   method: "POST",
-  body: { email: emailB, password, displayName: "记录用户 B", deviceId: dC, label: "设备 C" },
+  body: {
+    email: emailB,
+    password,
+    displayName: "记录用户 B",
+    deviceId: dC,
+    label: "设备 C",
+    code: codeB.data?.devCode,
+  },
 });
 const tokenBUser = regB.data?.token;
 const listOther = await api("/api/conversations", { token: tokenBUser });

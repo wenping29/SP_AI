@@ -134,9 +134,18 @@ if (!found) {
       return {
         title: document.getElementById("authTitle").textContent,
         nameRowVisible: !document.getElementById("authNameRow").hidden,
+        codeRowVisible: !document.getElementById("authCodeRow").hidden,
         submitText: document.getElementById("authSubmit").textContent,
       };
     })()`).then((v) => { out.registerMode = v; });
+
+    // 发送邮箱验证码（测试服务器 ExposeDevCode 会自动填入）
+    await s.evaluate(`document.getElementById("authSendCode").click()`);
+    await waitFor(s, `document.getElementById("authCode")?.value.length === 6`, 12000);
+    out.codeSent = await s.evaluate(`({
+      value: document.getElementById("authCode").value,
+      status: document.getElementById("status").textContent,
+    })`);
 
     await s.evaluate(`document.getElementById("authSubmit").click()`);
     await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`, 15000);

@@ -49,15 +49,15 @@ export default function PolicySettings() {
         运营策略
       </Typography.Title>
       <Typography.Paragraph className="page-desc">
-        控制新设备赠送积分、聊天总开关与全局公告，保存后立即对插件生效。
+        控制新用户注册赠送积分、聊天总开关与全局公告，保存后立即对插件生效。
       </Typography.Paragraph>
 
       <Alert
         type="info"
         showIcon
         style={{ marginBottom: 20 }}
-        message="免费积分只影响之后注册的新设备"
-        description="已有设备的余额请到「设备管理」里单独调整，否则修改这里不会改变老用户的积分。"
+        message="免费积分只在邮箱验证注册成功后发放一次"
+        description="新设备注册不再赠送积分，避免反复换设备刷额度。已有账号的余额请到「用户管理」或「设备管理」里单独调整。"
       />
 
       <Card
@@ -77,9 +77,9 @@ export default function PolicySettings() {
         >
           <Form.Item
             name="freeCredits"
-            label="新设备免费积分"
-            rules={[{ required: true, message: '请输入免费积分' }]}
-            extra="设备首次注册时直接发放到余额，同时写入一条「注册赠送」流水。"
+            label="新用户注册赠送积分"
+            rules={[{ required: true, message: '请输入赠送积分' }]}
+            extra="邮箱验证通过并注册成功后发放一次，同时写入一条「注册赠送」流水；新设备注册不再赠送。"
           >
             <InputNumber min={0} max={1000000} precision={0} style={{ width: '100%' }} />
           </Form.Item>

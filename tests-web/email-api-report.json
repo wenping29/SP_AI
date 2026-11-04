@@ -1,0 +1,167 @@
+{
+  "checks": [
+    {
+      "name": "新设备注册余额为 0",
+      "ok": true,
+      "detail": {
+        "token": "902bed2e3a5c460fbe189f7afc58ea27",
+        "balance": 0,
+        "deviceId": "0bb3dab1-190d-48fc-bd77-50fe4027a99f"
+      }
+    },
+    {
+      "name": "新设备没有注册赠送流水",
+      "ok": true,
+      "detail": {
+        "balance": 0,
+        "deviceId": "0bb3dab1-190d-48fc-bd77-50fe4027a99f",
+        "transactions": []
+      }
+    },
+    {
+      "name": "发送验证码",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "data": {
+          "expiresIn": 600,
+          "devCode": "676073"
+        }
+      }
+    },
+    {
+      "name": "60 秒内重复发送被限流",
+      "ok": true,
+      "detail": {
+        "status": 429,
+        "code": "code_too_frequent"
+      }
+    },
+    {
+      "name": "缺少验证码被拒绝",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "code_required"
+      }
+    },
+    {
+      "name": "错误验证码被拒绝",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "code_invalid"
+      }
+    },
+    {
+      "name": "邮箱验证注册成功",
+      "ok": true,
+      "detail": {
+        "token": "9jAN5-5gNGf-NfRmotTCjdZcH7MFsD3NHWZfogVHrsA",
+        "balance": 1000,
+        "mergedCredits": 0,
+        "giftCredits": 1000,
+        "user": {
+          "email": "mail-a-1793789691067@example.com",
+          "displayName": "邮箱用户"
+        },
+        "accountDeviceId": "u06c187a56dc14f3d9687f766e8949b4b"
+      }
+    },
+    {
+      "name": "新用户获得 1000 积分",
+      "ok": true,
+      "detail": {
+        "gift": 1000,
+        "balance": 1000
+      }
+    },
+    {
+      "name": "设备 0 积分时不产生合并",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "注册后可正常登录",
+      "ok": true,
+      "detail": {
+        "token": "CiZCK10IWk1tcm4YdcbTmWPFqoEHbwE1drAC40SKQCo",
+        "balance": 1000,
+        "mergedCredits": 0,
+        "giftCredits": 0,
+        "user": {
+          "email": "mail-a-1793789691067@example.com",
+          "displayName": "邮箱用户"
+        },
+        "accountDeviceId": "u06c187a56dc14f3d9687f766e8949b4b"
+      }
+    },
+    {
+      "name": "验证码不能跨邮箱复用",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "code_invalid"
+      }
+    },
+    {
+      "name": "已注册邮箱不能再获取注册验证码",
+      "ok": true,
+      "detail": {
+        "status": 409
+      }
+    },
+    {
+      "name": "验证码错误次数超限后锁定",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "code_attempts"
+      }
+    },
+    {
+      "name": "管理员调整注册赠送额度",
+      "ok": true,
+      "detail": {
+        "freeCredits": 50,
+        "chatEnabled": true,
+        "notice": "",
+        "updatedAt": "2026-11-04T10:54:51.8438514Z"
+      }
+    },
+    {
+      "name": "按策略发放 50 积分",
+      "ok": true,
+      "detail": {
+        "gift": 50,
+        "balance": 50
+      }
+    },
+    {
+      "name": "管理员可创建用户",
+      "ok": true,
+      "detail": {
+        "id": 3,
+        "email": "mail-admin-1793789691067@example.com",
+        "displayName": "后台创建用户",
+        "isBlocked": false,
+        "balance": 0,
+        "deviceCount": 0,
+        "createdAt": "2026-11-04T10:54:51.917746Z",
+        "lastLoginAt": null
+      }
+    },
+    {
+      "name": "管理员创建的用户可直接登录",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    }
+  ],
+  "summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0
+  }
+}

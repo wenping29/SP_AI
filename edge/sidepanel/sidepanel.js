@@ -151,6 +151,9 @@ const els = {
   authName: document.getElementById("authName"),
   authNameRow: document.getElementById("authNameRow"),
   authPassword: document.getElementById("authPassword"),
+  authCodeRow: document.getElementById("authCodeRow"),
+  authCode: document.getElementById("authCode"),
+  authSendCode: document.getElementById("authSendCode"),
   authError: document.getElementById("authError"),
   authTip: document.getElementById("authTip"),
   authSubmit: document.getElementById("authSubmit"),
@@ -2256,17 +2259,45 @@ els.closeCredits.addEventListener("click", () => els.creditsDialog.close());
 
 // ---------- 用户账号：登录 / 注册 / 退出 ----------
 
+let authCodeTimer = 0;
+let authCodeLeft = 0;
+
+function resetCodeButton() {
+  clearInterval(authCodeTimer);
+  authCodeTimer = 0;
+  authCodeLeft = 0;
+  els.authSendCode.disabled = false;
+  els.authSendCode.textContent = "发送验证码";
+}
+
+function startCodeCountdown(seconds) {
+  clearInterval(authCodeTimer);
+  authCodeLeft = Math.max(1, seconds);
+  els.authSendCode.disabled = true;
+  els.authSendCode.textContent = `重新发送(${authCodeLeft})`;
+  authCodeTimer = setInterval(() => {
+    authCodeLeft -= 1;
+    if (authCodeLeft <= 0) {
+      resetCodeButton();
+      return;
+    }
+    els.authSendCode.textContent = `重新发送(${authCodeLeft})`;
+  }, 1000);
+}
+
 function setAuthMode(mode) {
   state.authMode = mode;
   const register = mode === "register";
   els.authTitle.textContent = register ? "注册账号" : "登录账号";
   els.authSubmit.textContent = register ? "注册并登录" : "登录";
   els.authNameRow.hidden = !register;
+  els.authCodeRow.hidden = !register;
   els.authPassword.autocomplete = register ? "new-password" : "current-password";
   els.authTip.textContent = register
-    ? "注册后积分归账号所有，本机还没用完的积分会自动并入。"
-    : "登录后积分与充值记录跟随账号，换设备登录同一账号即可继续使用。";
+    ? "注册需要邮箱验证码，验证通过后新用户积分归账号所有，本机剩余积分也会并入。"
+    : "登录后积分、充值记录和聊天记录跟随账号，换设备登录同一账号即可继续使用。";
   els.authError.hidden = true;
+  resetCodeButton();
   for (const tab of els.authDialog.querySelectorAll("[data-auth-tab]")) {
     tab.classList.toggle("active", tab.dataset.authTab === mode);
   }
@@ -2278,6 +2309,7 @@ function openAuthDialog(mode = "login") {
   els.authEmail.value = "";
   els.authName.value = "";
   els.authPassword.value = "";
+  els.authCode.value = "";
   els.authSubmit.disabled = false;
   els.authDialog.showModal();
   setTimeout(() => els.authEmail.focus(), 0);
@@ -2288,12 +2320,43 @@ function showAuthError(text) {
   els.authError.hidden = false;
 }
 
+async function sendEmailCode() {
+  const email = els.authEmail.value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return showAuthError("请先填写有效的邮箱地址");
+  }
+  els.authError.hidden = true;
+  els.authSendCode.disabled = true;
+  try {
+    const response = await fetch(`${state.server}/api/auth/email-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await readJson(response);
+    const minutes = Math.max(1, Math.round((data.expiresIn || 600) / 60));
+    if (data.devCode) {
+      els.authCode.value = data.devCode;
+      setStatus(`验证码已生成（开发模式：${data.devCode}），${minutes} 分钟内有效`);
+    } else {
+      setStatus(`验证码已发送，请查收邮件（含垃圾箱），${minutes} 分钟内有效`);
+    }
+    startCodeCountdown(60);
+  } catch (err) {
+    els.authSendCode.disabled = false;
+    if (err instanceof TypeError) showAuthError(`连不上服务器：${state.server}`);
+    else showAuthError(err.message || "发送失败，请重试");
+  }
+}
+
 async function submitAuth() {
   const register = state.authMode === "register";
   const email = els.authEmail.value.trim();
   const password = els.authPassword.value;
+  const code = els.authCode.value.trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthError("请输入有效的邮箱地址");
   if (password.length < 8) return showAuthError("密码至少 8 位");
+  if (register && !/^\d{6}$/.test(code)) return showAuthError("请输入 6 位邮箱验证码");
 
   els.authError.hidden = true;
   els.authSubmit.disabled = true;
@@ -2304,6 +2367,7 @@ async function submitAuth() {
       body: JSON.stringify({
         email,
         password,
+        code: register ? code : "",
         displayName: register ? els.authName.value.trim() : "",
         deviceId: state.deviceId,
         label: state.label || "Edge 扩展",
@@ -2316,12 +2380,14 @@ async function submitAuth() {
     state.balance = data.balance;
     await saveState({ token: state.token, user: state.user });
     els.authDialog.close();
+    resetCodeButton();
     renderBalance();
     renderAccountCard();
     refreshCredits().catch(() => {});
     const synced = await syncConversations().catch(() => false);
+    const gift = register && data.giftCredits > 0 ? `，已赠送 ${data.giftCredits} 积分` : "";
     const merged = data.mergedCredits > 0 ? `，已合并本机 ${data.mergedCredits} 积分` : "";
-    setStatus(`${register ? "注册成功" : "已登录"}${merged}${synced ? "，聊天记录已同步" : ""}`);
+    setStatus(`${register ? "注册成功" : "已登录"}${gift}${merged}${synced ? "，聊天记录已同步" : ""}`);
   } catch (err) {
     els.authSubmit.disabled = false;
     if (err instanceof TypeError) showAuthError(`连不上服务器：${state.server}`);
@@ -2372,7 +2438,9 @@ els.authDialog.addEventListener("click", (event) => {
   if (tab) setAuthMode(tab.dataset.authTab);
 });
 els.authSubmit.addEventListener("click", () => submitAuth());
+els.authSendCode.addEventListener("click", () => sendEmailCode());
 els.authCancel.addEventListener("click", () => els.authDialog.close());
+els.authDialog.addEventListener("close", resetCodeButton);
 els.authDialog.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && event.target.tagName === "INPUT") {
     event.preventDefault();

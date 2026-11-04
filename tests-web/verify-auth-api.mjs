@@ -30,10 +30,19 @@ const anon1 = await api("/api/device/register", {
 });
 out.anon1 = anon1;
 
-// 2) 注册用户（本机 1000 积分应并入）
+// 2) 邮箱验证码注册（本机为 0 积分，赠送直接进账号）
+const emailCode = await api("/api/auth/email-code", { method: "POST", body: { email } });
+out.emailCode = emailCode;
 const reg = await api("/api/auth/register", {
   method: "POST",
-  body: { email, password, displayName: "测试用户", deviceId: d1, label: "测试设备一" },
+  body: {
+    email,
+    password,
+    displayName: "测试用户",
+    deviceId: d1,
+    label: "测试设备一",
+    code: emailCode.data?.devCode,
+  },
 });
 out.register = reg;
 
@@ -84,15 +93,22 @@ out.shortPassword = await api("/api/auth/register", {
   method: "POST",
   body: { email: `x-${Date.now()}@example.com`, password: "123", deviceId: d1 },
 });
+out.missingCode = await api("/api/auth/register", {
+  method: "POST",
+  body: { email: `nocode-${Date.now()}@example.com`, password, deviceId: d1 },
+});
 
 const ok = {
-  anonBalance: anon1.data?.balance === 1000,
-  registerMerged: reg.status === 200 && reg.data?.mergedCredits === 1000 && reg.data?.balance === 1000,
+  anonBalance: anon1.data?.balance === 0,
+  anon2Balance: anon2.data?.balance === 0,
+  codeSent: emailCode.status === 200 && /^\d{6}$/.test(emailCode.data?.devCode || ""),
+  registerGift: reg.status === 200 && reg.data?.giftCredits === 1000 &&
+    reg.data?.mergedCredits === 0 && reg.data?.balance === 1000,
   accountIdSynthetic: /^u[0-9a-f]{32}$/.test(reg.data?.accountDeviceId || ""),
   meLoggedIn: out.meLoggedIn.data?.loggedIn === true && out.meLoggedIn.data?.email === email,
   creditsShared: out.creditsUser.data?.balance === 1000,
-  login2Merged: login2.data?.mergedCredits === 1000 && login2.data?.balance === 2000,
-  device1SeesShared: out.creditsDevice1.data?.balance === 2000,
+  login2Merged: login2.data?.mergedCredits === 0 && login2.data?.balance === 1000,
+  device1SeesShared: out.creditsDevice1.data?.balance === 1000,
   logoutAnon: logout2.status === 200 && logout2.data?.balance === 0 &&
     logout2.data?.accountDeviceId === d2,
   meAfterLogout: out.meAfterLogout.data?.loggedIn === false,
@@ -102,6 +118,7 @@ const ok = {
   duplicate409: out.duplicateEmail.status === 409,
   badEmail400: out.badEmail.status === 400,
   shortPassword400: out.shortPassword.status === 400,
+  missingCode400: out.missingCode.status === 400 && out.missingCode.data?.code === "code_required",
 };
 out.checks = ok;
 out.allPassed = Object.values(ok).every(Boolean);
