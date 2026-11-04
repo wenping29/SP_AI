@@ -43,6 +43,7 @@ builder.Services.AddScoped<CreditService>();
 builder.Services.AddScoped<AdminAuth>();
 builder.Services.AddScoped<AdminAccounts>();
 builder.Services.AddScoped<UserAuth>();
+builder.Services.AddScoped<MemberAdmin>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
@@ -896,11 +897,11 @@ admin.MapPost("/devices/{deviceId}/block", async (string deviceId, BlockRequest 
 
 // 管理员账号：新增、修改、删除；自己不能删自己、不能停用自己
 admin.MapGet("/users", async (AdminAccounts accounts, CancellationToken ct) =>
-    Results.Ok(await accounts.ListUsersAsync(ct))).RequireAdmin("users.view");
+    Results.Ok(await accounts.ListUsersAsync(ct))).RequireAdmin("admins.view");
 
 admin.MapPost("/users", async (AdminUserCreateRequest req, AdminAccounts accounts, CancellationToken ct) =>
     Results.Ok(await accounts.CreateUserAsync(req.Username, req.DisplayName, req.RoleId, req.Password, ct)))
-    .RequireAdmin("users.manage");
+    .RequireAdmin("admins.manage");
 
 admin.MapPut("/users/{id:int}", async (int id, AdminUserUpdateRequest req, HttpContext http,
     AdminAccounts accounts, CancellationToken ct) =>
@@ -908,7 +909,7 @@ admin.MapPut("/users/{id:int}", async (int id, AdminUserUpdateRequest req, HttpC
     var current = (AdminIdentity)http.Items[AdminAuth.IdentityItem]!;
     return Results.Ok(await accounts.UpdateUserAsync(id, req.DisplayName, req.RoleId, req.Password,
         req.IsDisabled, current, ct));
-}).RequireAdmin("users.manage");
+}).RequireAdmin("admins.manage");
 
 admin.MapDelete("/users/{id:int}", async (int id, HttpContext http, AdminAccounts accounts,
     CancellationToken ct) =>
@@ -916,11 +917,35 @@ admin.MapDelete("/users/{id:int}", async (int id, HttpContext http, AdminAccount
     var current = (AdminIdentity)http.Items[AdminAuth.IdentityItem]!;
     await accounts.DeleteUserAsync(id, current, ct);
     return Results.Ok(new { id, deleted = true });
+}).RequireAdmin("admins.manage");
+
+// 普通用户（插件端注册）：与管理员分表，支持新增、编辑、重置密码、封禁与删除
+admin.MapGet("/members", async (string? q, int? page, int? pageSize, MemberAdmin members,
+    CancellationToken ct) =>
+    Results.Ok(await members.ListAsync(q, page ?? 1, pageSize ?? 20, ct))).RequireAdmin("users.view");
+
+admin.MapPost("/members", async (MemberCreateRequest req, MemberAdmin members, CancellationToken ct) =>
+    Results.Ok(await members.CreateAsync(req.Email, req.DisplayName, req.Password, ct)))
+    .RequireAdmin("users.manage");
+
+admin.MapPut("/members/{id:int}", async (int id, MemberUpdateRequest req, MemberAdmin members,
+    CancellationToken ct) =>
+    Results.Ok(await members.UpdateAsync(id, req.Email, req.DisplayName, req.Password, ct)))
+    .RequireAdmin("users.manage");
+
+admin.MapPost("/members/{id:int}/block", async (int id, MemberBlockRequest req, MemberAdmin members,
+    CancellationToken ct) =>
+    Results.Ok(await members.BlockAsync(id, req.Blocked ?? false, ct))).RequireAdmin("users.manage");
+
+admin.MapDelete("/members/{id:int}", async (int id, MemberAdmin members, CancellationToken ct) =>
+{
+    await members.DeleteAsync(id, ct);
+    return Results.Ok(new { id, deleted = true });
 }).RequireAdmin("users.manage");
 
-// 角色：列表同时给用户管理页选角色用，所以 users.manage 也能读
+// 角色：列表同时给管理员页选角色用，所以 admins.manage 也能读
 admin.MapGet("/roles", async (AdminAccounts accounts, CancellationToken ct) =>
-    Results.Ok(await accounts.ListRolesAsync(ct))).RequireAdmin("roles.view", "users.manage");
+    Results.Ok(await accounts.ListRolesAsync(ct))).RequireAdmin("roles.view", "admins.manage");
 
 admin.MapPost("/roles", async (AdminRoleRequest req, AdminAccounts accounts, CancellationToken ct) =>
     Results.Ok(await accounts.CreateRoleAsync(req.Name, req.Description, req.Permissions, ct)))
@@ -1077,3 +1102,6 @@ public record AdminLoginRequest(string? Username, string? Password);
 public record AdminUserCreateRequest(string? Username, string? DisplayName, int? RoleId, string? Password);
 public record AdminUserUpdateRequest(string? DisplayName, int? RoleId, string? Password, bool? IsDisabled);
 public record AdminRoleRequest(string? Name, string? Description, string[]? Permissions);
+public record MemberCreateRequest(string? Email, string? DisplayName, string? Password);
+public record MemberUpdateRequest(string? Email, string? DisplayName, string? Password);
+public record MemberBlockRequest(bool? Blocked);

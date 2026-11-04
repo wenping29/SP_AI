@@ -6,6 +6,7 @@ import {
   ControlOutlined,
   DashboardOutlined,
   DesktopOutlined,
+  IdcardOutlined,
   KeyOutlined,
   LogoutOutlined,
   MoneyCollectOutlined,
@@ -35,6 +36,7 @@ const menuEntries: MenuEntry[] = [
   { key: '/policy', icon: <ControlOutlined />, label: '运营策略', permission: 'policy.view' },
   { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理', permission: 'keyenvs.view' },
   { key: '/users', icon: <TeamOutlined />, label: '用户管理', permission: 'users.view' },
+  { key: '/admins', icon: <IdcardOutlined />, label: '管理员', permission: 'admins.view' },
   { key: '/roles', icon: <UserSwitchOutlined />, label: '角色管理', permission: 'roles.view' },
 ];
 

@@ -9,6 +9,7 @@ import ModelList from '@/pages/models/ModelList';
 import PolicySettings from '@/pages/policy/PolicySettings';
 import ProviderList from '@/pages/providers/ProviderList';
 import UserList from '@/pages/users/UserList';
+import AdminList from '@/pages/admins/AdminList';
 import RoleList from '@/pages/roles/RoleList';
 import Forbidden from '@/pages/Forbidden';
 import { useAuth } from '@/store/auth';
@@ -91,6 +92,14 @@ export const router = createBrowserRouter(
           element: (
             <RequirePermission permission="users.view">
               <UserList />
+            </RequirePermission>
+          ),
+        },
+        {
+          path: 'admins',
+          element: (
+            <RequirePermission permission="admins.view">
+              <AdminList />
             </RequirePermission>
           ),
         },

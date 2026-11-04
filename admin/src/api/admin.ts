@@ -218,6 +218,36 @@ export interface AdminRoleInput {
   permissions?: string[];
 }
 
+export interface Member {
+  id: number;
+  email: string;
+  displayName: string;
+  isBlocked: boolean;
+  balance: number;
+  deviceCount: number;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface MemberPage {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: Member[];
+}
+
+export interface MemberCreate {
+  email: string;
+  displayName?: string;
+  password: string;
+}
+
+export interface MemberUpdate {
+  email?: string;
+  displayName?: string;
+  password?: string;
+}
+
 export const adminApi = {
   login: (username: string, password: string) =>
     post<{ token: string; expiresAt: string; user: AdminIdentity }>('/admin/auth/login', {
@@ -308,4 +338,16 @@ export const adminApi = {
   updateRole: (id: number, data: AdminRoleInput) => put<AdminRole>(`/admin/roles/${id}`, data),
 
   deleteRole: (id: number) => del<{ id: number; deleted: boolean }>(`/admin/roles/${id}`),
+
+  members: (params: { q?: string; page: number; pageSize: number }) =>
+    get<MemberPage>('/admin/members', params),
+
+  createMember: (data: MemberCreate) => post<Member>('/admin/members', data),
+
+  updateMember: (id: number, data: MemberUpdate) => put<Member>(`/admin/members/${id}`, data),
+
+  blockMember: (id: number, blocked: boolean) =>
+    post<Member>(`/admin/members/${id}/block`, { blocked }),
+
+  deleteMember: (id: number) => del<{ id: number; deleted: boolean }>(`/admin/members/${id}`),
 };

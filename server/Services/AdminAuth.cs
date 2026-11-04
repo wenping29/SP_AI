@@ -21,6 +21,7 @@ public static class AdminPermissions
         "policy.view", "policy.manage",
         "keyenvs.view", "keyenvs.manage",
         "users.view", "users.manage",
+        "admins.view", "admins.manage",
         "roles.view", "roles.manage",
     ];
 

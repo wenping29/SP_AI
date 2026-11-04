@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Form,
   Input,
   Modal,
   Popconfirm,
-  Select,
   Space,
-  Switch,
   Table,
   Tag,
   Typography,
@@ -15,77 +13,65 @@ import {
 } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { adminApi, type AdminRole, type AdminUser } from '@/api/admin';
+import { adminApi, type Member, type MemberPage } from '@/api/admin';
 import { useAuth } from '@/store/auth';
 import { formatTime } from '@/utils/format';
 
-type EditorState = { mode: 'create' } | { mode: 'edit'; user: AdminUser } | null;
+type EditorState = { mode: 'create' } | { mode: 'edit'; member: Member } | null;
 
-interface UserFormValues {
-  username?: string;
+interface MemberFormValues {
+  email: string;
   displayName?: string;
-  roleId: number;
   password?: string;
-  isDisabled?: boolean;
 }
 
 export default function UserList() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [roles, setRoles] = useState<AdminRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [editor, setEditor] = useState<EditorState>(null);
+  const [data, setData] = useState<MemberPage>({ total: 0, page: 1, pageSize: 20, items: [] });
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [keyword, setKeyword] = useState('');
+  const [tick, setTick] = useState(0);
 
-  const [form] = Form.useForm<UserFormValues>();
+  const [editor, setEditor] = useState<EditorState>(null);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm<MemberFormValues>();
   const can = useAuth((s) => s.can);
-  const identity = useAuth((s) => s.identity);
   const canManage = can('users.manage');
 
-  const load = useCallback(async () => {
-    const userRows = await adminApi.users();
-    setUsers(userRows);
-    // 只有能管理用户时才需要角色下拉；纯查看角色无权读取 /roles
-    if (canManage) setRoles(await adminApi.roles());
-  }, [canManage]);
-
   useEffect(() => {
-    load()
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
-  }, [load]);
-
-  const refresh = () => {
+    let cancelled = false;
     setLoading(true);
-    load()
+    adminApi
+      .members({ q: keyword || undefined, page, pageSize })
+      .then((result) => {
+        if (!cancelled) setData(result);
+      })
       .catch(() => undefined)
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  const act = async (task: () => Promise<unknown>, success: string) => {
-    try {
-      await task();
-      message.success(success);
-      await load();
-    } catch {
-      // 请求拦截器已提示错误
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [keyword, page, pageSize, tick]);
+
+  const reload = () => setTick((value) => value + 1);
 
   const openCreate = () => {
     form.resetFields();
-    form.setFieldsValue({ roleId: roles[0]?.id, isDisabled: false });
+    form.setFieldsValue({});
     setEditor({ mode: 'create' });
   };
 
-  const openEdit = (user: AdminUser) => {
+  const openEdit = (member: Member) => {
     form.setFieldsValue({
-      username: user.username,
-      displayName: user.displayName,
-      roleId: user.roleId,
+      email: member.email,
+      displayName: member.displayName,
       password: '',
-      isDisabled: user.isDisabled,
     });
-    setEditor({ mode: 'edit', user });
+    setEditor({ mode: 'edit', member });
   };
 
   const submit = async () => {
@@ -94,25 +80,23 @@ export default function UserList() {
     setSaving(true);
     try {
       if (editor.mode === 'create') {
-        await adminApi.createUser({
-          username: values.username!.trim(),
+        await adminApi.createMember({
+          email: values.email.trim(),
           displayName: values.displayName?.trim() || undefined,
-          roleId: values.roleId,
           password: values.password!,
         });
-        message.success('管理员已新增');
+        message.success('用户已新增');
       } else {
-        await adminApi.updateUser(editor.user.id, {
+        await adminApi.updateMember(editor.member.id, {
+          email: values.email.trim(),
           displayName: values.displayName?.trim() ?? '',
-          roleId: values.roleId,
-          password: values.password ? values.password : undefined,
-          isDisabled: values.isDisabled,
+          password: values.password || undefined,
         });
-        message.success('管理员已更新');
+        message.success('用户已更新');
       }
 
       setEditor(null);
-      await load();
+      reload();
     } catch {
       // 校验失败或请求失败，提示已在表单/拦截器里显示
     } finally {
@@ -120,43 +104,53 @@ export default function UserList() {
     }
   };
 
-  const isSelf = (user: AdminUser) => identity?.id === user.id;
+  const toggleBlock = async (member: Member) => {
+    const result = await adminApi.blockMember(member.id, !member.isBlocked);
+    message.success(result.isBlocked ? '用户已封禁' : '用户已解封');
+    reload();
+  };
 
-  const columns: TableColumnsType<AdminUser> = [
+  const columns: TableColumnsType<Member> = [
     {
-      title: '管理员',
+      title: '用户',
       key: 'user',
-      width: 220,
+      width: 260,
       render: (_, row) => (
         <div>
           <Typography.Text strong>{row.displayName}</Typography.Text>
-          <div className="sub-text mono">{row.username}</div>
+          <div className="sub-text mono">{row.email}</div>
         </div>
       ),
     },
     {
-      title: '角色',
-      dataIndex: 'roleName',
-      width: 150,
-      render: (value: string) => <Tag color="geekblue">{value}</Tag>,
+      title: '状态',
+      dataIndex: 'isBlocked',
+      width: 100,
+      render: (value: boolean) =>
+        value ? <Tag color="red">已封禁</Tag> : <Tag color="green">正常</Tag>,
     },
     {
-      title: '状态',
-      dataIndex: 'isDisabled',
-      width: 110,
-      render: (value: boolean) =>
-        value ? <Tag color="red">已停用</Tag> : <Tag color="green">启用</Tag>,
+      title: '余额',
+      dataIndex: 'balance',
+      width: 100,
+      render: (value: number) => <Typography.Text strong>{value}</Typography.Text>,
+    },
+    {
+      title: '登录设备',
+      dataIndex: 'deviceCount',
+      width: 100,
+      render: (value: number) => `${value} 台`,
     },
     {
       title: '最近登录',
       dataIndex: 'lastLoginAt',
-      width: 180,
+      width: 170,
       render: (value: string | null) => formatTime(value),
     },
     {
-      title: '创建时间',
+      title: '注册时间',
       dataIndex: 'createdAt',
-      width: 180,
+      width: 170,
       render: (value: string) => formatTime(value),
     },
     ...(canManage
@@ -164,35 +158,44 @@ export default function UserList() {
           {
             title: '操作',
             key: 'actions',
-            width: 220,
-            render: (_: unknown, row: AdminUser) => (
-              <Space size={0} wrap>
+            width: 210,
+            render: (_: unknown, row: Member) => (
+              <Space size={0}>
                 <Button type="link" size="small" onClick={() => openEdit(row)}>
                   编辑
                 </Button>
-                <Button
-                  type="link"
-                  size="small"
-                  disabled={isSelf(row)}
-                  onClick={() =>
-                    act(
-                      () => adminApi.updateUser(row.id, { isDisabled: !row.isDisabled }),
-                      row.isDisabled ? '已启用该账号' : '已停用该账号',
-                    )
-                  }
-                >
-                  {row.isDisabled ? '启用' : '停用'}
-                </Button>
                 <Popconfirm
-                  title="删除该管理员？"
-                  description="删除后其登录会话立即失效，操作不可恢复。"
+                  title={row.isBlocked ? '确认解封该用户？' : '确认封禁该用户？'}
+                  description={
+                    row.isBlocked
+                      ? '解封后该用户可继续登录与调用模型。'
+                      : '封禁后该用户无法登录，已登录设备也会立即停止调用。'
+                  }
+                  onConfirm={() => toggleBlock(row)}
+                  okText="确认"
+                  cancelText="取消"
+                >
+                  <Button type="link" size="small" danger={!row.isBlocked}>
+                    {row.isBlocked ? '解封' : '封禁'}
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="删除该用户？"
+                  description="账号与积分流水一并删除，已登录设备回落为匿名状态，操作不可恢复。"
                   okText="删除"
                   okButtonProps={{ danger: true }}
                   cancelText="取消"
-                  disabled={isSelf(row)}
-                  onConfirm={() => act(() => adminApi.deleteUser(row.id), '已删除')}
+                  onConfirm={() =>
+                    adminApi
+                      .deleteMember(row.id)
+                      .then(() => {
+                        message.success('已删除');
+                        reload();
+                      })
+                      .catch(() => undefined)
+                  }
                 >
-                  <Button type="link" size="small" danger disabled={isSelf(row)}>
+                  <Button type="link" size="small" danger>
                     删除
                   </Button>
                 </Popconfirm>
@@ -209,16 +212,25 @@ export default function UserList() {
         用户管理
       </Typography.Title>
       <Typography.Paragraph className="page-desc">
-        管理后台登录账号；角色决定可访问的模块，密码只保存哈希。应急密钥不在此列表中。
+        插件端注册的普通用户，与后台管理员分表管理。可编辑资料、重置密码、封禁或删除。
       </Typography.Paragraph>
 
-      <Space wrap style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-        <Button icon={<ReloadOutlined />} onClick={refresh}>
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="搜索邮箱 / 昵称"
+          allowClear
+          style={{ width: 300 }}
+          onSearch={(value) => {
+            setPage(1);
+            setKeyword(value.trim());
+          }}
+        />
+        <Button icon={<ReloadOutlined />} onClick={reload}>
           刷新
         </Button>
         {canManage && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            新增管理员
+            新增用户
           </Button>
         )}
       </Space>
@@ -228,55 +240,46 @@ export default function UserList() {
         size="middle"
         loading={loading}
         columns={columns}
-        dataSource={users}
-        pagination={false}
+        dataSource={data.items}
+        scroll={{ x: 1100 }}
+        pagination={{
+          current: page,
+          pageSize,
+          total: data.total,
+          showSizeChanger: true,
+          showTotal: (total) => `共 ${total} 位用户`,
+          onChange: (nextPage, nextSize) => {
+            setPage(nextSize !== pageSize ? 1 : nextPage);
+            setPageSize(nextSize);
+          },
+        }}
       />
 
       <Modal
-        title={editor?.mode === 'edit' ? '编辑管理员' : '新增管理员'}
+        title={editor?.mode === 'edit' ? '编辑用户' : '新增用户'}
         open={!!editor}
         onOk={submit}
         confirmLoading={saving}
         onCancel={() => setEditor(null)}
         okText="保存"
         cancelText="取消"
+        width={480}
         forceRender
       >
         <Form form={form} layout="vertical" preserve={false}>
-          {editor?.mode === 'create' && (
-            <Form.Item
-              name="username"
-              label="用户名"
-              rules={[
-                { required: true, message: '请输入用户名' },
-                {
-                  pattern: /^[A-Za-z0-9_.-]{3,32}$/,
-                  message: '需为 3-32 位字母、数字、下划线、点或短横线',
-                },
-              ]}
-            >
-              <Input placeholder="登录用户名" autoComplete="off" />
-            </Form.Item>
-          )}
-
-          <Form.Item name="displayName" label="显示名称">
-            <Input placeholder="留空则使用用户名" maxLength={50} />
+          <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '请输入有效的邮箱地址' },
+            ]}
+          >
+            <Input placeholder="user@example.com" autoComplete="off" maxLength={120} />
           </Form.Item>
 
-          <Form.Item
-            name="roleId"
-            label="角色"
-            rules={[{ required: true, message: '请选择角色' }]}
-            extra={
-              editor?.mode === 'edit' && isSelf(editor.user)
-                ? '不能修改自己的角色，请让其他管理员操作'
-                : undefined
-            }
-          >
-            <Select
-              disabled={editor?.mode === 'edit' && isSelf(editor.user)}
-              options={roles.map((role) => ({ value: role.id, label: role.name }))}
-            />
+          <Form.Item name="displayName" label="昵称">
+            <Input placeholder="留空则使用邮箱前缀" maxLength={32} />
           </Form.Item>
 
           <Form.Item
@@ -295,21 +298,8 @@ export default function UserList() {
             ]}
             extra={editor?.mode === 'edit' ? '留空表示不修改密码' : '至少 8 位'}
           >
-            <Input.Password placeholder="登录密码" autoComplete="new-password" />
+            <Input.Password placeholder="登录密码" autoComplete="new-password" maxLength={72} />
           </Form.Item>
-
-          {editor?.mode === 'edit' && (
-            <Form.Item
-              name="isDisabled"
-              label="启用账号"
-              valuePropName="checked"
-              getValueProps={(value) => ({ checked: !value })}
-              getValueFromEvent={(checked: boolean) => !checked}
-              extra={isSelf(editor.user) ? '不能停用自己的账号' : undefined}
-            >
-              <Switch disabled={isSelf(editor.user)} />
-            </Form.Item>
-          )}
         </Form>
       </Modal>
     </div>
