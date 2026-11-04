@@ -60,6 +60,7 @@ builder.Services.AddCors();
 
 var app = builder.Build();
 var logger = app.Logger;
+var startedAt = DateTimeOffset.UtcNow;
 app.UseCors();
 
 using (var scope = app.Services.CreateScope())
@@ -688,6 +689,41 @@ admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationT
         policy.FreeCredits, policy.ChatEnabled, policy.Notice, UpdatedAt = AsUtc(policy.UpdatedAt),
     });
 }).RequireAdmin("policy.manage");
+
+// 服务器配置：邮件服务与允许来源，保存后立即生效（SMTP 环境变量仍然优先）
+admin.MapGet("/server", async (ServerConfig settings, IConfiguration cfg, IHostEnvironment env,
+    CancellationToken ct) => Results.Ok(await BuildServerViewAsync(settings, cfg, env, startedAt, ct)))
+    .RequireAdmin("server.view");
+
+admin.MapPut("/server", async (ServerSettingsRequest req, ServerConfig settings, IConfiguration cfg,
+    IHostEnvironment env, CancellationToken ct) =>
+{
+    await settings.SaveAsync(req, ct);
+    return Results.Ok(await BuildServerViewAsync(settings, cfg, env, startedAt, ct));
+}).RequireAdmin("server.manage");
+
+admin.MapPost("/server/test-email", async (TestEmailRequest req, EmailSender sender, IConfiguration cfg,
+    CancellationToken ct) =>
+{
+    var to = (req.To ?? "").Trim();
+    if (to.Length is 0 or > 120 || !to.Contains('@'))
+        throw new ApiException(400, "invalid_email", "请输入有效的收件邮箱");
+
+    var options = await sender.GetOptionsAsync(ct);
+    if (!EmailSender.IsConfigured(options))
+        throw new ApiException(400, "email_not_configured", "请先启用并填写 SMTP 服务器");
+
+    try
+    {
+        await sender.SendTestAsync(to, options, ct);
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+        throw new ApiException(502, "email_send_failed", $"测试邮件发送失败：{ex.Message}");
+    }
+
+    return Results.Ok(new { ok = true, to });
+}).RequireAdmin("server.manage");
 
 admin.MapGet("/models", async (AppDbContext db, CancellationToken ct) =>
     Results.Ok(await db.Models
