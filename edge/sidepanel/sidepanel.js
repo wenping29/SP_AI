@@ -15,6 +15,44 @@ const QUICK_ASKS = [
   { text: "解释其中的专业术语和缩写", page: false },
   { text: "列出这段文字里我需要自己核对的事实", page: false },
 ];
+const CAPABILITIES = {
+  skill: {
+    label: "技能",
+    icon: "sparkle",
+    hint: "给这条消息加一段处理指令",
+    items: [
+      { id: "summary", name: "精炼总结", desc: "先给结论，再列要点", prompt: "请先用一句话给出结论，再列出 3 到 6 条要点。" },
+      { id: "outline", name: "分段大纲", desc: "按层级整理结构", prompt: "请把内容整理成清晰的分段大纲，最多三级。" },
+      { id: "explain", name: "术语解释", desc: "把术语讲成白话", prompt: "请用通俗的中文解释其中的专业术语和缩写。" },
+      { id: "polish", name: "润色改写", desc: "更简洁、更正式", prompt: "请把内容改写得更简洁、更正式，并说明主要改动。" },
+      { id: "facts", name: "事实核对", desc: "标出待自行核实的事实", prompt: "请列出其中需要我自己核对的事实和依据。" },
+    ],
+  },
+  plugin: {
+    label: "插件",
+    icon: "plug",
+    hint: "给这条消息补充上下文",
+    items: [
+      { id: "page", name: "网页正文", desc: "带上当前页面正文提问", prompt: "" },
+      { id: "selection", name: "划选文字", desc: "带上网页里选中的那段", prompt: "" },
+      { id: "shot", name: "页面截图", desc: "发送时抓取可见区域", prompt: "" },
+    ],
+  },
+  plan: {
+    label: "计划",
+    icon: "plan",
+    hint: "先列步骤，再动手回答",
+    items: [
+      { id: "plan", name: "先出计划", desc: "先给分步计划再执行", prompt: "请先给出分步计划，再按计划逐步执行。" },
+    ],
+  },
+  goal: {
+    label: "目标",
+    icon: "target",
+    hint: "整个对话都围绕这个目标",
+    items: [],
+  },
+};
 const HISTORY_TURNS = 6;
 const MAX_SESSIONS = 30;
 const MAX_ATTACH_CHARS = 4_000_000;
@@ -32,7 +70,11 @@ const els = {
   selectionCard: document.getElementById("selectionCard"),
   selectionText: document.getElementById("selectionText"),
   runSelection: document.getElementById("runSelection"),
+  picks: document.getElementById("picks"),
   attachments: document.getElementById("attachments"),
+  btnAdd: document.getElementById("btnAdd"),
+  addMenu: document.getElementById("addMenu"),
+  menuBody: document.getElementById("menuBody"),
   input: document.getElementById("input"),
   model: document.getElementById("model"),
   btnShot: document.getElementById("btnShot"),
@@ -94,6 +136,8 @@ const state = {
   view: "chat",
   selection: "",
   attachments: [],
+  caps: { skills: [], plugins: [], plan: false },
+  menuTab: "skill",
   readPage: false,
   pageCache: null,
   controller: null,
@@ -158,6 +202,11 @@ const ICONS = {
   aZh: '<path d="M4 6h8"/><path d="M8 3.5V6"/><path d="M4.8 9.6c1.4 2.6 3.4 4.2 5.8 4.9"/><path d="M9.8 9.6C8.4 12.2 6.4 13.8 4 14.6"/><path d="M13.6 20l3.4-8 3.4 8"/><path d="M15 17h4"/>',
   coin: '<circle cx="12" cy="12" r="8.6"/><path d="M8.8 9.2h6.4M12 9.2v5.6M9.6 14.8h4.8"/>',
   wallet: '<rect x="3" y="6.6" width="18" height="12.8" rx="2.6"/><path d="M3 10.8h18"/><circle cx="16.6" cy="15" r="1.3"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  plug: '<path d="M9 4.5a2 2 0 0 1 4 0V6h3.5A1.5 1.5 0 0 1 18 7.5V11h-1.5a2 2 0 0 0 0 4H18v3.5a1.5 1.5 0 0 1-1.5 1.5H13v-1.5a2 2 0 0 0-4 0V20H5.5A1.5 1.5 0 0 1 4 18.5V15h1.5a2 2 0 0 0 0-4H4V7.5A1.5 1.5 0 0 1 5.5 6H9z"/>',
+  plan: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -188,6 +237,209 @@ function hydrateIcons(root = document) {
 }
 
 hydrateIcons();
+
+// ---------- 输入框能力：技能 / 插件 / 计划 / 目标 ----------
+
+function capItems(group) {
+  return CAPABILITIES[group].items;
+}
+
+function findCap(group, id) {
+  return capItems(group).find((item) => item.id === id) || null;
+}
+
+function selectedCaps(group) {
+  const key = group === "skill" ? "skills" : "plugins";
+  return state.caps[key].map((id) => findCap(group, id)).filter(Boolean);
+}
+
+function activeGoal() {
+  return (activeSession().goal || "").trim();
+}
+
+function setGoal(text) {
+  const session = activeSession();
+  session.goal = text.trim();
+  renderPicks();
+  saveSessions().catch(() => {});
+}
+
+function renderPicks() {
+  const picks = [];
+  for (const skill of selectedCaps("skill")) picks.push({ kind: "skill", id: skill.id, name: skill.name, icon: CAPABILITIES.skill.icon });
+  for (const plugin of selectedCaps("plugin")) picks.push({ kind: "plugin", id: plugin.id, name: plugin.name, icon: CAPABILITIES.plugin.icon });
+  if (state.caps.plan) picks.push({ kind: "plan", id: "plan", name: "先出计划", icon: CAPABILITIES.plan.icon });
+  const goal = activeGoal();
+  if (goal) picks.push({ kind: "goal", id: "goal", name: `目标：${clip(goal, 18)}`, icon: CAPABILITIES.goal.icon, tip: goal });
+
+  els.picks.textContent = "";
+  els.picks.hidden = picks.length === 0;
+  for (const pick of picks) {
+    const chip = document.createElement("span");
+    chip.className = "pick";
+    if (pick.tip) chip.dataset.tip = clip(pick.tip, 80);
+    const mark = document.createElement("i");
+    mark.className = "pick-ico";
+    mark.innerHTML = iconSvg(pick.icon);
+    const name = document.createElement("span");
+    name.className = "pick-name";
+    name.textContent = pick.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.title = `移除${pick.name}`;
+    remove.addEventListener("click", () => removeCap(pick.kind, pick.id));
+    chip.append(mark, name, remove);
+    els.picks.append(chip);
+  }
+}
+
+function capsNote() {
+  const parts = [];
+  const skills = selectedCaps("skill").map((item) => item.name);
+  const plugins = selectedCaps("plugin").map((item) => item.name);
+  if (skills.length) parts.push(`技能·${skills.join("、")}`);
+  if (plugins.length) parts.push(`插件·${plugins.join("、")}`);
+  if (state.caps.plan) parts.push("计划模式");
+  const goal = activeGoal();
+  if (goal) parts.push(`目标·${clip(goal, 16)}`);
+  return parts.join(" · ");
+}
+
+function removeCap(kind, id) {
+  if (kind === "goal") setGoal("");
+  else if (kind === "plan") state.caps.plan = false;
+  else if (kind === "skill") state.caps.skills = state.caps.skills.filter((item) => item !== id);
+  else state.caps.plugins = state.caps.plugins.filter((item) => item !== id);
+  renderPicks();
+  if (els.addMenu.hidden) return;
+  renderAddMenu();
+}
+
+function resetCaps() {
+  state.caps = { skills: [], plugins: [], plan: false };
+  renderPicks();
+}
+
+function toggleCap(group, id) {
+  if (group === "plan") {
+    state.caps.plan = !state.caps.plan;
+  } else {
+    const key = group === "skill" ? "skills" : "plugins";
+    const list = state.caps[key];
+    state.caps[key] = list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+  }
+  renderPicks();
+  renderAddMenu();
+}
+
+function menuRow({ icon, name, desc, on, onClick }) {
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = `menu-item${on ? " on" : ""}`;
+  const mark = document.createElement("span");
+  mark.className = "menu-ico";
+  mark.innerHTML = iconSvg(icon);
+  const text = document.createElement("span");
+  text.className = "menu-text";
+  const title = document.createElement("span");
+  title.className = "menu-name";
+  title.textContent = name;
+  const note = document.createElement("span");
+  note.className = "menu-desc";
+  note.textContent = desc;
+  text.append(title, note);
+  const check = document.createElement("span");
+  check.className = "menu-check";
+  check.innerHTML = iconSvg("check");
+  row.append(mark, text, check);
+  row.addEventListener("click", onClick);
+  return row;
+}
+
+function renderAddMenu() {
+  for (const tab of els.addMenu.querySelectorAll("[data-tab]")) {
+    const active = tab.dataset.tab === state.menuTab;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  }
+
+  els.menuBody.textContent = "";
+  const group = CAPABILITIES[state.menuTab];
+
+  if (state.menuTab === "goal") {
+    const wrap = document.createElement("div");
+    wrap.className = "menu-goal";
+    const hint = document.createElement("span");
+    hint.className = "menu-desc";
+    hint.textContent = group.hint;
+    const input = document.createElement("input");
+    input.id = "goalInput";
+    input.type = "text";
+    input.maxLength = 200;
+    input.placeholder = "例如：帮我判断这个方案值不值得推进";
+    input.value = activeGoal();
+    const row = document.createElement("div");
+    row.className = "row";
+    const save = document.createElement("button");
+    save.type = "button";
+    save.id = "goalSave";
+    save.className = "primary mini";
+    save.textContent = input.value ? "更新目标" : "添加目标";
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.id = "goalClear";
+    clear.className = "ghost mini";
+    clear.textContent = "清除";
+    clear.hidden = !input.value;
+    row.append(save, clear);
+    wrap.append(hint, input, row);
+    els.menuBody.append(wrap);
+    return;
+  }
+
+  const selected = state.menuTab === "skill" ? state.caps.skills : state.caps.plugins;
+  for (const item of group.items) {
+    const on = state.menuTab === "plan" ? state.caps.plan : selected.includes(item.id);
+    els.menuBody.append(menuRow({
+      icon: group.icon,
+      name: item.name,
+      desc: item.desc,
+      on,
+      onClick: () => toggleCap(state.menuTab, item.id),
+    }));
+  }
+}
+
+function positionAddMenu() {
+  const rect = els.btnAdd.getBoundingClientRect();
+  const menu = els.addMenu;
+  const width = menu.offsetWidth;
+  const height = menu.offsetHeight;
+  const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+  const above = rect.top - height - 8;
+  const top = above >= 8 ? above : Math.min(rect.bottom + 8, window.innerHeight - height - 8);
+  menu.style.left = `${Math.round(left)}px`;
+  menu.style.top = `${Math.round(top)}px`;
+}
+
+function openAddMenu() {
+  renderAddMenu();
+  els.addMenu.hidden = false;
+  els.btnAdd.setAttribute("aria-expanded", "true");
+  positionAddMenu();
+}
+
+function closeAddMenu() {
+  if (els.addMenu.hidden) return;
+  els.addMenu.hidden = true;
+  els.btnAdd.setAttribute("aria-expanded", "false");
+}
+
+function toggleAddMenu() {
+  if (els.addMenu.hidden) openAddMenu();
+  else closeAddMenu();
+}
 
 function currentModel() {
   return state.config?.models?.find((m) => m.modelId === state.model) || null;
@@ -304,6 +556,8 @@ function renderAccountCard() {
 function syncBusy() {
   els.send.disabled = state.busy;
   els.stop.hidden = !state.busy;
+  els.btnAdd.disabled = state.busy;
+  if (state.busy) closeAddMenu();
   els.btnShot.disabled = state.busy;
   els.btnFile.disabled = state.busy;
   els.btnVoice.disabled = state.busy;
@@ -329,6 +583,7 @@ async function refreshCredits() {
 
 function showView(name, { focusInput = false } = {}) {
   state.view = name;
+  closeAddMenu();
   for (const button of els.rail.querySelectorAll("button[data-view]")) {
     button.classList.toggle("active", button.dataset.view === name);
   }
@@ -801,6 +1056,7 @@ async function newChat() {
   state.lastRequest = null;
   state.pageCache = null;
   clearAttachments();
+  resetCaps();
   renderThread();
   await saveSessions();
   showView("chat", { focusInput: true });
@@ -830,6 +1086,7 @@ function renderHistory() {
     main.addEventListener("click", async () => {
       state.activeId = session.id;
       state.lastRequest = null;
+      resetCaps();
       renderThread();
       await saveSessions();
       els.historyDialog.close();
@@ -921,9 +1178,11 @@ async function ask({ label, content, images = [], note = "" }) {
 
   const session = activeSession();
   const history = session.messages.slice(-HISTORY_TURNS).map(trimForApi);
-  const apiMessages = [...history, { role: "user", content, images }];
+  const goal = (session.goal || "").trim();
+  const apiContent = goal ? `【对话目标】${goal}\n\n${content}` : content;
+  const apiMessages = [...history, { role: "user", content: apiContent, images }];
 
-  const userMessage = { role: "user", content: label, prompt: content, note, images: images.length, at: Date.now() };
+  const userMessage = { role: "user", content: label, prompt: apiContent, note, images: images.length, at: Date.now() };
   session.messages.push(userMessage);
   if (session.title === "新聊天") session.title = clip(label || content, 24);
   session.updatedAt = Date.now();
@@ -1086,9 +1345,9 @@ async function runAction(actionId, extra = {}) {
     .replaceAll("{{selection}}", selection)
     .replaceAll("{{question}}", question);
 
-  const label = question && template.includes("{{question}}")
+  const label = extra.label || (question && template.includes("{{question}}")
     ? question
-    : `${action.label}${selection ? `：${clip(selection, 60)}` : ""}`;
+    : `${action.label}${selection ? `：${clip(selection, 60)}` : ""}`);
   const noteParts = [];
   if (page) noteParts.push(`本页正文 ${page.length.toLocaleString()} 字 · ${clip(state.pageCache?.url || "", 60)}`);
   if (extra.note) noteParts.push(extra.note);
@@ -1162,6 +1421,58 @@ els.btnReadPage.addEventListener("click", () => {
   setStatus(state.readPage ? "发送时会带上本页正文" : "已取消带上本页");
 });
 
+els.btnAdd.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleAddMenu();
+});
+
+els.addMenu.addEventListener("click", (event) => {
+  // 选项重渲染后旧节点已脱离文档，靠冒泡到 document 判断“点在外面”会误关菜单
+  event.stopPropagation();
+  const tab = event.target.closest("[data-tab]");
+  if (tab) {
+    state.menuTab = tab.dataset.tab;
+    renderAddMenu();
+    return;
+  }
+  if (event.target.closest("#goalSave")) {
+    const input = els.menuBody.querySelector("#goalInput");
+    const text = input?.value.trim() || "";
+    if (!text) {
+      input?.focus();
+      return;
+    }
+    setGoal(text);
+    closeAddMenu();
+    setStatus("已设置对话目标");
+    return;
+  }
+  if (event.target.closest("#goalClear")) {
+    setGoal("");
+    renderAddMenu();
+    setStatus("已清除对话目标");
+  }
+});
+
+function handleGoalKey(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    els.menuBody.querySelector("#goalSave")?.click();
+  }
+}
+
+els.addMenu.addEventListener("keydown", (event) => {
+  if (event.target.id === "goalInput") handleGoalKey(event);
+});
+
+document.addEventListener("click", (event) => {
+  if (!els.addMenu.contains(event.target) && !els.btnAdd.contains(event.target)) closeAddMenu();
+});
+
+window.addEventListener("resize", () => {
+  if (!els.addMenu.hidden) positionAddMenu();
+});
+
 els.btnShot.addEventListener("click", async () => {
   try {
     await captureScreenshot();
@@ -1200,6 +1511,16 @@ els.input.addEventListener("keydown", (event) => {
 
 async function send() {
   const question = els.input.value.trim();
+  const plugins = state.caps.plugins;
+
+  if (plugins.includes("shot")) {
+    try {
+      await captureScreenshot();
+    } catch (err) {
+      showError(err);
+    }
+  }
+
   const images = state.attachments.filter((a) => a.kind === "image").map((a) => a.dataUrl);
   const files = state.attachments.filter((a) => a.kind === "text");
   if (!question && !images.length && !files.length) {
@@ -1207,10 +1528,20 @@ async function send() {
     return;
   }
 
+  const extras = [];
+  if (state.caps.plan) extras.push("【计划模式】请先给出分步计划，再按计划逐步执行。");
+  for (const skill of selectedCaps("skill")) extras.push(`【技能·${skill.name}】${skill.prompt}`);
+  if (plugins.includes("selection")) {
+    const selection = await syncSelection().catch(() => "");
+    if (selection) extras.push(`【选中文字】\n${selection}`);
+    else setStatus("没有选中网页文字，已跳过划选插件", "error");
+  }
+
   const fileBlock = files.map((f) => `【文件 ${f.name}】\n${f.text}`).join("\n\n");
-  const content = [question, fileBlock].filter(Boolean).join("\n\n");
-  const note = files.length ? `附加 ${files.length} 个文件` : "";
+  const content = [...extras, question, fileBlock].filter(Boolean).join("\n\n");
   const label = question || (images.length ? `看图 ${images.length} 张` : `附加 ${files.length} 个文件`);
+  const note = [files.length ? `附加 ${files.length} 个文件` : "", capsNote()].filter(Boolean).join(" · ");
+  const readPage = state.readPage || plugins.includes("page");
 
   if (images.length && !currentModel()?.supportsVision) {
     await ask({ label, content, images, note }); // 由 ask 统一提示换模型，附件保留在输入条
@@ -1219,9 +1550,10 @@ async function send() {
 
   clearAttachments();
   els.input.value = "";
+  resetCaps();
 
-  if (state.readPage) {
-    await runAction("qa_page", { question: content, images, note });
+  if (readPage) {
+    await runAction("qa_page", { question: content, images, note, label: label || "问这篇网页" });
     return;
   }
   await ask({ label, content, images, note });
@@ -1307,7 +1639,10 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAccountPop();
+  if (event.key === "Escape") {
+    closeAccountPop();
+    closeAddMenu();
+  }
 });
 
 els.refreshCredits.addEventListener("click", loadCreditsList);
@@ -1430,6 +1765,7 @@ async function boot() {
     activeSession();
     renderThread();
     renderAttachments();
+    renderPicks();
     await saveSessions();
     await consumePending();
   } catch (err) {

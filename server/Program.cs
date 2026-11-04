@@ -8,6 +8,18 @@ using SpServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 监听地址默认取 appsettings.json 的 Server:Host / Server:Port；
+// 需要临时改端口时仍可用 --urls 或 ASPNETCORE_URLS 覆盖，命令行优先级更高。
+var explicitUrls = builder.Configuration["urls"]
+    ?? Environment.GetEnvironmentVariable("ASPNETCORE_URLS")
+    ?? Environment.GetEnvironmentVariable("DOTNET_URLS");
+if (string.IsNullOrWhiteSpace(explicitUrls))
+{
+    var host = builder.Configuration["Server:Host"];
+    var port = builder.Configuration.GetValue("Server:Port", 5080);
+    builder.WebHost.UseUrls($"http://{(string.IsNullOrWhiteSpace(host) ? "127.0.0.1" : host)}:{port}");
+}
+
 var connectionString = builder.Configuration.GetConnectionString("Db") ?? "Data Source=sp.db";
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddScoped<CreditService>();

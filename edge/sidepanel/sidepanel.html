@@ -28,12 +28,13 @@
             <span id="selectionText" class="selection-text">尚未选中网页文字</span>
             <button id="runSelection" class="mini ico tip-top" data-icon="translate" data-tip="译成中文"></button>
           </div>
+          <div id="picks" class="picks" hidden></div>
           <div id="attachments" class="attachments" hidden></div>
           <div class="composer-row controls">
+            <button id="btnAdd" class="tool ico tip-top" data-icon="plus" data-tip="添加技能、插件、计划或目标" aria-haspopup="true" aria-expanded="false"></button>
             <select id="model" class="model-select" title="切换大模型"></select>
             <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="截图：抓取可见区域发给模型"></button>
             <button id="btnFile" class="tool ico tip-top" data-icon="clip" data-tip="附加文件：图片或 txt/md 等文本"></button>
-            <button id="btnVoice" class="tool ico tip-top" data-icon="mic" data-tip="语音输入：说完自动转成文字" aria-pressed="false"></button>
             <button id="btnReadPage" class="tool ico tip-top" data-icon="book" data-tip="阅读此页：发送时带上本页正文" aria-pressed="false"></button>
             <input id="filePicker" type="file" accept="image/*,.txt,.md,.csv,.json,.log" multiple hidden>
             <button id="newChat" class="mini ico tip-top" data-icon="compose" data-tip="新聊天"></button>
@@ -42,8 +43,19 @@
           <textarea id="input" rows="3" placeholder="输入问题，Enter 发送，Shift + Enter 换行"></textarea>
           <div class="composer-row sendbar">
             <span id="status" class="status" aria-live="polite">准备中</span>
+            <button id="btnVoice" class="tool ico tip-top" data-icon="mic" data-tip="语音输入：说完自动转成文字" aria-pressed="false"></button>
             <button id="stop" class="tool danger ico lg tip-top" data-icon="stop" data-tip="停止生成" hidden></button>
             <button id="send" class="primary ico lg tip-top tip-in" data-icon="send" data-tip="发送"></button>
+          </div>
+          <div id="addMenu" class="add-menu" hidden>
+            <div class="menu-head">添加到对话</div>
+            <div class="menu-tabs" role="tablist">
+              <button type="button" role="tab" data-tab="skill" class="active">技能</button>
+              <button type="button" role="tab" data-tab="plugin">插件</button>
+              <button type="button" role="tab" data-tab="plan">计划</button>
+              <button type="button" role="tab" data-tab="goal">目标</button>
+            </div>
+            <div id="menuBody" class="menu-body"></div>
           </div>
         </section>
       </div>

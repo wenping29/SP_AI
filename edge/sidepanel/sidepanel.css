@@ -584,6 +584,163 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
   color: var(--muted);
 }
 
+/* 已添加的技能 / 插件 / 计划 / 目标 */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+.picks[hidden] { display: none; }
+
+.pick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 12px;
+}
+
+.pick-ico { display: flex; }
+.pick-ico svg { width: 13px; height: 13px; display: block; }
+
+.pick-name {
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pick button {
+  padding: 0 0 0 1px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .7;
+}
+
+.pick button:hover { opacity: 1; }
+
+.pick[data-tip]::after {
+  left: 0;
+  bottom: calc(100% + 6px);
+  white-space: normal;
+  max-width: 240px;
+}
+
+/* “+” 添加菜单：技能 / 插件 / 计划 / 目标 */
+.add-menu {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, calc(100vw - 24px));
+  max-height: min(420px, 70vh);
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+}
+
+.add-menu[hidden] { display: none; }
+
+.menu-head { padding: 2px 4px; color: var(--muted); font-size: 11px; }
+
+.menu-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.menu-tabs button {
+  flex: 1;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.menu-tabs button.active {
+  background: var(--panel);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
+}
+
+.menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover { background: var(--surface-hover); }
+
+.menu-item.on {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.menu-ico { display: flex; color: var(--muted); flex: none; }
+.menu-ico svg { width: 16px; height: 16px; display: block; }
+.menu-item.on .menu-ico { color: var(--accent); }
+
+.menu-text { flex: 1; min-width: 0; }
+.menu-name { display: block; font-size: 12px; font-weight: 500; }
+
+.menu-desc {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.menu-check { display: flex; color: var(--accent); opacity: 0; flex: none; }
+.menu-check svg { width: 14px; height: 14px; display: block; }
+.menu-item.on .menu-check { opacity: 1; }
+
+.menu-goal { display: flex; flex-direction: column; gap: 7px; padding: 2px; }
+
+.menu-goal input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.menu-goal .row { gap: 6px; }
+
 .attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
 .attachments[hidden] { display: none; }
