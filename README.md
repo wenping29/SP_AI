@@ -184,7 +184,7 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 | --- | --- | --- |
 | `ConnectionStrings:Db` | SQLite 连接串 | `Data Source=sp.db` |
 | `Server:Host` / `Server:Port` | 监听地址与端口 | `127.0.0.1:5080` |
-| `AllowedOrigins` | CORS 白名单数组；留空则放开所有来源 | 空 |
+| `AllowedOrigins` | CORS 白名单；留空时使用后台「服务器配置」里填写的来源，两处都空则放开所有来源 | 空 |
 | `MaxOutputTokens` | 单次回复最大 token | `1024` |
 | `Transcribe:Enabled` | 是否开放语音转写 | `true` |
 | `Transcribe:Provider` / `Model` | 语音转写提供商与模型 | dashscope / qwen3-asr-flash |
@@ -223,7 +223,7 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 - 验证码只存 SHA-256 哈希，不落明文
 - 新设备匿名账号初始 200 体验积分，登录/注册后并入用户账号；注册赠送只发一次，避免换设备刷注册额度
 
-邮件通过 SMTP 发送，配置在 `server/appsettings.json` 的 `Email` 段，或使用 `Email__*` 环境变量覆盖：
+邮件通过 SMTP 发送。**日常在后台「服务器配置」页维护**（保存即生效，密码加密存库、不回显），首次启动会按 `server/appsettings.json` 的 `Email` 段播种，环境变量 `Email__*` 仍然优先：
 
 | 配置项 | 说明 | 默认 |
 | --- | --- | --- |
@@ -296,7 +296,9 @@ dotnet run
 
 ## 部署建议
 
-- 对外部署时设置 `AllowedOrigins` 为固定的扩展来源（如 `chrome-extension://<扩展ID>`），并启用 HTTPS
+- Linux 服务器（Nginx + .NET 10 运行时）的完整步骤见 [deploy/DEPLOY.md](deploy/DEPLOY.md)，打包命令见 [deploy/pack.sh](deploy/pack.sh)
+- 后台「服务器配置」页可维护 SMTP 与插件允许来源，保存即生效，不需要改文件重启
+- 对外部署时把允许来源设为固定的扩展来源（如 `chrome-extension://<扩展ID>`），并启用 HTTPS
 - 首次登录后立即修改 `admin` 的默认密码；或在启动前用 `Admin__InitialPassword` 指定自己的初始密码
 - 对外部署前重新生成 `Admin__Key` 并替换仓库里的默认值；不需要应急入口时直接清空，只保留账号登录
 - 按最小权限为运营人员分配角色，不要共用超级管理员账号

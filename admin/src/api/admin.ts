@@ -125,6 +125,55 @@ export interface PolicyUpdate {
   notice?: string;
 }
 
+export interface EmailSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  implicitTls: boolean;
+  user: string;
+  passwordSet: boolean;
+  passwordSource: KeySource;
+  from: string;
+  fromName: string;
+  codeMinutes: number;
+  exposeDevCode: boolean;
+  configured: boolean;
+  source: 'env' | 'database';
+}
+
+export interface ServerRuntime {
+  environment: string;
+  version: string;
+  framework: string;
+  urls: string;
+  databaseFile: string;
+  keysPath: string;
+  startedAt: string;
+  uptimeSeconds: number;
+}
+
+export interface ServerConfigView {
+  email: EmailSettings;
+  allowedOrigins: string[];
+  allowedOriginsSource: 'config' | 'database' | 'none';
+  runtime: ServerRuntime;
+}
+
+export interface ServerConfigUpdate {
+  smtpEnabled?: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpImplicitTls?: boolean;
+  smtpUser?: string;
+  smtpPassword?: string;
+  clearSmtpPassword?: boolean;
+  smtpFrom?: string;
+  smtpFromName?: string;
+  codeMinutes?: number;
+  exposeDevCode?: boolean;
+  allowedOrigins?: string[];
+}
+
 export type KeySource = 'env' | 'database' | 'none';
 
 export interface ProviderKeyStatus {
@@ -306,6 +355,14 @@ export const adminApi = {
   policy: () => get<CreditPolicy>('/admin/policy'),
 
   updatePolicy: (data: PolicyUpdate) => put<CreditPolicy>('/admin/policy', data),
+
+  serverConfig: () => get<ServerConfigView>('/admin/server'),
+
+  updateServerConfig: (data: ServerConfigUpdate) =>
+    put<ServerConfigView>('/admin/server', data),
+
+  testServerEmail: (to: string) =>
+    post<{ ok: boolean; to: string }>('/admin/server/test-email', { to }),
 
   providers: () => get<ProviderSummary[]>('/admin/providers'),
 

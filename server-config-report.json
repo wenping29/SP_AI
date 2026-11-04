@@ -1,0 +1,59 @@
+{
+  "checks": [
+    {
+      "name": "页面标题渲染",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "运行信息区块",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "数据库路径可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "邮件服务区块",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "允许来源区块",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "表单带出现有配置",
+      "ok": true,
+      "detail": "smtp.qq.com"
+    },
+    {
+      "name": "来源标签为后台配置",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "填入新的 SMTP 地址",
+      "ok": true,
+      "detail": "smtp.qq.com"
+    },
+    {
+      "name": "点击保存",
+      "ok": true,
+      "detail": "clicked"
+    },
+    {
+      "name": "保存成功提示",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "接口已保存新地址",
+      "ok": true,
+      "detail": "smtp.qq.com"
+    }
+  ]
+}

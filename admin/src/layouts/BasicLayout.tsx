@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   ApiOutlined,
   ControlOutlined,
+  CloudServerOutlined,
   DashboardOutlined,
   DesktopOutlined,
   IdcardOutlined,
@@ -35,6 +36,7 @@ const menuEntries: MenuEntry[] = [
   { key: '/models', icon: <ApiOutlined />, label: '模型管理', permission: 'models.view' },
   { key: '/policy', icon: <ControlOutlined />, label: '运营策略', permission: 'policy.view' },
   { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理', permission: 'keyenvs.view' },
+  { key: '/server', icon: <CloudServerOutlined />, label: '服务器配置', permission: 'server.view' },
   { key: '/users', icon: <TeamOutlined />, label: '用户管理', permission: 'users.view' },
   { key: '/admins', icon: <IdcardOutlined />, label: '管理员', permission: 'admins.view' },
   { key: '/roles', icon: <UserSwitchOutlined />, label: '角色管理', permission: 'roles.view' },

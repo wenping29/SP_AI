@@ -8,6 +8,7 @@ import CreditsList from '@/pages/credits/CreditsList';
 import ModelList from '@/pages/models/ModelList';
 import PolicySettings from '@/pages/policy/PolicySettings';
 import ProviderList from '@/pages/providers/ProviderList';
+import ServerSettings from '@/pages/server/ServerSettings';
 import UserList from '@/pages/users/UserList';
 import AdminList from '@/pages/admins/AdminList';
 import RoleList from '@/pages/roles/RoleList';
@@ -84,6 +85,14 @@ export const router = createBrowserRouter(
           element: (
             <RequirePermission permission="keyenvs.view">
               <ProviderList />
+            </RequirePermission>
+          ),
+        },
+        {
+          path: 'server',
+          element: (
+            <RequirePermission permission="server.view">
+              <ServerSettings />
             </RequirePermission>
           ),
         },

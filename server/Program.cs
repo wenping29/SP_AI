@@ -702,8 +702,7 @@ admin.MapPut("/server", async (ServerSettingsRequest req, ServerConfig settings,
     return Results.Ok(await BuildServerViewAsync(settings, cfg, env, startedAt, ct));
 }).RequireAdmin("server.manage");
 
-admin.MapPost("/server/test-email", async (TestEmailRequest req, EmailSender sender, IConfiguration cfg,
-    CancellationToken ct) =>
+admin.MapPost("/server/test-email", async (TestEmailRequest req, EmailSender sender, CancellationToken ct) =>
 {
     var to = (req.To ?? "").Trim();
     if (to.Length is 0 or > 120 || !to.Contains('@'))
@@ -1157,6 +1156,45 @@ app.Run();
 // SQLite 读出来的 DateTime 没有 Kind，统一按 UTC 输出，避免前端当成本地时间
 static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 
+// 后台「服务器配置」：运行信息从进程配置里读，邮件与来源来自数据库（环境变量优先）
+static async Task<object> BuildServerViewAsync(ServerConfig settings, IConfiguration cfg,
+    IHostEnvironment env, DateTimeOffset startedAt, CancellationToken ct)
+{
+    var email = await settings.GetEmailViewAsync(ct);
+    var (origins, originsSource) = await settings.GetAllowedOriginsAsync(ct);
+
+    var dataSource = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(
+        cfg.GetConnectionString("Db") ?? "Data Source=sp.db").DataSource;
+    var databaseFile = Path.IsPathRooted(dataSource)
+        ? dataSource
+        : Path.GetFullPath(dataSource, env.ContentRootPath);
+
+    var keysPath = cfg["Security:KeysPath"] is { Length: > 0 } custom ? custom : "keys";
+    if (!Path.IsPathRooted(keysPath)) keysPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, keysPath));
+
+    var urls = cfg["urls"] is { Length: > 0 } explicitUrls
+        ? explicitUrls
+        : $"http://{cfg["Server:Host"] ?? "127.0.0.1"}:{cfg.GetValue("Server:Port", 5080)}";
+
+    return new
+    {
+        email,
+        allowedOrigins = origins,
+        allowedOriginsSource = originsSource,
+        runtime = new
+        {
+            environment = env.EnvironmentName,
+            version = typeof(ServerConfig).Assembly.GetName().Version?.ToString() ?? "",
+            framework = Environment.Version.ToString(),
+            urls,
+            databaseFile,
+            keysPath,
+            startedAt = startedAt.UtcDateTime,
+            uptimeSeconds = (long)(DateTimeOffset.UtcNow - startedAt).TotalSeconds,
+        },
+    };
+}
+
 static string NormalizeModelId(string? value)
 {
     var id = (value ?? "").Trim();
@@ -1288,3 +1326,17 @@ public record MemberCreateRequest(string? Email, string? DisplayName, string? Pa
 public record MemberUpdateRequest(string? Email, string? DisplayName, string? Password);
 public record MemberBlockRequest(bool? Blocked);
 public record ConversationUpsertRequest(string? Title, JsonElement Messages, long? UpdatedAt);
+public record ServerSettingsRequest(
+    bool? SmtpEnabled,
+    string? SmtpHost,
+    int? SmtpPort,
+    bool? SmtpImplicitTls,
+    string? SmtpUser,
+    string? SmtpPassword,
+    bool? ClearSmtpPassword,
+    string? SmtpFrom,
+    string? SmtpFromName,
+    int? CodeMinutes,
+    bool? ExposeDevCode,
+    string[]? AllowedOrigins);
+public record TestEmailRequest(string? To);
