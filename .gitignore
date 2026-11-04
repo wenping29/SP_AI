@@ -16,6 +16,10 @@ Icon
 # ---- Node.js ----
 web/node_modules/
 deploy/dist/
+admin/node_modules/
+admin/dist/
+server/wwwroot/admin/
+*.tsbuildinfo
 
 ## .NET 隐藏文件夹
 .vs/
