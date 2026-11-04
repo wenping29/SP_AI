@@ -19,12 +19,13 @@ public enum DeltaKind
     Reasoning,
 }
 
-public class ModelGateway(IHttpClientFactory httpFactory, IConfiguration config, ILogger<ModelGateway> logger)
+public class ModelGateway(IHttpClientFactory httpFactory, IConfiguration config, ProviderKey providerKeys,
+    ILogger<ModelGateway> logger)
 {
     public async Task<CompletionUsage> StreamAsync(ModelSpec model, IReadOnlyList<ChatMessage> messages,
         int maxTokens, Func<DeltaKind, string, Task> onDelta, CancellationToken ct)
     {
-        var key = ProviderKey.Resolve(config, logger, model.Provider);
+        var key = await providerKeys.ResolveAsync(model.Provider, ct);
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new ApiException(503, "provider_not_configured",

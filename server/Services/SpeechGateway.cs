@@ -5,14 +5,15 @@ using System.Text.Json;
 namespace SpServer.Services;
 
 /// 语音转文字：走 OpenAI 兼容的 /audio/transcriptions，国内几家（百炼、硅基流动等）都是这个形状
-public class SpeechGateway(IHttpClientFactory httpFactory, IConfiguration config, ILogger<SpeechGateway> logger)
+public class SpeechGateway(IHttpClientFactory httpFactory, IConfiguration config, ProviderKey providerKeys,
+    ILogger<SpeechGateway> logger)
 {
     public async Task<string> TranscribeAsync(Stream audio, string fileName, string mimeType, CancellationToken ct)
     {
         var provider = config["Transcribe:Provider"] ?? "dashscope";
         var model = config["Transcribe:Model"] ?? "qwen3-asr-flash";
 
-        var key = ProviderKey.Resolve(config, logger, provider);
+        var key = await providerKeys.ResolveAsync(provider, ct);
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new ApiException(503, "asr_not_configured", "语音输入暂未开放，管理员需先为识别服务配置密钥");

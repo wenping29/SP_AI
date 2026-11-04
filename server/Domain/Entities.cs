@@ -40,6 +40,15 @@ public class ModelSpec
     public string Note { get; set; } = "";
 }
 
+// 上游密钥的库里副本：只存密文与尾号，明文仅在内存中出现
+public class ProviderCredential
+{
+    public string Provider { get; set; } = "";
+    public string Cipher { get; set; } = "";
+    public string MaskedTail { get; set; } = "";
+    public DateTime UpdatedAt { get; set; }
+}
+
 public class CreditPolicy
 {
     public int Id { get; set; } = 1;

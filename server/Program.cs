@@ -1,12 +1,28 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using SpServer.Data;
 using SpServer.Domain;
 using SpServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 数据库密钥的加密密钥环放在仓库外，权限收紧；丢失后库里的密文需重新设置
+var keysPath = builder.Configuration["Security:KeysPath"] ?? "keys";
+if (!Path.IsPathRooted(keysPath)) keysPath = Path.Combine(builder.Environment.ContentRootPath, keysPath);
+var keysDir = Directory.CreateDirectory(keysPath);
+if (!OperatingSystem.IsWindows())
+{
+    File.SetUnixFileMode(keysDir.FullName,
+        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+}
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(keysDir)
+    .SetApplicationName("SpServer");
 
 // 监听地址默认取 appsettings.json 的 Server:Host / Server:Port；
 // 需要临时改端口时仍可用 --urls 或 ASPNETCORE_URLS 覆盖，命令行优先级更高。
@@ -23,8 +39,9 @@ if (string.IsNullOrWhiteSpace(explicitUrls))
 var connectionString = builder.Configuration.GetConnectionString("Db") ?? "Data Source=sp.db";
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddScoped<CreditService>();
-builder.Services.AddSingleton<ModelGateway>();
-builder.Services.AddSingleton<SpeechGateway>();
+builder.Services.AddScoped<ProviderKey>();
+builder.Services.AddScoped<ModelGateway>();
+builder.Services.AddScoped<SpeechGateway>();
 builder.Services.AddHttpClient("upstream", client => client.Timeout = TimeSpan.FromMinutes(5));
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
@@ -46,6 +63,15 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
     await db.SeedAsync();
+    // EnsureCreated 只在建库时起作用，已有库不会补新表，这里幂等创建凭据表
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "ProviderCredentials" (
+            "Provider" TEXT NOT NULL CONSTRAINT "PK_ProviderCredentials" PRIMARY KEY,
+            "Cipher" TEXT NOT NULL,
+            "MaskedTail" TEXT NOT NULL,
+            "UpdatedAt" TEXT NOT NULL
+        );
+        """);
 }
 
 app.Use(async (context, next) =>
@@ -228,13 +254,29 @@ admin.AddEndpointFilter(async (context, next) =>
 {
     var configured = app.Configuration["Admin:Key"];
     var http = context.HttpContext;
-    if (!string.IsNullOrWhiteSpace(configured) && http.Request.Headers["X-Admin-Key"] != configured)
+
+    // 没配置管理密钥时直接拒绝，避免公网默认放行；密钥比较走定长，防止计时侧信道
+    if (string.IsNullOrWhiteSpace(configured))
+    {
+        return Results.Json(new { code = "admin_not_configured", message = "管理接口未启用：请先配置 Admin:Key" },
+            statusCode: 503);
+    }
+
+    var provided = http.Request.Headers["X-Admin-Key"].ToString();
+    if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(configured)))
     {
         return Results.Json(new { code = "bad_admin_key", message = "管理密钥不正确" }, statusCode: 401);
     }
 
     return await next(context);
 });
+
+admin.MapGet("/providers", async (ProviderKey keys, CancellationToken ct) =>
+    Results.Ok(await keys.ListAsync(ct)));
+
+// 只写不读：接收明文，加密后落库，响应里只回尾号
+admin.MapPut("/providers/{provider}/key", async (string provider, ProviderKeyRequest req, ProviderKey keys,
+    CancellationToken ct) => Results.Ok(await keys.SaveAsync(provider, req.Key, ct)));
 
 admin.MapGet("/policy", async (CreditService credits, CancellationToken ct) =>
 {
@@ -370,3 +412,4 @@ public record PolicyRequest(int? FreeCredits, bool? ChatEnabled, string? Notice)
 public record ModelRequest(string? DisplayName, bool? IsEnabled, int? InputRatePer1K, int? OutputRatePer1K,
     int? MaxContextChars, int? SortOrder, bool? SupportsVision);
 public record GrantRequest(string DeviceId, int? Delta, string? Reason);
+public record ProviderKeyRequest(string? Key);
