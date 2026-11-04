@@ -600,6 +600,66 @@ admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService 
     return Results.Ok(new { deviceId = account.DeviceId, delta, balance });
 }).RequireAdmin("devices.manage");
 
+// 积分管理页汇总；手工增减/设值不算用户消费
+admin.MapGet("/credits/summary", async (AppDbContext db, CancellationToken ct) =>
+{
+    var accounts = await db.Accounts.CountAsync(ct);
+    var totalBalance = await db.Accounts.SumAsync(a => (int?)a.Balance, ct) ?? 0;
+    var blocked = await db.Accounts.CountAsync(a => a.IsBlocked, ct);
+    var spent = -(await db.Transactions
+        .Where(t => t.Delta < 0 && t.Reason != "admin_grant" && t.Reason != "admin_set")
+        .SumAsync(t => (int?)t.Delta, ct) ?? 0);
+    var calls = await db.Transactions
+        .CountAsync(t => t.Delta < 0 && t.Reason != "admin_grant" && t.Reason != "admin_set", ct);
+
+    return Results.Ok(new { accounts, totalBalance, blocked, spent, calls });
+}).RequireAdmin("devices.view");
+
+// 直接改分：delta 为增减，balance 为设为指定余额，二者只传一个
+admin.MapPost("/credits/adjust", async (CreditAdjustRequest req, AppDbContext db, CreditService credits,
+    CancellationToken ct) =>
+{
+    var deviceId = (req.DeviceId ?? "").Trim();
+    if (deviceId.Length == 0) throw new ApiException(400, "invalid_device", "缺少设备 ID");
+    if ((req.Delta is null) == (req.Balance is null))
+    {
+        throw new ApiException(400, "invalid_adjust", "请提供 delta 或 balance 其中一个");
+    }
+
+    var account = await db.Accounts.FirstOrDefaultAsync(a => a.DeviceId == deviceId, ct)
+        ?? throw new ApiException(404, "account_not_found", "用户不存在");
+
+    int delta;
+    string defaultReason;
+    if (req.Balance is { } target)
+    {
+        if (target < 0) throw new ApiException(400, "invalid_balance", "目标余额不能为负数");
+        target = Math.Min(target, 100_000_000);
+        delta = target - account.Balance;
+        defaultReason = "admin_set";
+    }
+    else
+    {
+        delta = req.Delta!.Value;
+        defaultReason = "admin_grant";
+    }
+
+    if (delta != 0)
+    {
+        if (delta < 0 && account.Balance + delta < 0)
+        {
+            throw new ApiException(400, "balance_below_zero",
+                $"扣减后余额会变成 {account.Balance + delta}，请减少扣减数量");
+        }
+
+        var reason = string.IsNullOrWhiteSpace(req.Reason) ? defaultReason : ClampText(req.Reason, 40);
+        await credits.AdjustBalanceAsync(account.Id, delta, reason, ct);
+    }
+
+    var balance = await db.Accounts.Where(a => a.Id == account.Id).Select(a => a.Balance).FirstAsync(ct);
+    return Results.Ok(new { deviceId = account.DeviceId, label = account.Label, delta, balance });
+}).RequireAdmin("devices.manage");
+
 admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
 {
     // 用近 24 小时而不是自然日，避免服务器 UTC 与国内时区不一致导致“今日”口径漂移
@@ -609,11 +669,13 @@ admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
     var blocked = await db.Accounts.CountAsync(a => a.IsBlocked, ct);
     var modelCount = await db.Models.CountAsync(m => !m.IsDeprecated, ct);
     var enabledModels = await db.Models.CountAsync(m => m.IsEnabled && !m.IsDeprecated, ct);
-    // 只统计真实消耗；后台手工扣分不算用户消费
+    // 只统计真实消耗；后台手工增减/设值不算用户消费
     var calls24h = await db.Transactions
-        .CountAsync(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant", ct);
+        .CountAsync(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant"
+            && t.Reason != "admin_set", ct);
     var consumed24h = -(await db.Transactions
-        .Where(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant")
+        .Where(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant"
+            && t.Reason != "admin_set")
         .SumAsync(t => (int?)t.Delta, ct) ?? 0);
     var active24h = await db.Accounts.CountAsync(a => a.LastUsedAt >= since, ct);
 
@@ -668,7 +730,8 @@ admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContex
 
     var ids = accounts.Select(a => a.Id).ToList();
     var usage = await db.Transactions.AsNoTracking()
-        .Where(t => ids.Contains(t.AccountId) && t.Delta < 0 && t.Reason != "admin_grant")
+        .Where(t => ids.Contains(t.AccountId) && t.Delta < 0 && t.Reason != "admin_grant"
+            && t.Reason != "admin_set")
         .GroupBy(t => t.AccountId)
         .Select(g => new { AccountId = g.Key, Spent = -g.Sum(t => t.Delta), Calls = g.Count() })
         .ToDictionaryAsync(u => u.AccountId, ct);
@@ -902,6 +965,7 @@ public record ModelCreateRequest(string? ModelId, string? DisplayName, string? P
     int? InputRatePer1K, int? OutputRatePer1K, int? MaxContextChars, bool? SupportsVision, bool? IsEnabled,
     int? SortOrder, string? Note, string? Category);
 public record GrantRequest(string DeviceId, int? Delta, string? Reason);
+public record CreditAdjustRequest(string? DeviceId, int? Delta, int? Balance, string? Reason);
 public record BlockRequest(bool? Blocked);
 public record ProviderKeyRequest(string? Key);
 public record KeyEnvCreateRequest(string? Provider, string? EnvName, string? Key, string? Note, bool? Activate);
