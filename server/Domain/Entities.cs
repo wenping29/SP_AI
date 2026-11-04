@@ -170,3 +170,22 @@ public class CreditPolicy
     public string Notice { get; set; } = "";
     public DateTime UpdatedAt { get; set; }
 }
+
+// 服务器运行配置：邮件服务与浏览器跨域来源，后台改完即时生效，不需要改文件重启
+public class ServerSetting
+{
+    public int Id { get; set; } = 1;
+    public bool SmtpEnabled { get; set; }
+    public string SmtpHost { get; set; } = "";
+    public int SmtpPort { get; set; } = 465;
+    public bool SmtpImplicitTls { get; set; } = true;
+    public string SmtpUser { get; set; } = "";
+    public string SmtpPasswordCipher { get; set; } = "";
+    public string SmtpFrom { get; set; } = "";
+    public string SmtpFromName { get; set; } = "SP 助手";
+    public int CodeMinutes { get; set; } = 10;
+    public bool ExposeDevCode { get; set; }
+    // 每行一个来源，留空表示不限制（当前默认行为）
+    public string AllowedOrigins { get; set; } = "";
+    public DateTime UpdatedAt { get; set; }
+}

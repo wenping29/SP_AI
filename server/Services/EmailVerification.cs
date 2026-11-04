@@ -27,7 +27,8 @@ public class EmailVerification(AppDbContext db, EmailSender sender, ILogger<Emai
             throw new ApiException(400, "invalid_email", "请输入有效的邮箱地址");
         }
 
-        if (!sender.IsConfigured && !sender.CanExposeDevCode)
+        var options = await sender.GetOptionsAsync(ct);
+        if (!EmailSender.IsConfigured(options) && !sender.CanExposeDevCode(options))
         {
             throw new ApiException(503, "email_not_configured", "邮箱验证暂不可用，请联系管理员配置邮件服务");
         }
@@ -67,7 +68,7 @@ public class EmailVerification(AppDbContext db, EmailSender sender, ILogger<Emai
 
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
         var salt = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
-        var minutes = Math.Clamp(sender.Options.CodeMinutes, 1, 30);
+        var minutes = Math.Clamp(options.CodeMinutes, 1, 30);
         var row = new EmailCode
         {
             Email = normalized,
@@ -84,7 +85,7 @@ public class EmailVerification(AppDbContext db, EmailSender sender, ILogger<Emai
 
         try
         {
-            await sender.SendVerificationCodeAsync(normalized, code, ct);
+            await sender.SendVerificationCodeAsync(normalized, code, options, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -94,7 +95,8 @@ public class EmailVerification(AppDbContext db, EmailSender sender, ILogger<Emai
             throw new ApiException(502, "email_send_failed", "验证码邮件发送失败，请稍后再试");
         }
 
-        return new EmailCodeResult(minutes * 60, sender.CanExposeDevCode ? code : null);
+        return new EmailCodeResult(minutes * 60,
+            EmailSender.IsConfigured(options) || !options.ExposeDevCode ? null : code);
     }
 
     public async Task VerifyAndConsumeAsync(string? email, string? code, CancellationToken ct)

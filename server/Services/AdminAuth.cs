@@ -23,6 +23,7 @@ public static class AdminPermissions
         "users.view", "users.manage",
         "admins.view", "admins.manage",
         "roles.view", "roles.manage",
+        "server.view", "server.manage",
     ];
 
     public static bool IsValid(string key) => key == All || Keys.Contains(key);

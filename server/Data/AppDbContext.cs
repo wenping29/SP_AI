@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DeviceSession> DeviceSessions => Set<DeviceSession>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<EmailCode> EmailCodes => Set<EmailCode>();
+    public DbSet<ServerSetting> ServerSettings => Set<ServerSetting>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -40,6 +41,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         model.Entity<Conversation>().HasIndex(c => new { c.UserId, c.UpdatedAt });
         model.Entity<EmailCode>().HasIndex(c => c.Email);
         model.Entity<EmailCode>().HasIndex(c => c.CreatedAt);
+        // 单行配置表，固定 Id=1
+        model.Entity<ServerSetting>().HasKey(s => s.Id);
     }
 
     public async Task SeedAsync(CancellationToken ct = default)

@@ -1,0 +1,27 @@
+[Unit]
+Description=SP 后端 (ASP.NET Core + SQLite)
+Documentation=file:/opt/sp/DEPLOY.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sp
+Group=sp
+WorkingDirectory=/opt/sp
+ExecStart=/opt/sp/SpServer
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=20
+SyslogIdentifier=sp
+EnvironmentFile=/etc/sp/sp.env
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/sp
+
+[Install]
+WantedBy=multi-user.target

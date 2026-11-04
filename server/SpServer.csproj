@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 接口样例仅供本地联调，不打进发布包 -->
+    <Content Remove="tests/**" />
+  </ItemGroup>
+
 </Project>

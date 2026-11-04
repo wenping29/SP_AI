@@ -45,6 +45,7 @@ builder.Services.AddScoped<AdminAccounts>();
 builder.Services.AddScoped<UserAuth>();
 builder.Services.AddScoped<MemberAdmin>();
 builder.Services.AddScoped<ConversationStore>();
+builder.Services.AddScoped<ServerConfig>();
 builder.Services.AddScoped<EmailSender>();
 builder.Services.AddScoped<EmailVerification>();
 builder.Services.AddScoped<ProviderKey>();
@@ -52,15 +53,10 @@ builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
 builder.Services.AddHttpClient("upstream", client => client.Timeout = TimeSpan.FromMinutes(5));
 
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
-{
-    // 扩展来源是 chrome-extension://<id>，加载位置变化会导致 ID 变化，所以本地开发默认放开。
-    // 正式对外前应收紧为固定的扩展 ID，并接 HTTPS。
-    if (allowedOrigins is { Length: > 0 }) policy.WithOrigins(allowedOrigins);
-    else policy.AllowAnyOrigin();
-    policy.AllowAnyHeader().AllowAnyMethod();
-}));
+// 允许来源与 SMTP 都存在服务器配置里，后台改完即时生效；留空来源时沿用放开策略
+builder.Services.AddScoped<Microsoft.AspNetCore.Cors.Infrastructure.ICorsPolicyProvider,
+    ServerCorsPolicyProvider>();
+builder.Services.AddCors();
 
 var app = builder.Build();
 var logger = app.Logger;
@@ -219,6 +215,46 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_Conversations_UserId_UpdatedAt"
             ON "Conversations" ("UserId", "UpdatedAt");
         """);
+
+    // 服务器运行配置：单行表；首次启动按 appsettings 的 Email 段播种，之后以数据库为准
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "ServerSettings" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_ServerSettings" PRIMARY KEY,
+            "SmtpEnabled" INTEGER NOT NULL,
+            "SmtpHost" TEXT NOT NULL,
+            "SmtpPort" INTEGER NOT NULL,
+            "SmtpImplicitTls" INTEGER NOT NULL,
+            "SmtpUser" TEXT NOT NULL,
+            "SmtpPasswordCipher" TEXT NOT NULL,
+            "SmtpFrom" TEXT NOT NULL,
+            "SmtpFromName" TEXT NOT NULL,
+            "CodeMinutes" INTEGER NOT NULL,
+            "ExposeDevCode" INTEGER NOT NULL,
+            "AllowedOrigins" TEXT NOT NULL,
+            "UpdatedAt" TEXT NOT NULL
+        );
+        """);
+
+    if (!await db.ServerSettings.AnyAsync())
+    {
+        var email = app.Configuration.GetSection("Email");
+        db.ServerSettings.Add(new ServerSetting
+        {
+            Id = 1,
+            SmtpEnabled = email.GetValue("Enabled", false),
+            SmtpHost = email["Host"] ?? "",
+            SmtpPort = email.GetValue("Port", 465),
+            SmtpImplicitTls = email.GetValue("UseImplicitTls", true),
+            SmtpUser = email["User"] ?? "",
+            SmtpFrom = email["From"] ?? "",
+            SmtpFromName = email["FromName"] is { Length: > 0 } name ? name : "SP 助手",
+            CodeMinutes = email.GetValue("CodeMinutes", 10),
+            ExposeDevCode = email.GetValue("ExposeDevCode", false),
+            AllowedOrigins = "",
+            UpdatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+    }
 
     try
     {

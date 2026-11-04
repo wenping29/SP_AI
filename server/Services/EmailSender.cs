@@ -20,24 +20,27 @@ public class EmailOptions
     public int CodeMinutes { get; set; } = 10;
 }
 
-// 验证码邮件发送：不引入第三方包，兼容 465 隐式 TLS 与 587 STARTTLS
-public class EmailSender(IConfiguration config, ILogger<EmailSender> logger)
+// 验证码邮件发送：不引入第三方包，兼容 465 隐式 TLS 与 587 STARTTLS。
+// SMTP 参数来自后台「服务器配置」，环境变量优先，改完即时生效
+public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(20);
-    public EmailOptions Options { get; } = config.GetSection("Email").Get<EmailOptions>() ?? new();
 
-    public bool IsConfigured =>
-        Options.Enabled &&
-        Options.Host.Trim().Length > 0 &&
-        (Options.From.Trim().Length > 0 || Options.User.Contains('@'));
+    public static bool IsConfigured(EmailOptions options) =>
+        options.Enabled &&
+        options.Host.Trim().Length > 0 &&
+        (options.From.Trim().Length > 0 || options.User.Contains('@'));
 
-    public bool CanExposeDevCode => !IsConfigured && Options.ExposeDevCode;
+    public bool CanExposeDevCode(EmailOptions options) => !IsConfigured(options) && options.ExposeDevCode;
 
-    public async Task SendVerificationCodeAsync(string email, string code, CancellationToken ct)
+    public Task<EmailOptions> GetOptionsAsync(CancellationToken ct) => settings.GetEmailOptionsAsync(ct);
+
+    public async Task SendVerificationCodeAsync(string email, string code, EmailOptions options,
+        CancellationToken ct)
     {
-        if (!IsConfigured)
+        if (!IsConfigured(options))
         {
-            if (!Options.ExposeDevCode)
+            if (!options.ExposeDevCode)
             {
                 throw new ApiException(503, "email_not_configured", "邮箱验证暂不可用，请联系管理员配置邮件服务");
             }
@@ -46,11 +49,29 @@ public class EmailSender(IConfiguration config, ILogger<EmailSender> logger)
             return;
         }
 
-        var from = Clean(Options.From.Trim().Length > 0 ? Options.From : Options.User);
-        var message = BuildMessage(from, Options.FromName, email, code, Options.CodeMinutes);
+        var body = $"你的注册验证码是 {code}，{options.CodeMinutes} 分钟内有效。\r\n如非本人操作，请忽略这封邮件。";
+        await DeliverAsync(options, email, "SP 助手注册验证码", body, ct);
+    }
+
+    public async Task SendTestAsync(string to, EmailOptions options, CancellationToken ct)
+    {
+        if (!IsConfigured(options))
+        {
+            throw new ApiException(400, "email_not_configured", "请先启用并填写 SMTP 服务器");
+        }
+
+        const string body = "这是一封来自 SP 后台的测试邮件，收到说明邮件服务配置可用。";
+        await DeliverAsync(options, to, "SP 助手邮件配置测试", body, ct);
+    }
+
+    private async Task DeliverAsync(EmailOptions options, string to, string subject, string body,
+        CancellationToken ct)
+    {
+        var from = Clean(options.From.Trim().Length > 0 ? options.From : options.User);
+        var message = BuildMessage(from, options.FromName, to, subject, body);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         cts.CancelAfter(Timeout);
-        await SendAsync(Options, from, email, message, cts.Token);
+        await SendAsync(options, from, to, message, cts.Token);
     }
 
     private async Task SendAsync(EmailOptions options, string from, string to, string message,
@@ -105,14 +126,13 @@ public class EmailSender(IConfiguration config, ILogger<EmailSender> logger)
         }
     }
 
-    private static string BuildMessage(string from, string fromName, string to, string code, int minutes)
+    private static string BuildMessage(string from, string fromName, string to, string subject, string body)
     {
-        var body = $"你的注册验证码是 {code}，{minutes} 分钟内有效。\r\n如非本人操作，请忽略这封邮件。";
         var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
         var sb = new StringBuilder();
         sb.Append("From: ").Append(EncodeHeader(Clean(fromName))).Append(" <").Append(from).Append(">\r\n");
         sb.Append("To: <").Append(to).Append(">\r\n");
-        sb.Append("Subject: ").Append(EncodeHeader("SP 助手注册验证码")).Append("\r\n");
+        sb.Append("Subject: ").Append(EncodeHeader(subject)).Append("\r\n");
         sb.Append("Date: ").Append(DateTimeOffset.UtcNow.ToString("r")).Append("\r\n");
         sb.Append("MIME-Version: 1.0\r\n");
         sb.Append("Content-Type: text/plain; charset=utf-8\r\n");
