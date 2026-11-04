@@ -16,6 +16,10 @@
 </head>
 <body>
   <div class="layout">
+    <div class="collapsed-hint" aria-hidden="true">
+      <img src="../icons/icon48.png" alt="" width="34" height="34">
+      <span>面板已折叠，点空白处展开</span>
+    </div>
     <div class="main">
       <div id="notice" class="notice" hidden></div>
 
@@ -31,7 +35,6 @@
           <div id="picks" class="picks" hidden></div>
           <div id="attachments" class="attachments" hidden></div>
           <div class="composer-row controls">
-            <button id="btnAdd" class="tool ico tip-top" data-icon="plus" data-tip="添加技能、插件、计划或目标" aria-haspopup="true" aria-expanded="false"></button>
             <div id="modelPicker" class="model-picker">
               <button id="modelButton" class="model-current tip-top" type="button" aria-haspopup="listbox" aria-expanded="false" data-tip="切换大模型">
                 <span id="modelLogo" class="model-logo" aria-hidden="true"></span>
@@ -41,7 +44,6 @@
               <div id="modelMenu" class="model-menu" role="listbox" aria-label="选择模型" hidden></div>
             </div>
             <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="截图：抓取可见区域发给模型"></button>
-            <button id="btnFile" class="tool ico tip-top" data-icon="clip" data-tip="附加文件：图片或 txt/md 等文本"></button>
             <button id="btnReadPage" class="tool ico tip-top" data-icon="book" data-tip="阅读此页：发送时带上本页正文" aria-pressed="false"></button>
             <input id="filePicker" type="file" accept="image/*,.txt,.md,.csv,.json,.log" multiple hidden>
             <button id="newChat" class="mini ico tip-top" data-icon="compose" data-tip="新聊天"></button>
@@ -50,6 +52,8 @@
           <textarea id="input" rows="3" placeholder="输入问题，Enter 发送，Shift + Enter 换行"></textarea>
           <div class="composer-row sendbar">
             <span id="status" class="status" aria-live="polite">准备中</span>
+            <button id="btnAdd" class="tool ico tip-top tip-out" data-icon="plus" data-tip="添加技能、插件、计划或目标" aria-haspopup="true" aria-expanded="false"></button>
+            <button id="btnFile" class="tool ico tip-top" data-icon="clip" data-tip="附加文件：图片或 txt/md 等文本"></button>
             <button id="btnVoice" class="tool ico tip-top" data-icon="mic" data-tip="语音输入：说完自动转成文字" aria-pressed="false"></button>
             <button id="stop" class="tool danger ico lg tip-top" data-icon="stop" data-tip="停止生成" hidden></button>
             <button id="send" class="primary ico lg tip-top tip-in" data-icon="send" data-tip="发送"></button>
@@ -132,6 +136,10 @@
     </div>
 
     <nav class="rail" id="rail">
+      <div class="rail-top">
+        <button id="railFold" class="tip-left" data-icon="fold" data-tip="折叠面板" aria-pressed="false"></button>
+        <button id="railFull" class="tip-left" data-icon="expand" data-tip="全页模式打开"></button>
+      </div>
       <button data-view="chat" class="active tip-left" data-icon="chat" data-tip="聊天"></button>
       <button data-view="ask" class="tip-left" data-icon="sparkle" data-tip="提问"></button>
       <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>

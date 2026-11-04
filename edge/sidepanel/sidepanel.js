@@ -58,8 +58,14 @@ const MAX_SESSIONS = 30;
 const MAX_ATTACH_CHARS = 4_000_000;
 const MAX_TEXT_FILE_CHARS = 6000;
 
+const FULL_PAGE = new URLSearchParams(location.search).has("full");
+if (FULL_PAGE) document.documentElement.dataset.full = "1";
+
 const els = {
+  layout: document.querySelector(".layout"),
   rail: document.getElementById("rail"),
+  railFold: document.getElementById("railFold"),
+  railFull: document.getElementById("railFull"),
   status: document.getElementById("status"),
   notice: document.getElementById("notice"),
   newChat: document.getElementById("newChat"),
@@ -149,6 +155,7 @@ const state = {
   busy: false,
   balance: undefined,
   lastRequest: null,
+  collapsed: false,
 };
 
 class UiError extends Error {}
@@ -211,6 +218,9 @@ const ICONS = {
   plan: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
   check: '<path d="M20 6L9 17l-5-5"/>',
+  fold: '<path d="M11 5l6 7-6 7"/><path d="M20 4v16"/>',
+  unfold: '<path d="M13 5l-6 7 6 7"/><path d="M4 4v16"/>',
+  expand: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -708,6 +718,25 @@ function showView(name, { focusInput = false } = {}) {
   if (name === "settings") fillSettings();
   if (name === "translate") renderTranslatePane();
   if (name === "chat" && focusInput) els.input.focus();
+}
+
+// ---------- 折叠与全页模式：仿 Sider 面板右上角那一对按钮 ----------
+
+function setCollapsed(collapsed, { persist = true } = {}) {
+  state.collapsed = collapsed;
+  els.layout.classList.toggle("collapsed", collapsed);
+  const name = collapsed ? "unfold" : "fold";
+  const tip = collapsed ? "展开面板" : "折叠面板";
+  els.railFold.dataset.icon = name;
+  els.railFold.dataset.tip = tip;
+  els.railFold.setAttribute("aria-label", tip);
+  els.railFold.setAttribute("aria-pressed", String(collapsed));
+  els.railFold.innerHTML = iconSvg(name);
+  if (persist) chrome.storage.local.set({ panelCollapsed: collapsed });
+}
+
+function openFullPage() {
+  return chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel/sidepanel.html?full=1") });
 }
 
 function fillSettings() {
@@ -1515,9 +1544,21 @@ function setReadPage(on) {
 
 // ---------- 事件绑定 ----------
 
+els.railFold.addEventListener("click", () => setCollapsed(!state.collapsed));
+
+els.railFull.addEventListener("click", () => {
+  openFullPage().catch(() => setStatus("打开全页失败", "error"));
+});
+
+// 折叠后左边是一片空白，点一下就还原，不用非得找准按钮
+els.layout.addEventListener("click", (event) => {
+  if (state.collapsed && !event.target.closest(".rail")) setCollapsed(false);
+});
+
 els.rail.addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-view]");
   if (!button) return;
+  if (state.collapsed) setCollapsed(false);
   showView(button.dataset.view);
   if (button.dataset.view === "translate" || button.dataset.view === "chat") await syncSelection();
 });
@@ -1850,6 +1891,13 @@ chrome.storage.local.get("launcher").then((saved) => {
   els.launcherToggle.checked = saved.launcher !== false;
 });
 
+// 全页标签页里没有“折叠”这回事，只有面板恢复上次的折叠状态
+if (!FULL_PAGE) {
+  chrome.storage.local.get("panelCollapsed").then((saved) => {
+    if (saved.panelCollapsed) setCollapsed(true, { persist: false });
+  });
+}
+
 window.addEventListener("focus", () => syncSelection().catch(() => {}));
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -1879,6 +1927,8 @@ async function consumePending() {
 
   await chrome.storage.local.remove("pending");
   state.pageCache = null;
+  // 从网页悬浮栏唤起的操作一定有明确意图，折叠状态下先展开再执行
+  if (state.collapsed) setCollapsed(false);
   showView(pending.view || "chat");
   if (pending.actionId) await runAction(pending.actionId, { selection: pending.selection });
 }

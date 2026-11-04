@@ -137,6 +137,53 @@ body {
 .rail button svg { width: 20px; height: 20px; }
 .rail button:hover { background: var(--accent-soft); color: var(--accent); }
 
+/* 顶部两个小按钮：折叠面板 / 全页模式，仿 Sider 右上角那一对 */
+.rail-top {
+  display: flex;
+  gap: 2px;
+  margin: 0 -3px 8px;
+}
+
+.rail-top button {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  border-radius: 6px;
+}
+
+.rail-top button svg { width: 15px; height: 15px; margin: 0 auto; }
+
+/* 折叠：主内容收起，右侧功能栏留成窄条；点空白、展开按钮或任意图标都能回来 */
+.layout.collapsed { justify-content: flex-end; }
+.layout.collapsed .main { display: none; }
+
+/* 原生侧边栏不能真正改宽，空白处给一句提示，别让人以为面板坏了 */
+.collapsed-hint { display: none; }
+
+.layout.collapsed .collapsed-hint {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.collapsed-hint img { opacity: .2; }
+
+/* 全页模式（新标签页）：内容列居中定宽，功能栏贴在这条宽列的右缘 */
+html[data-full="1"] .layout {
+  max-width: 960px;
+  margin: 0 auto;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+html[data-full="1"] .rail-top { display: none; }
+
 .rail button.active {
   background: var(--accent-soft);
   border-color: var(--accent-border);
@@ -372,7 +419,10 @@ textarea {
 .composer-row.controls { margin-top: 0; margin-bottom: 8px; }
 /* 换行时让「新聊天/历史」始终贴在这一行的右端，不会散在左边 */
 .composer-row.controls #newChat { margin-left: auto; }
+/* 发送栏：+ 和附件贴着左侧状态文字，录音/发送留在右端 */
 .composer-row.sendbar { margin-top: 0; justify-content: flex-end; }
+.composer-row.sendbar .status { flex: 0 1 auto; min-width: 0; }
+.composer-row.sendbar #btnVoice { margin-left: auto; }
 
 .toggle { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 4px; }
 
@@ -992,6 +1042,13 @@ button.ico.lg svg { width: 18px; height: 18px; }
 .tip-top.tip-in::after {
   left: auto;
   right: 0;
+  transform: none;
+}
+
+/* 靠最左的控件同理，气泡改成从按钮右边缘往右展开 */
+.tip-top.tip-out::after {
+  left: 0;
+  right: auto;
   transform: none;
 }
 
