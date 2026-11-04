@@ -1,0 +1,1 @@
+({ id: chrome.runtime.id, status: document.getElementById("status").textContent, bal: document.getElementById("balance").textContent, models: document.getElementById("model").options.length })

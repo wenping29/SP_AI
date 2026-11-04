@@ -1,0 +1,140 @@
+{
+  "boot": {
+    "status": "已连接",
+    "model": "deepseek-chat",
+    "vision": false
+  },
+  "attached": {
+    "kinds": [
+      "image:pixel.png"
+    ],
+    "chips": [
+      "pixel.png"
+    ],
+    "thumbs": 1
+  },
+  "ledgerBeforeBlocked": {
+    "balance": 824,
+    "rows": 23,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 57,
+      "outputTokens": 2,
+      "at": "2026-11-04 11:58:00"
+    }
+  },
+  "blocked": {
+    "status": "当前模型不支持图片",
+    "busy": false,
+    "attachments": 1,
+    "msgs": 1
+  },
+  "ledgerAfterBlocked": {
+    "balance": 824,
+    "rows": 23,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 57,
+      "outputTokens": 2,
+      "at": "2026-11-04 11:58:00"
+    }
+  },
+  "chipRemoved": {
+    "clicked": true,
+    "left": 0,
+    "selectors": "IMG,name,BUTTON"
+  },
+  "ledgerBeforeText": {
+    "balance": 824,
+    "rows": 23,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 57,
+      "outputTokens": 2,
+      "at": "2026-11-04 11:58:00"
+    }
+  },
+  "textDone": {
+    "sec": 1,
+    "busy": false,
+    "msgs": 3
+  },
+  "ledgerAfterText": {
+    "balance": 816,
+    "rows": 24,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 41,
+      "outputTokens": 8,
+      "at": "2026-11-04 12:00:29"
+    }
+  },
+  "bubbleButtons": [
+    {
+      "label": "复制",
+      "disabled": false
+    },
+    {
+      "label": "引用",
+      "disabled": false
+    },
+    {
+      "label": "重新生成",
+      "disabled": false
+    }
+  ],
+  "quote": {
+    "inputHead": "> 1+1 等于 2。\n\n"
+  },
+  "ledgerBeforeRegen": {
+    "balance": 816,
+    "rows": 24,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 41,
+      "outputTokens": 8,
+      "at": "2026-11-04 12:00:29"
+    }
+  },
+  "regenClick": {
+    "found": true,
+    "disabled": false
+  },
+  "regenDone": {
+    "sec": 1,
+    "busy": false,
+    "msgs": 2
+  },
+  "ledgerAfterRegen": {
+    "balance": 808,
+    "rows": 25,
+    "first": {
+      "delta": -8,
+      "reason": "chat",
+      "modelId": "deepseek-chat",
+      "inputTokens": 41,
+      "outputTokens": 6,
+      "at": "2026-11-04 12:00:30"
+    }
+  },
+  "threadFinal": [
+    {
+      "role": "msg user",
+      "text": "只用一句话回答：1+1 等于几 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "1+1等于2。 deepseek-chat · 输入 41／输出 6 token 复制 引用 重新生成"
+    }
+  ]
+}

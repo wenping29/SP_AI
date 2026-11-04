@@ -1,0 +1,29 @@
+{
+ "panelBefore": {
+  "innerW": 382,
+  "view": "chat",
+  "model": "glm-4v-flash",
+  "msgs": 4
+ },
+ "storageBefore": {
+  "launcher": true,
+  "model": "glm-4v-flash"
+ },
+ "storageAfter": {
+  "launcher": true,
+  "model": "glm-4v-flash"
+ },
+ "settingsCheckbox": {
+  "checked": true
+ },
+ "railNow": {
+  "found": true,
+  "hidden": false,
+  "count": 4,
+  "firstBox": [
+   42,
+   42
+  ],
+  "innerW": 457
+ }
+}

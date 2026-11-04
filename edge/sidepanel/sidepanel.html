@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SP 侧边栏助手</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="layout">
+    <div class="main">
+      <header>
+        <span class="brand"><img class="brand-mark" src="../icons/icon32.png" alt="SP 图标" width="18" height="18">SP 助手</span>
+        <span id="status" class="status">准备中</span>
+        <button id="balance" class="chip" title="查看积分明细">积分 —</button>
+      </header>
+
+      <div id="notice" class="notice" hidden></div>
+
+      <section class="toolbar">
+        <div id="viewTitle" class="view-title">聊天</div>
+        <span class="spacer"></span>
+      </section>
+
+      <div id="chatView" class="chat-view">
+        <main id="thread" class="thread">
+          <p class="hint">可以直接提问，或用右侧「工具」处理整页与划线内容。</p>
+        </main>
+
+        <section id="composer" class="composer">
+          <div id="selectionCard" class="selection-card" hidden>
+            <span class="selection-label">已选中</span>
+            <span id="selectionText" class="selection-text">尚未选中网页文字</span>
+            <button id="runSelection" class="mini ico tip-top" data-icon="translate" data-tip="译成中文"></button>
+          </div>
+          <div id="attachments" class="attachments" hidden></div>
+          <div class="composer-row controls">
+            <select id="model" class="model-select" title="切换大模型"></select>
+            <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="截图：抓取可见区域发给模型"></button>
+            <button id="btnFile" class="tool ico tip-top" data-icon="clip" data-tip="附加文件：图片或 txt/md 等文本"></button>
+            <button id="btnVoice" class="tool ico tip-top" data-icon="mic" data-tip="语音输入：说完自动转成文字" aria-pressed="false"></button>
+            <button id="btnReadPage" class="tool ico tip-top" data-icon="book" data-tip="阅读此页：发送时带上本页正文" aria-pressed="false"></button>
+            <input id="filePicker" type="file" accept="image/*,.txt,.md,.csv,.json,.log" multiple hidden>
+            <button id="newChat" class="mini ico tip-top" data-icon="compose" data-tip="新聊天"></button>
+            <button id="openHistory" class="mini ico tip-top tip-in" data-icon="history" data-tip="聊天记录"></button>
+          </div>
+          <textarea id="input" rows="3" placeholder="输入问题，Enter 发送，Shift + Enter 换行"></textarea>
+          <div class="composer-row sendbar">
+            <span class="spacer"></span>
+            <button id="stop" class="tool danger ico lg tip-top" data-icon="stop" data-tip="停止生成" hidden></button>
+            <button id="send" class="primary ico lg tip-top tip-in" data-icon="send" data-tip="发送"></button>
+          </div>
+        </section>
+      </div>
+
+      <section id="askView" class="pane" hidden>
+        <p class="tip">点一条常用提问，内容会填进输入框，可再修改后发送。</p>
+        <div id="askList" class="prompt-list"></div>
+      </section>
+
+      <section id="translateView" class="pane" hidden>
+        <div class="pane-block">
+          <div class="pane-label">网页中选中的文字</div>
+          <div id="translateSource" class="quote">还没有选中文字。先在网页里划选一段，再点下面的按钮。</div>
+        </div>
+        <div class="row wrap">
+          <button id="refreshSelection" class="ghost">读取当前选中</button>
+          <button id="translateZh" class="primary">译成中文</button>
+          <button id="translateEn" class="ghost">译成英文</button>
+        </div>
+        <p class="tip">右侧「工具」里也可以直接做总结、大纲、解释、润色。</p>
+      </section>
+
+      <section id="toolsView" class="pane" hidden>
+        <div id="tools" class="tools-grid"></div>
+        <p class="tip">「总结全文」「分段大纲」读取当前标签页正文；「译成中文」「解释划线」「润色改写」需要先在网页中选中文字。</p>
+      </section>
+
+      <section id="settingsView" class="pane settings" hidden>
+        <div class="about">
+          <img src="../icons/icon48.png" alt="SP 图标" width="40" height="40">
+          <div>
+            <strong>SP 侧边栏助手</strong>
+            <span id="brandVersion" class="muted"></span>
+          </div>
+        </div>
+        <label>服务器地址
+          <input id="serverInput" type="text" spellcheck="false">
+        </label>
+        <label>设备备注
+          <input id="labelInput" type="text">
+        </label>
+        <label>设备 ID
+          <input id="deviceInput" type="text" readonly>
+        </label>
+        <label>访问令牌
+          <input id="tokenInput" type="text" readonly>
+        </label>
+        <label class="switch">
+          <input id="launcherToggle" type="checkbox">
+          <span>在网页右侧显示悬浮快捷按钮</span>
+        </label>
+        <div class="settings-actions">
+          <button id="saveSettings" class="primary">保存并重连</button>
+          <button id="reregister" class="ghost">重新注册</button>
+          <button id="openCredits" class="ghost">积分明细</button>
+        </div>
+        <p class="tip">换服务器地址后旧令牌失效，会自动重新注册；服务器由后台统一配置，普通用户不需要动这一页。</p>
+      </section>
+    </div>
+
+    <nav class="rail" id="rail">
+      <button data-view="chat" class="active tip-left" data-icon="chat" data-tip="聊天"></button>
+      <button data-view="ask" class="tip-left" data-icon="sparkle" data-tip="提问"></button>
+      <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>
+      <button data-view="tools" class="tip-left" data-icon="grid" data-tip="工具"></button>
+      <button data-view="settings" class="tip-left" data-icon="gear" data-tip="设置"></button>
+    </nav>
+  </div>
+
+  <dialog id="historyDialog">
+    <h2>聊天历史</h2>
+    <ul id="historyList" class="history-list"></ul>
+    <div class="row">
+      <button id="clearHistory" class="ghost">清空全部</button>
+      <span class="spacer"></span>
+      <button id="closeHistory" class="primary">关闭</button>
+    </div>
+  </dialog>
+
+  <dialog id="creditsDialog">
+    <h2>积分明细</h2>
+    <div class="balance-line">当前余额 <strong id="creditsBalance">—</strong></div>
+    <ul id="transactions" class="transactions"></ul>
+    <div class="row">
+      <button id="refreshCredits" class="ghost">刷新</button>
+      <span class="spacer"></span>
+      <button id="closeCredits" class="primary">关闭</button>
+    </div>
+  </dialog>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

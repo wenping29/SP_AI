@@ -1,0 +1,10 @@
+{
+  "model": "glm-4v-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "这张图里有什么？",
+      "images": ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="]
+    }
+  ]
+}

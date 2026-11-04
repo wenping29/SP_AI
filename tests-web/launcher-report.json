@@ -1,0 +1,443 @@
+{
+  "reload": "via panel tab",
+  "worldId": 4,
+  "railInitial": {
+    "found": true,
+    "hidden": false,
+    "count": 4,
+    "btns": [
+      {
+        "title": "总结全文",
+        "primary": false,
+        "ring": false,
+        "x": 813,
+        "y": 375,
+        "w": 42,
+        "h": 42,
+        "svg": true
+      },
+      {
+        "title": "划词翻译",
+        "primary": false,
+        "ring": false,
+        "x": 813,
+        "y": 425,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "全部工具",
+        "primary": false,
+        "ring": false,
+        "x": 813,
+        "y": 475,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "打开聊天",
+        "primary": true,
+        "ring": true,
+        "x": 813,
+        "y": 525,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      }
+    ],
+    "innerW": 843,
+    "innerH": 900,
+    "竖排": true,
+    "全部40圆角": false,
+    "贴右": true,
+    "整体居中": true,
+    "标题": [
+      "总结全文",
+      "划词翻译",
+      "全部工具",
+      "打开聊天"
+    ]
+  },
+  "clickChat": {
+    "clicked": {
+      "title": "打开聊天",
+      "primary": true,
+      "ring": true,
+      "x": 427,
+      "y": 525,
+      "w": 40,
+      "h": 40,
+      "svg": true
+    }
+  },
+  "panelAppearedAfterSec": 1,
+  "afterChatClick": {
+    "viewTitle": "翻译",
+    "activeRail": "translate",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "streaming": false,
+    "assistant": 1,
+    "msgs": 2,
+    "launcherChecked": true
+  },
+  "pendingAfterChat": null,
+  "creditsAfterChat": {
+    "__error": "TypeError: Failed to fetch\n    at <anonymous>:3:21"
+  },
+  "clickTools": {
+    "clicked": {
+      "title": "全部工具",
+      "primary": false,
+      "ring": false,
+      "x": 427,
+      "y": 475,
+      "w": 40,
+      "h": 40,
+      "svg": true
+    }
+  },
+  "afterToolsClick": {
+    "viewTitle": "工具",
+    "activeRail": "tools",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "streaming": false,
+    "assistant": 1,
+    "msgs": 2,
+    "launcherChecked": true
+  },
+  "clickTranslate": {
+    "clicked": {
+      "title": "划词翻译",
+      "primary": false,
+      "ring": false,
+      "x": 427,
+      "y": 425,
+      "w": 40,
+      "h": 40,
+      "svg": true
+    }
+  },
+  "afterTranslateClick": {
+    "viewTitle": "翻译",
+    "activeRail": "translate",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "streaming": false,
+    "assistant": 1,
+    "msgs": 2,
+    "launcherChecked": true
+  },
+  "clickSummarize": {
+    "clicked": {
+      "title": "总结全文",
+      "primary": false,
+      "ring": false,
+      "x": 427,
+      "y": 375,
+      "w": 40,
+      "h": 40,
+      "svg": true
+    }
+  },
+  "rightAfterSummarize": {
+    "viewTitle": "工具",
+    "activeRail": "tools",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "streaming": false,
+    "assistant": 2,
+    "msgs": 4,
+    "launcherChecked": true
+  },
+  "summarizeWait": {
+    "sec": 1,
+    "viewTitle": "工具",
+    "activeRail": "tools",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "streaming": false,
+    "assistant": 2,
+    "msgs": 4,
+    "launcherChecked": true
+  },
+  "summarizeLedger": {
+    "before": {
+      "__error": "TypeError: Failed to fetch\n    at <anonymous>:3:21"
+    },
+    "after": {
+      "__error": "TypeError: Failed to fetch\n    at <anonymous>:3:21"
+    },
+    "新增流水": []
+  },
+  "threadTail": [
+    {
+      "role": "msg user",
+      "text": "总结全文本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+    },
+    {
+      "role": "msg assistant error",
+      "text": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥"
+    }
+  ],
+  "toggleOff": {
+    "rail": {
+      "found": true,
+      "hidden": true,
+      "count": 4,
+      "btns": [
+        {
+          "title": "总结全文",
+          "primary": false,
+          "ring": false,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "svg": true
+        },
+        {
+          "title": "划词翻译",
+          "primary": false,
+          "ring": false,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "svg": true
+        },
+        {
+          "title": "全部工具",
+          "primary": false,
+          "ring": false,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "svg": true
+        },
+        {
+          "title": "打开聊天",
+          "primary": true,
+          "ring": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "svg": true
+        }
+      ],
+      "innerW": 457,
+      "innerH": 900,
+      "竖排": false,
+      "全部40圆角": false,
+      "贴右": false,
+      "整体居中": false,
+      "标题": [
+        "总结全文",
+        "划词翻译",
+        "全部工具",
+        "打开聊天"
+      ]
+    },
+    "panel": {
+      "viewTitle": "工具",
+      "activeRail": "tools",
+      "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+      "streaming": false,
+      "assistant": 2,
+      "msgs": 4,
+      "launcherChecked": false
+    }
+  },
+  "toggleOn": {
+    "rail": {
+      "found": true,
+      "hidden": false,
+      "count": 4,
+      "btns": [
+        {
+          "title": "总结全文",
+          "primary": false,
+          "ring": false,
+          "x": 427,
+          "y": 375,
+          "w": 40,
+          "h": 40,
+          "svg": true
+        },
+        {
+          "title": "划词翻译",
+          "primary": false,
+          "ring": false,
+          "x": 427,
+          "y": 425,
+          "w": 40,
+          "h": 40,
+          "svg": true
+        },
+        {
+          "title": "全部工具",
+          "primary": false,
+          "ring": false,
+          "x": 427,
+          "y": 475,
+          "w": 40,
+          "h": 40,
+          "svg": true
+        },
+        {
+          "title": "打开聊天",
+          "primary": true,
+          "ring": true,
+          "x": 427,
+          "y": 525,
+          "w": 42,
+          "h": 42,
+          "svg": true
+        }
+      ],
+      "innerW": 457,
+      "innerH": 900,
+      "竖排": true,
+      "全部40圆角": false,
+      "贴右": true,
+      "整体居中": true,
+      "标题": [
+        "总结全文",
+        "划词翻译",
+        "全部工具",
+        "打开聊天"
+      ]
+    },
+    "panel": {
+      "viewTitle": "工具",
+      "activeRail": "tools",
+      "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+      "streaming": false,
+      "assistant": 2,
+      "msgs": 4,
+      "launcherChecked": true
+    }
+  },
+  "toggleViaCheckbox": {
+    "railHidden": true,
+    "storage": false
+  },
+  "restored": {
+    "found": true,
+    "hidden": false,
+    "count": 4,
+    "btns": [
+      {
+        "title": "总结全文",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 375,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "划词翻译",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 425,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "全部工具",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 475,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "打开聊天",
+        "primary": true,
+        "ring": true,
+        "x": 427,
+        "y": 525,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      }
+    ],
+    "innerW": 457,
+    "innerH": 900,
+    "竖排": true,
+    "全部40圆角": true,
+    "贴右": true,
+    "整体居中": true,
+    "标题": [
+      "总结全文",
+      "划词翻译",
+      "全部工具",
+      "打开聊天"
+    ]
+  },
+  "railFinal": {
+    "found": true,
+    "hidden": false,
+    "count": 4,
+    "btns": [
+      {
+        "title": "总结全文",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 375,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "划词翻译",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 425,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "全部工具",
+        "primary": false,
+        "ring": false,
+        "x": 427,
+        "y": 475,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      },
+      {
+        "title": "打开聊天",
+        "primary": true,
+        "ring": true,
+        "x": 427,
+        "y": 525,
+        "w": 40,
+        "h": 40,
+        "svg": true
+      }
+    ],
+    "innerW": 457,
+    "innerH": 900,
+    "竖排": true,
+    "全部40圆角": true,
+    "贴右": true,
+    "整体居中": true,
+    "标题": [
+      "总结全文",
+      "划词翻译",
+      "全部工具",
+      "打开聊天"
+    ]
+  }
+}

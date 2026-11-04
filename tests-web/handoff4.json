@@ -1,0 +1,129 @@
+{
+  "worldId": null,
+  "swUrl": "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js",
+  "panelBefore": 0,
+  "pendingBefore": {
+    "__cdp": "Invalid parameters"
+  },
+  "button": null,
+  "clickedAt": "2026-11-04 11:52:34",
+  "trace": [
+    {
+      "sec": 1,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 2,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 3,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 4,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 5,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 6,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 7,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 8,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 9,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 10,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 11,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 12,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 13,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 14,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    },
+    {
+      "sec": 15,
+      "panelTargets": 0,
+      "pending": {
+        "__cdp": "Invalid parameters"
+      }
+    }
+  ],
+  "panel": "面板 target 无法连接",
+  "swLogs": [],
+  "targetsFinal": [
+    "page:http://127.0.0.1:8899/fixture.html",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://ecloud.10086.cn/portal/market/all",
+    "page:https://juejin.cn/user/4248168662580222",
+    "other:edge://newtab/",
+    "service_worker:chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/backgrou",
+    "worker:"
+  ]
+}

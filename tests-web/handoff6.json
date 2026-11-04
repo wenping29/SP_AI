@@ -1,0 +1,93 @@
+{
+  "worldId": 8,
+  "swUrl": "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js",
+  "panelBefore": 0,
+  "pendingBefore": null,
+  "selection": "本次版本支持国产大模型切换，采用积分制计费，注册即送 100",
+  "button": {
+    "label": "翻译",
+    "x": 238,
+    "y": 122,
+    "width": 45
+  },
+  "hitCheck": {
+    "selLen": 35,
+    "hitTag": "DIV",
+    "hitIsHost": true,
+    "barShown": "bar show",
+    "barBox": "{\"x\":164.84375,\"y\":102.20833587646484,\"width\":192.6666717529297,\"height\":39.333335876464844,\"top\":102.20833587646484,\"right\":357.5104217529297,\"bottom\":141.5416717529297,\"left\":164.84375}"
+  },
+  "pendingJustAfterClick": null,
+  "clickedAt": "2026-11-04 11:55:30",
+  "trace": [
+    {
+      "sec": 1,
+      "panelTargets": 1,
+      "pending": null
+    }
+  ],
+  "panel": {
+    "viewTitle": "聊天",
+    "status": "已连接",
+    "msgs": [
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "本版本支持国产大模型切换，采用积分制计费，注册即赠送 1000 积分。 deepseek-chat · 输入 80／输出 23 token 复制 引用 重新生成"
+      }
+    ],
+    "msgCount": 2
+  },
+  "panelStorage": {
+    "pending": null,
+    "sessionCount": 1,
+    "messages": [
+      {
+        "title": "译成中文：本次版本支持国产大模型切换，采用积分制…",
+        "n": 2,
+        "last": "本版本支持国产大模型切换，采用积分制计费，注册即赠送 1000 积分。"
+      }
+    ]
+  },
+  "panelToken": {
+    "deviceId": "26b78139-8621-45b4-83bd-794407a480b8",
+    "model": "deepseek-chat",
+    "token": "731c4a82875247d1a9356cdbf79cd501"
+  },
+  "wait": {
+    "sec": 1,
+    "busy": false,
+    "assistant": 1,
+    "msgs": 2
+  },
+  "threadFinal": [
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "本版本支持国产大模型切换，采用积分制计费，注册即赠送 1000 积分。 deepseek-chat · 输入 80／输出 23 token 复制 引用 重新生成"
+    }
+  ],
+  "ledger": {
+    "__error": "TypeError: Failed to fetch\n    at <anonymous>:3:21"
+  },
+  "swLogs": [
+    "warning: 通知面板失败 Could not establish connection. Receiving end does not exist."
+  ],
+  "targetsFinal": [
+    "page:chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/sidepane",
+    "page:http://127.0.0.1:8899/fixture.html",
+    "page:https://ecloud.10086.cn/portal/market/all",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://juejin.cn/user/4248168662580222",
+    "other:edge://newtab/",
+    "service_worker:chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/backgrou",
+    "worker:"
+  ]
+}

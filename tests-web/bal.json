@@ -1,0 +1,1 @@
+{"balance":997,"deviceId":"voice-curl-test-0001","transactions":[{"delta":-3,"reason":"voice","modelId":"qwen3-asr-flash","inputTokens":0,"outputTokens":0,"at":"2026-11-04 13:15:15"},{"delta":1000,"reason":"free_grant","modelId":"","inputTokens":0,"outputTokens":0,"at":"2026-11-04 13:14:14"}]}

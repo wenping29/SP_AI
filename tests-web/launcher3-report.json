@@ -1,0 +1,130 @@
+{
+  "worldId": 25,
+  "panelWidth": 382,
+  "beforeChat": {
+    "innerW": 382,
+    "view": "tools",
+    "viewTitle": "工具",
+    "model": "glm-4v-flash",
+    "status": "已切换到 智谱 GLM-4V-Flash（视觉免费档）",
+    "msgs": 2,
+    "streaming": false
+  },
+  "boxChat": {
+    "x": 427,
+    "y": 525,
+    "innerW": 457,
+    "hidden": false,
+    "hit": true,
+    "ring": true
+  },
+  "afterChat": {
+    "innerW": 382,
+    "view": "chat",
+    "viewTitle": "聊天",
+    "model": "glm-4v-flash",
+    "status": "已切换到 智谱 GLM-4V-Flash（视觉免费档）",
+    "msgs": 2,
+    "streaming": false
+  },
+  "pendingAfterChat": null,
+  "viewOnlyCharge": {
+    "新增流水": []
+  },
+  "boxSum": {
+    "x": 427,
+    "y": 375,
+    "innerW": 457,
+    "hidden": false,
+    "hit": true,
+    "ring": false
+  },
+  "rightAfterSum": {
+    "innerW": 382,
+    "view": "chat",
+    "viewTitle": "聊天",
+    "model": "glm-4v-flash",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "msgs": 4,
+    "streaming": false
+  },
+  "sumWait": {
+    "sec": 1,
+    "innerW": 382,
+    "view": "chat",
+    "viewTitle": "聊天",
+    "model": "glm-4v-flash",
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "msgs": 4,
+    "streaming": false
+  },
+  "summarizeCharge": {
+    "之前余额": 784,
+    "之后余额": 784,
+    "新增流水": []
+  },
+  "threadTail": [
+    {
+      "cls": "msg user",
+      "text": "总结全文 本页正文 83 字 · http://127.0.0.1:8899/fixture.html 复制 引用"
+    },
+    {
+      "cls": "msg assistant error",
+      "text": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥"
+    }
+  ],
+  "ledgerTop": {
+    "status": 200,
+    "balance": 784,
+    "tx": [
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 128,
+        "outputTokens": 112,
+        "at": "2026-11-04 12:35:58"
+      },
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 150,
+        "outputTokens": 287,
+        "at": "2026-11-04 12:06:45"
+      },
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 80,
+        "outputTokens": 39,
+        "at": "2026-11-04 12:06:34"
+      },
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 41,
+        "outputTokens": 6,
+        "at": "2026-11-04 12:00:30"
+      },
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 41,
+        "outputTokens": 8,
+        "at": "2026-11-04 12:00:29"
+      },
+      {
+        "delta": -8,
+        "reason": "chat",
+        "modelId": "deepseek-chat",
+        "inputTokens": 57,
+        "outputTokens": 2,
+        "at": "2026-11-04 11:58:00"
+      }
+    ]
+  }
+}

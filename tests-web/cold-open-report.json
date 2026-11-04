@@ -1,0 +1,28 @@
+{
+  "worldId": 15,
+  "closeTry": "没有服务端口可关面板",
+  "baseline": {
+    "panels": 1,
+    "innerW": 457
+  },
+  "swAliveBeforeIdle": false,
+  "swAliveAfterIdle": false,
+  "idleWaitSec": "已休眠",
+  "coldBox": {
+    "x": 427,
+    "y": 525,
+    "innerW": 457
+  },
+  "coldPanelAppeared": true,
+  "coldPending": null,
+  "swAliveBeforeWarmClick": true,
+  "warmPreexisting": 1,
+  "warmBox": {
+    "x": 427,
+    "y": 525,
+    "innerW": 457
+  },
+  "warmPanelAppeared": true,
+  "warmPending": "chat",
+  "warmInnerW": 457
+}

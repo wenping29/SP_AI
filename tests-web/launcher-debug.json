@@ -1,0 +1,50 @@
+{
+  "worldId": 12,
+  "hasSw": true,
+  "swPatch": "patched",
+  "contentPatch": {
+    "hasHost": true,
+    "hasBtn": true,
+    "box": {
+      "x": 427.3333435058594,
+      "y": 525,
+      "w": 40
+    },
+    "hit": true,
+    "hitTag": "DIV",
+    "innerW": 457
+  },
+  "contentAfter": {
+    "sent": [
+      {
+        "type": "sp-launch",
+        "actionId": null,
+        "view": "chat"
+      }
+    ],
+    "error": null
+  },
+  "swAfter": {
+    "msgs": [
+      "sp-launch"
+    ],
+    "openCalls": 1,
+    "openArgs": {
+      "windowId": 803120329
+    },
+    "openResult": "ok"
+  },
+  "rawOpen": "`sidePanel.open()` may only be called in response to a user gesture.",
+  "windows": [
+    {
+      "id": 803120329,
+      "type": "normal",
+      "focused": null
+    }
+  ],
+  "swLogs": [],
+  "panels": [
+    "DCE03A7E"
+  ],
+  "pendingNow": null
+}

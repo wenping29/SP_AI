@@ -1,0 +1,255 @@
+{
+  "samples": [
+    {
+      "ms": 200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 1000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 1200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 1400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 1600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 1800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 2000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 2200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 2400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 2600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 2800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 3000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 3200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 3400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 3600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 3800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 4000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 4200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 4400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 4600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 4800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 5000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 5200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 5400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 5600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 5800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 6000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 6200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 6400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 6600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 6800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 7000,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 7200,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 7400,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 7600,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 7800,
+      "pending": null,
+      "panels": 1
+    },
+    {
+      "ms": 8000,
+      "pending": null,
+      "panels": 1
+    }
+  ],
+  "worldId": 30,
+  "toolbar": {
+    "barDisplay": "flex",
+    "box": {
+      "left": "164.849px",
+      "top": "102.208px"
+    },
+    "sel": "本次版本支持国产大模型切换，采用积分制计费，注册即送 100"
+  },
+  "button": {
+    "label": "翻译",
+    "x": 238,
+    "y": 122,
+    "width": 45
+  },
+  "focusBefore": true,
+  "hit": {
+    "tag": "DIV",
+    "isHost": true,
+    "selLen": 35
+  },
+  "panelsFinal": [
+    "page:chrome-extension://jmgfklbjklbemmocojbpaajjpbobank"
+  ],
+  "windows": "no",
+  "manifest": "0.1.0",
+  "control": "ok",
+  "controlPending": null,
+  "sendLog": [
+    {
+      "type": "sp-action",
+      "actionId": "translate",
+      "selLen": 35,
+      "ts": 1793765194015
+    },
+    {
+      "ok": true,
+      "reply": true
+    },
+    {
+      "type": "sp-action",
+      "actionId": "explain",
+      "selLen": 5,
+      "ts": 1793765202633
+    },
+    {
+      "ok": true,
+      "reply": true
+    }
+  ],
+  "pendingCleared": true
+}

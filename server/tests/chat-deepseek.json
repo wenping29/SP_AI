@@ -1,0 +1,6 @@
+{
+  "model": "deepseek-chat",
+  "messages": [
+    { "role": "user", "content": "用一句话说清这个测试网页的重点：新版 Edge 侧边栏插件支持国产大模型切换，采用积分制计费，注册送 1000 积分。" }
+  ]
+}

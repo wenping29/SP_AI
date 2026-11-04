@@ -1,0 +1,47 @@
+{
+  "worldId": 2,
+  "swContexts": [
+    "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js"
+  ],
+  "swCtx": 1,
+  "patched": "挂钩完成",
+  "selection": "本次版本支持国产大模型切换，采用积分制计费，注册即送 100",
+  "button": {
+    "label": "翻译",
+    "x": 238,
+    "y": 122,
+    "width": 45
+  },
+  "clickedAt": 1793764244894,
+  "setLog": [
+    {
+      "ts": 1793764244896,
+      "keys": [
+        "pending"
+      ],
+      "hasPending": true,
+      "stack": "at stack (<anonymous>:6:23) << at S.set (<anonymous>:7:136) << at launchAction (chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js:56:40) << at chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js:35:5"
+    }
+  ],
+  "openLog": [
+    {
+      "ts": 1793764244896,
+      "arg": "{\"windowId\":803120329}",
+      "stack": "at stack (<anonymous>:6:23) << at chrome.sidePanel.open (<anonymous>:10:105) << at launchAction (chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js:58:28) << at chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js:35:5"
+    }
+  ],
+  "sendLog": [
+    {
+      "ts": 1793764244912,
+      "type": "pending-ready",
+      "stack": "at stack (<anonymous>:6:23) << at chrome.runtime.sendMessage (<anonymous>:12:114) << at launchAction (chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js:64:26)"
+    }
+  ],
+  "pendingNow": null,
+  "swConsole": [
+    "warning: 通知面板失败 Could not establish connection. Receiving end does not exist."
+  ],
+  "panelTargets": [
+    "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/sidepanel/sidepane"
+  ]
+}

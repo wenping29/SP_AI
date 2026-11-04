@@ -1,0 +1,105 @@
+{
+  "worldId": 39,
+  "vis": {
+    "state": "hidden",
+    "hasFocus": true,
+    "w": 843,
+    "h": 900,
+    "dpr": 1.5
+  },
+  "install": {
+    "n": 4,
+    "rects": [
+      [
+        793,
+        355,
+        40,
+        40
+      ],
+      [
+        793,
+        405,
+        40,
+        40
+      ],
+      [
+        793,
+        455,
+        40,
+        40
+      ],
+      [
+        793,
+        505,
+        40,
+        40
+      ]
+    ],
+    "hidden": false
+  },
+  "sw": true,
+  "patch": "patched",
+  "box": {
+    "x": 813,
+    "y": 525,
+    "stack": [
+      "DIV",
+      "HTML"
+    ],
+    "topIsHost": true
+  },
+  "afterTrusted": [
+    {
+      "events": [],
+      "swMsgs": [],
+      "calls": [],
+      "pending": null,
+      "panels": 0
+    },
+    {
+      "events": [],
+      "swMsgs": [],
+      "calls": [],
+      "pending": null,
+      "panels": 0
+    }
+  ],
+  "programmatic": [
+    "doc BUTTON>DIV>#document-fragment",
+    "rail target=BUTTON",
+    "btn3"
+  ],
+  "afterProgrammatic": {
+    "swMsgs": [
+      {
+        "type": "sp-launch",
+        "view": "chat",
+        "action": null,
+        "windowId": 803120329
+      }
+    ],
+    "calls": [
+      {
+        "args": {
+          "windowId": 803120329
+        },
+        "at": 1793768450019,
+        "result": "`sidePanel.open()` may only be called in response to a user gesture."
+      }
+    ],
+    "pending": {
+      "actionId": null,
+      "at": 1793768450019,
+      "selection": "",
+      "title": "测试网页：新版侧边栏插件发布说明",
+      "url": "http://127.0.0.1:8899/fixture.html",
+      "view": "chat",
+      "windowId": 803120329
+    }
+  },
+  "logs": [
+    "warning: 打开侧边栏失败 `sidePanel.open()` may only be called in response to a user gesture.",
+    "warning: 通知面板失败 Could not establish connection. Receiving end does not exist."
+  ],
+  "panels": 0
+}

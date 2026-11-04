@@ -1,0 +1,40 @@
+{
+  "worldId": 25,
+  "button": {
+    "label": "翻译",
+    "x": 238,
+    "y": 122,
+    "width": 45
+  },
+  "wait": {
+    "sec": 20,
+    "booted": true,
+    "busy": false,
+    "msgs": 0
+  },
+  "activeTab": [
+    {
+      "id": 803120567,
+      "url": "http://127.0.0.1:8899/fixture.html"
+    }
+  ],
+  "afterShot": {
+    "status": "已插入截图",
+    "kinds": [
+      "image:网页截图 1.png:104366"
+    ],
+    "thumbs": 1
+  },
+  "guard": {
+    "before": {
+      "balance": 808,
+      "rows": 25
+    },
+    "after": {
+      "balance": 808,
+      "rows": 25
+    },
+    "status": "当前模型不支持图片",
+    "kept": 1
+  }
+}

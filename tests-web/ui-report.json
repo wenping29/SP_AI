@@ -1,0 +1,571 @@
+{
+  "reload": "已重载",
+  "cleared": "沿用 26b78139-8621-45b4-83bd-794407a480b8",
+  "boot": {
+    "status": "已连接",
+    "balance": "积分 976",
+    "deviceId": "26b78139-8621-45b4-83bd-794407a480b8",
+    "token": "731c4a82875247d1a9356cdbf79cd501",
+    "model": "deepseek-chat",
+    "models": [
+      "DeepSeek V3",
+      "智谱 GLM-4V-Flash（视觉免费档）"
+    ],
+    "modelTitles": [
+      "输入 2／输出 6 积分每千 token",
+      "输入 1／输出 2 积分每千 token · 支持图片"
+    ],
+    "rail": [
+      "聊天*",
+      "提问",
+      "翻译",
+      "工具",
+      "设置"
+    ],
+    "tools": [
+      "总结全文读整页正文",
+      "分段大纲读整页正文",
+      "译成中文需要划选文字",
+      "译成英文需要划选文字",
+      "解释划线需要划选文字",
+      "润色改写需要划选文字",
+      "问这篇网页读整页正文"
+    ],
+    "askItems": 6,
+    "visibleViews": [
+      "chatView"
+    ],
+    "composerTools": [
+      "截图",
+      "附加文件",
+      "阅读此页",
+      "停止"
+    ],
+    "hasFilePicker": true
+  },
+  "views": {
+    "steps": [
+      {
+        "name": "ask",
+        "title": "提问",
+        "activeRail": "ask",
+        "visible": [
+          "askView"
+        ]
+      },
+      {
+        "name": "translate",
+        "title": "翻译",
+        "activeRail": "translate",
+        "visible": [
+          "translateView"
+        ]
+      },
+      {
+        "name": "tools",
+        "title": "工具",
+        "activeRail": "tools",
+        "visible": [
+          "toolsView"
+        ]
+      },
+      {
+        "name": "settings",
+        "title": "设置",
+        "activeRail": "settings",
+        "visible": [
+          "settingsView"
+        ]
+      },
+      {
+        "name": "chat",
+        "title": "聊天",
+        "activeRail": "chat",
+        "visible": [
+          "chatView"
+        ]
+      }
+    ],
+    "quickAsk": {
+      "before": {
+        "view": "ask",
+        "input": "",
+        "readPage": false
+      },
+      "after": {
+        "view": "chat",
+        "input": "用三句话讲清楚这个页面在说什么",
+        "readPage": true,
+        "aria": "true"
+      }
+    },
+    "afterReset": {
+      "readPage": false,
+      "view": "chat"
+    }
+  },
+  "normalize": {
+    "model": "deepseek-chat",
+    "readPage": false,
+    "attachments": 0
+  },
+  "fileNode": 41,
+  "textFile": {
+    "status": "已附加 1 个文件",
+    "view": "chat",
+    "attachments": [
+      {
+        "kind": "text",
+        "name": "fixture.html",
+        "size": 578
+      }
+    ],
+    "chips": [
+      "fixture.html"
+    ],
+    "chipsVisible": true,
+    "thumbnails": 0
+  },
+  "screenshot": {
+    "status": "Either the '<all_urls>' or 'activeTab' permission is required.",
+    "view": "chat",
+    "attachments": [
+      {
+        "kind": "text",
+        "name": "fixture.html",
+        "size": 578
+      }
+    ],
+    "chips": [
+      "fixture.html"
+    ],
+    "chipsVisible": true,
+    "thumbnails": 0
+  },
+  "blockedClick": {
+    "clicked": true,
+    "model": "deepseek-chat",
+    "attachmentsBefore": 0
+  },
+  "blocked": {
+    "status": "生成中…",
+    "balance": "积分 976",
+    "model": "deepseek-chat",
+    "readPage": false,
+    "busy": true,
+    "attachments": 0,
+    "messages": [
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 正文一：本次版本支持国"
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。\n\n1+1 等于 2。deepseek-chat · 输入 640／输出 29 token复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "这个页面讲的是什么事？本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。deepseek-chat · 输入 756／输"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant streaming",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 第一段：本次版本支持国产大模型切换，采用"
+      }
+    ],
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 8
+      }
+    ],
+    "activeId": "9984d932-5a15-4f57-acd5-d691249afa76",
+    "lastRequest": {
+      "label": "附加 1 个文件",
+      "images": 0
+    }
+  },
+  "withTextFile": {
+    "status": "已连接",
+    "balance": "积分 968",
+    "model": "deepseek-chat",
+    "readPage": false,
+    "busy": false,
+    "attachments": 0,
+    "messages": [
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 正文一：本次版本支持国"
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。\n\n1+1 等于 2。deepseek-chat · 输入 640／输出 29 token复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "这个页面讲的是什么事？本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。deepseek-chat · 输入 756／输"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 第一段：本次版本支持国产大模型切换，采用"
+      }
+    ],
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 9
+      }
+    ],
+    "activeId": "9984d932-5a15-4f57-acd5-d691249afa76",
+    "lastRequest": {
+      "label": "附加 1 个文件",
+      "images": 0
+    }
+  },
+  "visionNoKey": {
+    "status": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥",
+    "balance": "积分 968",
+    "model": "glm-4v-flash",
+    "readPage": false,
+    "busy": false,
+    "attachments": 0,
+    "messages": [
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 正文一：本次版本支持国"
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。\n\n1+1 等于 2。deepseek-chat · 输入 640／输出 29 token复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "这个页面讲的是什么事？本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。deepseek-chat · 输入 756／输"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 第一段：本次版本支持国产大模型切换，采用"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg assistant error",
+        "text": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥"
+      }
+    ],
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 10
+      }
+    ],
+    "activeId": "9984d932-5a15-4f57-acd5-d691249afa76",
+    "lastRequest": null
+  },
+  "textChat": {
+    "status": "已连接",
+    "balance": "积分 960",
+    "model": "deepseek-chat",
+    "readPage": false,
+    "busy": false,
+    "attachments": 0,
+    "messages": [
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 正文一：本次版本支持国"
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。\n\n1+1 等于 2。deepseek-chat · 输入 640／输出 29 token复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "这个页面讲的是什么事？本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。deepseek-chat · 输入 756／输"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 第一段：本次版本支持国产大模型切换，采用"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg assistant error",
+        "text": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，无法看到任何画面。\n\n1+1 等于 2。deepseek-chat · 输入 766／输出 29 token复制引用重新生成"
+      }
+    ],
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 12
+      }
+    ],
+    "activeId": "9984d932-5a15-4f57-acd5-d691249afa76",
+    "lastRequest": {
+      "label": "用一句话说明 1+1 等于几。",
+      "images": 0
+    }
+  },
+  "controls": {
+    "kinds": [
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg assistant",
+      "msg error",
+      "msg user",
+      "msg assistant",
+      "msg error",
+      "msg user",
+      "msg assistant error",
+      "msg user",
+      "msg assistant"
+    ],
+    "lastMessageActions": [
+      "复制",
+      "引用",
+      "重新生成"
+    ],
+    "afterCopy": "已连接",
+    "quoted": "",
+    "regeneratePresent": true,
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 12
+      }
+    ],
+    "lastRequest": {
+      "label": "用一句话说明 1+1 等于几。",
+      "images": 0
+    }
+  },
+  "regenerated": {
+    "status": "已连接",
+    "balance": "积分 960",
+    "model": "deepseek-chat",
+    "readPage": false,
+    "busy": false,
+    "attachments": 0,
+    "messages": [
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 正文一：本次版本支持国"
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。\n\n1+1 等于 2。deepseek-chat · 输入 640／输出 29 token复制引用"
+      },
+      {
+        "kind": "msg user",
+        "text": "这个页面讲的是什么事？本页正文 83 字 · http://127.0.0.1:8899/fixture.html复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。deepseek-chat · 输入 756／输"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "附加 1 个文件附加 1 个文件复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。\n\n要点：\n\n1. **应保留的正文**\n   - 标题：侧边栏插件发布说明\n   - 第一段：本次版本支持国产大模型切换，采用"
+      },
+      {
+        "kind": "msg error",
+        "text": "Either the '<all_urls>' or 'activeTab' permission is required."
+      },
+      {
+        "kind": "msg user",
+        "text": "图里有什么？复制引用"
+      },
+      {
+        "kind": "msg assistant error",
+        "text": "「智谱 GLM-4V-Flash（视觉免费档）」暂未开放，管理员需先为该模型配置密钥"
+      },
+      {
+        "kind": "msg user",
+        "text": "用一句话说明 1+1 等于几。复制引用"
+      },
+      {
+        "kind": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，无法看到任何画面。\n\n1+1 等于 2。deepseek-chat · 输入 766／输出 29 token复制引用重新生成"
+      }
+    ],
+    "sessions": [
+      {
+        "title": "附加 1 个文件",
+        "count": 12
+      }
+    ],
+    "activeId": "9984d932-5a15-4f57-acd5-d691249afa76",
+    "lastRequest": {
+      "label": "用一句话说明 1+1 等于几。",
+      "images": 0
+    }
+  },
+  "history": {
+    "afterNew": {
+      "msgNodes": 0,
+      "hint": "可以直接提问，或用右侧「提问」「工具」处理整页与划线内容。",
+      "sessions": 2,
+      "activeEmpty": 0
+    },
+    "historyRows": [
+      "附加 1 个文件2026/11/4 11:31:08 · 12 条"
+    ],
+    "switched": true,
+    "restoredMessages": [
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg assistant",
+      "msg user",
+      "msg user",
+      "msg assistant"
+    ],
+    "savedIntoStorage": true
+  },
+  "readPage": {
+    "__error": "ReferenceError: els is not defined\n    at <anonymous>:2:11\n    at <anonymous>:15:4"
+  }
+}

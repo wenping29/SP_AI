@@ -1,0 +1,34 @@
+[ {
+   "description": "",
+   "devtoolsFrontendUrl": "https://aka.ms/docs-landing-page/serve_rev/@7806b68d20d1c1273d5b07b4f4de18e8f5852581/inspector.html?ws=127.0.0.1:9333/devtools/page/CC7F99AB60CB0C123ED76406AFA4D017",
+   "id": "CC7F99AB60CB0C123ED76406AFA4D017",
+   "title": "测试网页：新版侧边栏插件发布说明",
+   "type": "page",
+   "url": "http://127.0.0.1:8899/fixture.html",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9333/devtools/page/CC7F99AB60CB0C123ED76406AFA4D017"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://aka.ms/docs-landing-page/serve_rev/@7806b68d20d1c1273d5b07b4f4de18e8f5852581/inspector.html?ws=127.0.0.1:9333/devtools/page/A406107D5976F3E55DA4BC1100D60583",
+   "faviconUrl": "https://assets.msn.cn/statics/icons/favicon_newtabpage.png",
+   "id": "A406107D5976F3E55DA4BC1100D60583",
+   "title": "新建标签页",
+   "type": "other",
+   "url": "edge://newtab/",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9333/devtools/page/A406107D5976F3E55DA4BC1100D60583"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://aka.ms/docs-landing-page/serve_rev/@7806b68d20d1c1273d5b07b4f4de18e8f5852581/worker_app.html?ws=127.0.0.1:9333/devtools/page/688117CDCD769D9F438F6C600D408236",
+   "id": "688117CDCD769D9F438F6C600D408236",
+   "title": "Service Worker chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js",
+   "type": "service_worker",
+   "url": "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9333/devtools/page/688117CDCD769D9F438F6C600D408236"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://aka.ms/docs-landing-page/serve_rev/@7806b68d20d1c1273d5b07b4f4de18e8f5852581/inspector.html?ws=127.0.0.1:9333/devtools/page/60B1DD1A1AE519389B52247B63BD6DB2",
+   "id": "60B1DD1A1AE519389B52247B63BD6DB2",
+   "title": "",
+   "type": "worker",
+   "url": "",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9333/devtools/page/60B1DD1A1AE519389B52247B63BD6DB2"
+} ]

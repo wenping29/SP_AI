@@ -1,0 +1,165 @@
+# ================================
+# HanJianNet · 项目根目录 .gitignore
+# 四个子项目共享规则；各子项目专属规则写在各子目录自己的 .gitignore
+# ================================
+
+# ---- 操作系统 ----
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+
+
+# ---- Node.js ----
+web/node_modules/
+deploy/dist/
+
+
+# ---- 构建输出 ----
+server/**/[Bb]in/
+server/**/[Oo]bj/
+server/**/[Dd]ebug/
+server/**/[Rr]elease/
+server/**/*.binlog
+
+## .NET 隐藏文件夹
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+
+## 发布输出
+webapi/[Pp]ublish/
+webapi/dist/
+
+## 本地配置密钥
+webapi/appsettings.Development.json
+webapi/appsettings.Local.json
+webapi/*.pfx
+# 天地图 tk 属于访问凭证，只在本地存在；模板见 data/tianditu.example.json
+data/tianditu.json
+data/dem/tiles_z7/
+data/dem/*.tif
+data/dem/*.tif.ovr
+data/gis/*.lpk
+
+## 日志
+webapi/*.log
+webapi/logs/
+webapi/uploads/
+## 覆盖测试报告
+webapi/coverage/
+webapi/logs/
+
+## Rider
+webapi/.idea/
+webapi/*.iml
+
+## Windows系统
+webapi/Thumbs.db
+webapi/.DS_Store
+
+# ---- 编辑器 / IDE ----
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+*.swp
+*.swo
+*~
+.history
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ---- 日志与临时文件 ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.bak
+*.old
+*.cache
+
+# ---- 环境变量与本地配置 ----
+
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local.json
+appsettings.Local.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+!appsettings.Production.json
+
+
+# ---- 证书与密钥 ----
+*.pem
+*.key
+*.crt
+*.pfx
+*.cer
+
+# ---- 压缩与备份 ----
+*.7z
+*.zip
+*.rar
+*.tar
+*.gz
+*.tgz
+*.bak
+
+# ---- 数据库文件（开发 SQLite 按需排除，若要保留种子请注释下面两行） ----
+*.db
+*.db-shm
+*.db-wal
+# *.sqlite
+# *.sqlite3
+
+# ---- server/ .NET 编译产物（含 dotnet 复制到 bin 的 data 目录副本） ----
+server/[Bb]in/
+server/[Oo]bj/
+server/tests/**/[Bb]in/
+server/tests/**/[Oo]bj/
+
+# ---- GIS 在线生成（§13.1）冒烟/试运行产物，不属于代码 ----
+data/gis/smoke_gis_*.json
+
+# ---- Python 缓存 ----
+__pycache__/
+*.py[cod]
+
+# ---- 兵棋运行期存档（每跑一局验证就新增/改写，不属于代码） ----
+saves/
+
+# ---- 运行时数据库（SQLite 主库：含账号/存档，禁止入库） ----
+
+
+data/
+server/data/

@@ -1,0 +1,345 @@
+{
+  "worldId": 2,
+  "swUrl": "chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/background.js",
+  "panelBefore": 0,
+  "pendingBefore": null,
+  "selection": "本次版本支持国产大模型切换，采用积分制计费，注册即送 100",
+  "button": {
+    "label": "翻译",
+    "x": 238,
+    "y": 122,
+    "width": 45
+  },
+  "trace": [
+    {
+      "sec": 1,
+      "panelTargets": 1,
+      "pending": null
+    }
+  ],
+  "panel": {
+    "viewTitle": "聊天",
+    "status": "生成中…",
+    "msgs": [
+      {
+        "role": "msg user",
+        "text": "附加 1 个文件 附加 1 个文件 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。 要点： 1. **应保留的正"
+      },
+      {
+        "role": "msg user",
+        "text": "图里有什么？ 复制 引用"
+      },
+      {
+        "role": "msg user",
+        "text": "用一句话说明 1+1 等于几。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。 1+1 等于 2。 deepseek-chat · 输入 640／输出 29 "
+      },
+      {
+        "role": "msg user",
+        "text": "这个页面讲的是什么事？ 本页正文 83 字 · http://127.0.0.1:8899/fixture.html 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作"
+      },
+      {
+        "role": "msg user",
+        "text": "附加 1 个文件 附加 1 个文件 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。 要点： 1. **应保留的正文** - 标题："
+      },
+      {
+        "role": "msg user",
+        "text": "图里有什么？ 复制 引用"
+      },
+      {
+        "role": "msg user",
+        "text": "用一句话说明 1+1 等于几。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，无法看到任何画面。 1+1 等于 2。 deepseek-chat · 输入 766／输出 29 "
+      },
+      {
+        "role": "msg user",
+        "text": "这个页面讲的是什么事？ 本页正文 3,212 字 · https://juejin.cn/user/4248168662580222 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "结论：这是掘金平台用户“犀利大公仔”的个人主页，展示其动态、文章与点赞记录，并非单一主题的文章。 要点： 1. **页面性质**：个人主页，含关注/私信/屏蔽入"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：直接投递测试 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "直接投递测试 （说明：原文仅这五个字，本身已是中文，无需翻译，属“直接投递”的操作测试。） deepseek-chat · 输入 2301／输出 30 toke"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "这段原文本身已经是中文，无需翻译。按你的要求整理为通顺表述，并给专有名词首次出现加注英文： 本次版本支持切换国产大模型（domestic large langu"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：直接投递测试 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文本身就是中文，无需翻译。“直接投递测试”可理解为“直接投递（direct submission）”这一操作的测试。 deepseek-chat · 输入 2"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文已是中文，无需翻译。按你的格式要求处理如下： 本次版本支持国产大模型（domestic large language model）切换，采用积分制（cred"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：直接投递测试 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文已是中文，无需翻译。若其中“直接投递”属专有说法，可标注为：直接投递（direct submission）测试。 deepseek-chat · 输入 33"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文已是中文，无需翻译。专有名词首次出现时保留英文的写法如下： 本次版本支持国产大模型（domestic large language model）切换，采用积"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：直接投递测试 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "这段内容本身已经是中文，无需翻译。“直接投递测试”中若“直接投递”为专有术语，可按你的格式写作： 直接投递（Direct Submission）测试 deeps"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文已为中文，无需翻译。按“专有名词首次出现保留英文”的格式改写如下： 本次版本支持国产大模型（domestic large language model）切换"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant",
+        "text": "原文已是通顺的中文，无需翻译。按“专有名词首次出现保留英文”的格式处理后如下： 本次版本支持国产大模型（Large Language Model, LLM）切换"
+      },
+      {
+        "role": "msg user",
+        "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+      },
+      {
+        "role": "msg assistant streaming",
+        "text": "原文本身就是通顺自然的中文，无需翻译。若要按“专有名词首现保留英文”的格式处理，可写作： 本次版本支持国产大模型（Large Language Model"
+      }
+    ],
+    "msgCount": 34
+  },
+  "panelStorage": {
+    "pending": null,
+    "sessionCount": 2,
+    "messages": [
+      {
+        "title": "新聊天",
+        "n": 0
+      },
+      {
+        "title": "附加 1 个文件",
+        "n": 32,
+        "last": "原文已是通顺的中文，无需翻译。按“专有名词首次出现保留英文”的格式处理后如下：\n"
+      }
+    ]
+  },
+  "panelToken": {
+    "deviceId": "26b78139-8621-45b4-83bd-794407a480b8",
+    "model": "deepseek-chat",
+    "token": "731c4a82875247d1a9356cdbf79cd501"
+  },
+  "wait": {
+    "sec": 2,
+    "busy": false,
+    "assistant": 16,
+    "msgs": 34
+  },
+  "threadFinal": [
+    {
+      "role": "msg user",
+      "text": "附加 1 个文件 附加 1 个文件 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "结论：这段 HTML 是典型的“正文抽取测试样本”，真正有效内容只有文章标题和两段正文，其余导航、广告、脚本、样式、评论都应剔除。 要点： 1. **应保留的正文** - 标题：侧边栏插件发布说明 - 正文一：本次版本支持国产大模型切换，采"
+    },
+    {
+      "role": "msg user",
+      "text": "图里有什么？ 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "用一句话说明 1+1 等于几。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，因此无法描述画面。 1+1 等于 2。 deepseek-chat · 输入 640／输出 29 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "这个页面讲的是什么事？ 本页正文 83 字 · http://127.0.0.1:8899/fixture.html 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "这个页面讲的是“侧边栏插件发布说明”，主要介绍新版本支持国产大模型切换、采用积分制计费、注册赠送 1000 积分，以及划词工具支持总结、翻译、解释和润色四类动作，正文抽取会自动剔除导航与广告。 deepseek-chat · 输入 756／"
+    },
+    {
+      "role": "msg user",
+      "text": "附加 1 个文件 附加 1 个文件 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "结论：这段 fixture.html 是正文抽取测试页面，核心内容只有文章标题和两段正文，其余均为应剔除的噪声。 要点： 1. **应保留的正文** - 标题：侧边栏插件发布说明 - 第一段：本次版本支持国产大模型切换，采用积分制计费，注册"
+    },
+    {
+      "role": "msg user",
+      "text": "图里有什么？ 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "用一句话说明 1+1 等于几。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "图中没有图片内容：你提供的是 HTML 源代码文本，不是图片，无法看到任何画面。 1+1 等于 2。 deepseek-chat · 输入 766／输出 29 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "这个页面讲的是什么事？ 本页正文 3,212 字 · https://juejin.cn/user/4248168662580222 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "结论：这是掘金平台用户“犀利大公仔”的个人主页，展示其动态、文章与点赞记录，并非单一主题的文章。 要点： 1. **页面性质**：个人主页，含关注/私信/屏蔽入口、文章数 35、沸点 0、获赞 35 等统计。 2. **点赞动态**：转发了"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：直接投递测试 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "直接投递测试 （说明：原文仅这五个字，本身已是中文，无需翻译，属“直接投递”的操作测试。） deepseek-chat · 输入 2301／输出 30 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "这段原文本身已经是中文，无需翻译。按你的要求整理为通顺表述，并给专有名词首次出现加注英文： 本次版本支持切换国产大模型（domestic large language model），采用积分制（credit-based）计费，注册即送 10"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：直接投递测试 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文本身就是中文，无需翻译。“直接投递测试”可理解为“直接投递（direct submission）”这一操作的测试。 deepseek-chat · 输入 2150／输出 26 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文已是中文，无需翻译。按你的格式要求处理如下： 本次版本支持国产大模型（domestic large language model）切换，采用积分制（credit-based system）计费，注册即送 1000 积分。 deepsee"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：直接投递测试 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文已是中文，无需翻译。若其中“直接投递”属专有说法，可标注为：直接投递（direct submission）测试。 deepseek-chat · 输入 338／输出 32 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文已是中文，无需翻译。专有名词首次出现时保留英文的写法如下： 本次版本支持国产大模型（domestic large language model）切换，采用积分制（credit system）计费，注册即送 1000 积分。 deepse"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：直接投递测试 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "这段内容本身已经是中文，无需翻译。“直接投递测试”中若“直接投递”为专有术语，可按你的格式写作： 直接投递（Direct Submission）测试 deepseek-chat · 输入 335／输出 39 token 复制 引用"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文已为中文，无需翻译。按“专有名词首次出现保留英文”的格式改写如下： 本次版本支持国产大模型（domestic large language model）切换，采用积分制（credit system）计费，注册即送 1000 积分。 de"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文已是通顺的中文，无需翻译。按“专有名词首次出现保留英文”的格式处理后如下： 本次版本支持国产大模型（Large Language Model, LLM）切换，采用积分制（credit system）计费，注册即送 1000 积分。 de"
+    },
+    {
+      "role": "msg user",
+      "text": "译成中文：本次版本支持国产大模型切换，采用积分制计费，注册即送 1000 积分。 复制 引用"
+    },
+    {
+      "role": "msg assistant",
+      "text": "原文本身就是通顺自然的中文，无需翻译。若要按“专有名词首现保留英文”的格式处理，可写作： 本次版本支持国产大模型（Large Language Model, LLM）切换，采用积分制（credit system）计费，注册即送 1000 积"
+    }
+  ],
+  "ledger": {
+    "__error": "TypeError: Failed to fetch\n    at <anonymous>:3:21"
+  },
+  "swLogs": [
+    "warning: 通知面板失败 Could not establish connection. Receiving end does not exist.",
+    "warning: 通知面板失败 Could not establish connection. Receiving end does not exist."
+  ],
+  "targetsFinal": [
+    "page:chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/sidepane",
+    "page:http://127.0.0.1:8899/fixture.html",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://juejin.cn/user/4248168662580222",
+    "page:https://ecloud.10086.cn/portal/market/all",
+    "page:https://juejin.cn/user/4248168662580222",
+    "other:edge://newtab/",
+    "service_worker:chrome-extension://jmgfklbjklbemmocojbpaajjpbobankp/backgrou",
+    "worker:"
+  ]
+}

@@ -1,0 +1,15 @@
+(() => ({
+  status: els.status.textContent,
+  balance: els.balance.textContent,
+  deviceId: state.deviceId,
+  token: state.token,
+  model: state.model,
+  models: [...els.model.options].map((o) => o.textContent),
+  modelTitles: [...els.model.options].map((o) => o.title),
+  rail: [...els.rail.querySelectorAll('button')].map((b) => `${b.textContent}${b.classList.contains('active') ? '*' : ''}`),
+  tools: [...els.tools.querySelectorAll('button')].map((b) => b.textContent),
+  askItems: els.askList.querySelectorAll('button').length,
+  visibleViews: ['chatView', 'askView', 'translateView', 'toolsView', 'settingsView'].filter((k) => !els[k].hidden),
+  composerTools: [...els.chatView.querySelectorAll('.composer-row .tool')].map((b) => b.textContent),
+  hasFilePicker: Boolean(els.filePicker),
+}))()

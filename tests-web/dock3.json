@@ -1,0 +1,30 @@
+{
+  "worldId": 39,
+  "before": {
+    "state": "hidden",
+    "focus": true
+  },
+  "wake": {
+    "Page.setWebLifecycleState": "ok",
+    "Emulation.setFocusEmulationEnabled": "ok",
+    "Emulation.setEmulatedMedia": "ok"
+  },
+  "after": {
+    "state": "visible",
+    "focus": true
+  },
+  "rafAfter": 1,
+  "rafProbe": 2,
+  "box": {
+    "x": 813,
+    "y": 525
+  },
+  "events": [
+    "doc svg>BUTTON>DIV",
+    "rail target=svg",
+    "rail svg",
+    "btn3"
+  ],
+  "panels": 1,
+  "innerW": 457
+}

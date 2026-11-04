@@ -1,0 +1,61 @@
+{
+  "reload": "sent",
+  "manifest": {
+    "icons": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "actionIcon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "fetchable": [
+    {
+      "size": 16,
+      "status": 200,
+      "bytes": 711,
+      "type": "image/png"
+    },
+    {
+      "size": 32,
+      "status": 200,
+      "bytes": 1697,
+      "type": "image/png"
+    },
+    {
+      "size": 48,
+      "status": 200,
+      "bytes": 2683,
+      "type": "image/png"
+    },
+    {
+      "size": 128,
+      "status": 200,
+      "bytes": 7418,
+      "type": "image/png"
+    }
+  ],
+  "headerImg": {
+    "natural": [
+      32,
+      32
+    ],
+    "box": [
+      18,
+      18
+    ],
+    "complete": true
+  },
+  "settingsImg": {
+    "natural": [
+      48,
+      48
+    ],
+    "complete": true,
+    "version": "v0.1.0"
+  }
+}

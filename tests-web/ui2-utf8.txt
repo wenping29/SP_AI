@@ -1,0 +1,27 @@
+shot.status  = 请先切到要截图的网页标签页
+blockedStatus= 已连接
+boot.status  = 已连接
+quote        = {"clicked": true, "inputHead": "", "view": "chat"}
+threadFinal  = [
+ {
+  "role": "msg error",
+  "text": "请先切到要截图的网页标签页"
+ },
+ {
+  "role": "msg user",
+  "text": "只用一句话回答：1+1 等于几 复制 引用"
+ },
+ {
+  "role": "msg assistant",
+  "text": "2。 deepseek-chat · 输入 41／输出 2 token 复制 引用 重新生成"
+ },
+ {
+  "role": "msg user",
+  "text": "只用一句话回答：1+1 等于几 复制 引用"
+ },
+ {
+  "role": "msg assistant",
+  "text": "2。 deepseek-chat · 输入 57／输出 2 token 复制 引用 重新生成"
+ }
+]
+lastBubble   = <div class="msg assistant">2。<div class="meta">deepseek-chat · 输入 57／输出 2 token</div><div class="msg-actions"><button type="button" disabled="">复制</button><button type="button" disabled="">引用</button><button type="button" disabled="">重新生成</button></div></div>

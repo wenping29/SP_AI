@@ -1,0 +1,112 @@
+{
+  "structure": {
+    "composerChildren": [
+      "selectionCard",
+      "attachments",
+      "composer-row controls",
+      "input",
+      "composer-row sendbar"
+    ],
+    "toolbarButtons": [],
+    "controlsButtons": [
+      "btnShot",
+      "btnFile",
+      "btnReadPage",
+      "newChat",
+      "openHistory"
+    ],
+    "sendbarButtons": [
+      {
+        "id": "stop",
+        "hidden": true
+      },
+      {
+        "id": "send",
+        "hidden": false
+      }
+    ]
+  },
+  "geometry": {
+    "顺序正确": true,
+    "发送在输入框下方": true,
+    "控件行包含全部按钮": true,
+    "历史靠右": true,
+    "新聊天与历史同行": true,
+    "controls": {
+      "top": 701,
+      "left": 12,
+      "w": 381,
+      "h": 63
+    },
+    "input": {
+      "top": 772,
+      "left": 12,
+      "w": 381,
+      "h": 80
+    },
+    "send": {
+      "top": 857,
+      "left": 12,
+      "w": 381,
+      "h": 33
+    },
+    "model": {
+      "top": 702,
+      "left": 12,
+      "w": 168,
+      "h": 26
+    },
+    "shot": {
+      "top": 701,
+      "left": 188,
+      "w": 43,
+      "h": 29
+    },
+    "file": {
+      "top": 701,
+      "left": 239,
+      "w": 67,
+      "h": 29
+    },
+    "read": {
+      "top": 701,
+      "left": 315,
+      "w": 67,
+      "h": 29
+    },
+    "chat": {
+      "top": 738,
+      "left": 287,
+      "w": 55,
+      "h": 27
+    },
+    "hist": {
+      "top": 738,
+      "left": 350,
+      "w": 43,
+      "h": 27
+    },
+    "sendBtn": {
+      "top": 857,
+      "left": 338,
+      "w": 55,
+      "h": 33
+    }
+  },
+  "overflow": {
+    "scrollW": 381,
+    "clientW": 381,
+    "溢出": false,
+    "panelW": 457
+  },
+  "history": {
+    "open": true,
+    "items": 2
+  },
+  "historyClosed": true,
+  "newChat": {
+    "before": 2,
+    "after": 2,
+    "title": "聊天"
+  }
+}

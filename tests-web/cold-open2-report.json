@@ -1,0 +1,35 @@
+{
+  "worldId": 18,
+  "cold": {
+    "swBeforeClose": false,
+    "close": "closed",
+    "innerWAfterClose": 843,
+    "swAtClick": false,
+    "box": {
+      "x": 813,
+      "y": 525,
+      "innerW": 843,
+      "hidden": false
+    },
+    "dockedWithin12s": true,
+    "afterSec": 1,
+    "innerWFinal": 457,
+    "pendingResidual": null
+  },
+  "warm": {
+    "swBeforeClose": true,
+    "close": "closed",
+    "innerWAfterClose": 843,
+    "swAtClick": true,
+    "box": {
+      "x": 813,
+      "y": 525,
+      "innerW": 843,
+      "hidden": false
+    },
+    "dockedWithin12s": true,
+    "afterSec": 1,
+    "innerWFinal": 457,
+    "pendingResidual": null
+  }
+}

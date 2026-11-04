@@ -1,0 +1,1 @@
+chrome.storage.local.get(["token","server","deviceId"]).then(v => v)

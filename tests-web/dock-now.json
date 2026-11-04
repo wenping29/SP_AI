@@ -1,0 +1,82 @@
+{
+  "worldId": 39,
+  "sw": true,
+  "patch": "patched",
+  "box": {
+    "x": 813,
+    "y": 525,
+    "innerW": 843,
+    "hidden": false,
+    "tip": "打开聊天",
+    "hit": true
+  },
+  "trace": [
+    {
+      "sec": 1,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 2,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 3,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 4,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 5,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 6,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 7,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 8,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 9,
+      "innerW": 843,
+      "panels": 0
+    },
+    {
+      "sec": 10,
+      "innerW": 843,
+      "panels": 0
+    }
+  ],
+  "calls": [],
+  "msgs": [],
+  "options": {
+    "windowId": 803120329,
+    "error": "Error in invocation of sidePanel.getOptions(sidePanel.GetPanelOptions options, optional function callback): Error at parameter 'options': Unexpected property: 'windowId'."
+  },
+  "swBehavior": "ok",
+  "logs": [],
+  "pending": null,
+  "windows": [
+    {
+      "id": 803120329,
+      "type": "normal",
+      "state": "normal",
+      "focused": true
+    }
+  ]
+}
