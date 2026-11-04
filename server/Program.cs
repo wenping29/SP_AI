@@ -416,7 +416,7 @@ admin.MapGet("/policy", async (CreditService credits, CancellationToken ct) =>
     {
         policy.FreeCredits, policy.ChatEnabled, policy.Notice, UpdatedAt = AsUtc(policy.UpdatedAt),
     });
-});
+}).RequireAdmin("policy.view");
 
 admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationToken ct) =>
 {
@@ -436,10 +436,10 @@ admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationT
     {
         policy.FreeCredits, policy.ChatEnabled, policy.Notice, UpdatedAt = AsUtc(policy.UpdatedAt),
     });
-});
+}).RequireAdmin("policy.manage");
 
 admin.MapGet("/models", async (AppDbContext db, CancellationToken ct) =>
-    Results.Ok(await db.Models.OrderBy(m => m.SortOrder).ToListAsync(ct)));
+    Results.Ok(await db.Models.OrderBy(m => m.SortOrder).ToListAsync(ct))).RequireAdmin("models.view");
 
 admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDbContext db, CancellationToken ct) =>
 {
@@ -457,7 +457,7 @@ admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDb
 
     await db.SaveChangesAsync(ct);
     return Results.Ok(model);
-});
+}).RequireAdmin("models.manage");
 
 admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService credits, CancellationToken ct) =>
 {
@@ -475,7 +475,7 @@ admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService 
     await credits.AdjustBalanceAsync(account.Id, delta, req.Reason ?? "admin_grant", ct);
     var balance = await db.Accounts.Where(a => a.Id == account.Id).Select(a => a.Balance).FirstAsync(ct);
     return Results.Ok(new { deviceId = account.DeviceId, delta, balance });
-});
+}).RequireAdmin("devices.manage");
 
 admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
 {
