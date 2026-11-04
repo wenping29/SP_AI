@@ -919,10 +919,12 @@ button.ico.recording {
   font-size: 12px;
 }
 
+/* ---------- 设置按钮贴在头像上方，其余功能按钮留在顶部 ---------- */
+.rail button[data-view="settings"] { margin-top: auto; }
+
 /* ---------- 右下角头像与账户浮层：积分从顶部搬到这里 ---------- */
 .rail .avatar-dock {
   position: relative;
-  margin-top: auto;
   align-self: stretch;
 }
 

@@ -32,7 +32,14 @@
           <div id="attachments" class="attachments" hidden></div>
           <div class="composer-row controls">
             <button id="btnAdd" class="tool ico tip-top" data-icon="plus" data-tip="添加技能、插件、计划或目标" aria-haspopup="true" aria-expanded="false"></button>
-            <select id="model" class="model-select" title="切换大模型"></select>
+            <div id="modelPicker" class="model-picker">
+              <button id="modelButton" class="model-current tip-top" type="button" aria-haspopup="listbox" aria-expanded="false" data-tip="切换大模型">
+                <span id="modelLogo" class="model-logo" aria-hidden="true"></span>
+                <span id="modelName" class="model-name">模型</span>
+                <span class="model-caret" aria-hidden="true"></span>
+              </button>
+              <div id="modelMenu" class="model-menu" role="listbox" aria-label="选择模型" hidden></div>
+            </div>
             <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="截图：抓取可见区域发给模型"></button>
             <button id="btnFile" class="tool ico tip-top" data-icon="clip" data-tip="附加文件：图片或 txt/md 等文本"></button>
             <button id="btnReadPage" class="tool ico tip-top" data-icon="book" data-tip="阅读此页：发送时带上本页正文" aria-pressed="false"></button>

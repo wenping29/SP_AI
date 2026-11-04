@@ -1,0 +1,42 @@
+{
+  "steps": [],
+  "layout": {
+    "order": [
+      "chat",
+      "ask",
+      "translate",
+      "tools",
+      "settings",
+      "avatarDock"
+    ],
+    "gearMarginTop": "585.333px",
+    "dockMarginTop": "0px",
+    "gearBox": [
+      769,
+      808
+    ],
+    "avatarBox": [
+      812,
+      846
+    ],
+    "toolsBox": [
+      140,
+      179
+    ],
+    "railBox": [
+      0,
+      856
+    ],
+    "gearDirectlyAboveAvatar": true,
+    "gearBelowTools": true,
+    "gearGapToRailBottom": 48,
+    "avatarGapToRailBottom": 10,
+    "gearVisible": true
+  },
+  "click": {
+    "active": true,
+    "settingsVisible": true,
+    "chatHidden": true
+  },
+  "shot": "rail-settings.png"
+}
