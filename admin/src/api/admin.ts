@@ -51,6 +51,21 @@ export interface DeviceTransactions {
   items: AdminTransaction[];
 }
 
+export interface CreditSummary {
+  accounts: number;
+  totalBalance: number;
+  blocked: number;
+  spent: number;
+  calls: number;
+}
+
+export interface CreditAdjust {
+  deviceId: string;
+  delta?: number;
+  balance?: number;
+  reason?: string;
+}
+
 export interface ModelSpec {
   id: number;
   modelId: string;
@@ -230,6 +245,14 @@ export const adminApi = {
 
   grant: (data: { deviceId: string; delta: number; reason?: string }) =>
     post<{ deviceId: string; delta: number; balance: number }>('/admin/grant', data),
+
+  creditSummary: () => get<CreditSummary>('/admin/credits/summary'),
+
+  adjustCredits: (data: CreditAdjust) =>
+    post<{ deviceId: string; label: string; delta: number; balance: number }>(
+      '/admin/credits/adjust',
+      data,
+    ),
 
   models: () => get<ModelSpec[]>('/admin/models'),
 

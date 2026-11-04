@@ -4,6 +4,7 @@ const reasonLabels: Record<string, string> = {
   voice: '语音输入',
   free_grant: '注册赠送',
   admin_grant: '后台调整',
+  admin_set: '后台设为',
 };
 
 export function formatTime(value?: string | null) {

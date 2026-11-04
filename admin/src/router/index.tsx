@@ -4,6 +4,7 @@ import BasicLayout from '@/layouts/BasicLayout';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import DeviceList from '@/pages/devices/DeviceList';
+import CreditsList from '@/pages/credits/CreditsList';
 import ModelList from '@/pages/models/ModelList';
 import PolicySettings from '@/pages/policy/PolicySettings';
 import ProviderList from '@/pages/providers/ProviderList';
@@ -50,6 +51,14 @@ export const router = createBrowserRouter(
           element: (
             <RequirePermission permission="devices.view">
               <DeviceList />
+            </RequirePermission>
+          ),
+        },
+        {
+          path: 'credits',
+          element: (
+            <RequirePermission permission="devices.view">
+              <CreditsList />
             </RequirePermission>
           ),
         },

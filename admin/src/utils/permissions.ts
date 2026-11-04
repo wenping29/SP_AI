@@ -42,6 +42,7 @@ export function permissionSummary(permissions: string[]) {
 const ROUTE_ORDER: Array<{ path: string; permission: string }> = [
   { path: '/dashboard', permission: 'dashboard.view' },
   { path: '/devices', permission: 'devices.view' },
+  { path: '/credits', permission: 'devices.view' },
   { path: '/models', permission: 'models.view' },
   { path: '/policy', permission: 'policy.view' },
   { path: '/providers', permission: 'keyenvs.view' },

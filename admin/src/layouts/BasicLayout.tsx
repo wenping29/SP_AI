@@ -8,6 +8,7 @@ import {
   DesktopOutlined,
   KeyOutlined,
   LogoutOutlined,
+  MoneyCollectOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
   ThunderboltFilled,
@@ -29,6 +30,7 @@ interface MenuEntry {
 const menuEntries: MenuEntry[] = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘', permission: 'dashboard.view' },
   { key: '/devices', icon: <DesktopOutlined />, label: '设备管理', permission: 'devices.view' },
+  { key: '/credits', icon: <MoneyCollectOutlined />, label: '积分管理', permission: 'devices.view' },
   { key: '/models', icon: <ApiOutlined />, label: '模型管理', permission: 'models.view' },
   { key: '/policy', icon: <ControlOutlined />, label: '运营策略', permission: 'policy.view' },
   { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理', permission: 'keyenvs.view' },
