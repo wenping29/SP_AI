@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  AutoComplete,
   Button,
   Col,
   Form,
@@ -27,6 +28,14 @@ const providerNames: Record<string, string> = {
   dashscope: '阿里云百炼',
   qianfan: '百度千帆',
   siliconflow: '硅基流动',
+};
+
+const categoryPresets = ['高性价比', '高级', '最智能'];
+
+const categoryColors: Record<string, string> = {
+  高性价比: 'green',
+  高级: 'blue',
+  最智能: 'purple',
 };
 
 type EditorState = { mode: 'create' } | { mode: 'edit'; model: ModelSpec } | null;
@@ -126,6 +135,7 @@ export default function ModelList() {
           modelId: values.modelId.trim(),
           displayName: values.displayName.trim(),
           upstreamModel: values.upstreamModel.trim(),
+          category: values.category?.trim() ?? '',
           note: values.note?.trim() ?? '',
         });
         message.success('模型已新增');
@@ -136,6 +146,7 @@ export default function ModelList() {
           ...payload,
           displayName: payload.displayName.trim(),
           upstreamModel: payload.upstreamModel.trim(),
+          category: payload.category?.trim() ?? '',
           note: payload.note?.trim() ?? '',
         });
         message.success('模型配置已保存');
@@ -149,6 +160,10 @@ export default function ModelList() {
       setSaving(false);
     }
   };
+
+  const categoryOptions = Array.from(
+    new Set([...categoryPresets, ...models.map((item) => (item.category ?? '').trim()).filter(Boolean)]),
+  ).map((value) => ({ value }));
 
   const columns: TableColumnsType<ModelSpec> = [
     {
@@ -166,6 +181,13 @@ export default function ModelList() {
           </div>
         </div>
       ),
+    },
+    {
+      title: '分类',
+      dataIndex: 'category',
+      width: 100,
+      render: (value: string) =>
+        value ? <Tag color={categoryColors[value]}>{value}</Tag> : <Typography.Text type="secondary">未分类</Typography.Text>,
     },
     {
       title: '提供商',
@@ -286,7 +308,7 @@ export default function ModelList() {
         模型管理
       </Typography.Title>
       <Typography.Paragraph className="page-desc">
-        启用开关决定插件里是否可选；废弃后不再下发但保留调用历史。费率按「分 / 千 token」计算，修改后立即生效。
+        启用开关决定插件里是否可选；废弃后不再下发但保留调用历史。分类会在插件里分组展示，可填 高性价比 / 高级 / 最智能 或自定义。费率按「分 / 千 token」计算，修改后立即生效。
       </Typography.Paragraph>
 
       <Space wrap style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
@@ -312,7 +334,7 @@ export default function ModelList() {
         loading={loading}
         columns={columns}
         dataSource={visibleModels}
-        scroll={{ x: 1250 }}
+        scroll={{ x: 1350 }}
         pagination={false}
       />
 
@@ -422,12 +444,28 @@ export default function ModelList() {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={8}>
+              <Form.Item
+                name="category"
+                label="分类"
+                extra="插件里按分类分组展示，可自定义"
+              >
+                <AutoComplete
+                  options={categoryOptions}
+                  placeholder="例如 高性价比"
+                  allowClear
+                  filterOption={(input, option) =>
+                    String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
               <Form.Item name="supportsVision" label="支持图片输入" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
                 name="isEnabled"
                 label="启用"

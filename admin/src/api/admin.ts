@@ -63,6 +63,7 @@ export interface ModelSpec {
   supportsVision: boolean;
   isEnabled: boolean;
   isDeprecated: boolean;
+  category: string;
   sortOrder: number;
   note: string;
 }
@@ -78,6 +79,7 @@ export type ModelUpdate = Partial<
     | 'maxContextChars'
     | 'supportsVision'
     | 'isEnabled'
+    | 'category'
     | 'sortOrder'
     | 'note'
   >
