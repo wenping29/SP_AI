@@ -89,6 +89,8 @@ appsettings.*.json
 # Data Protection 密钥环：可解密数据库中的提供商密钥，只保留在服务器上
 server/keys/
 /keys/
+# 验证脚本用临时目录启动服务时生成的密钥环
+tests-web/**/keys/
 
 # ---- 压缩与备份 ----
 *.7z

@@ -207,7 +207,7 @@ else fail('删除用户');
 
 // 管理员页
 await s.send('Page.navigate', { url: `${BASE}/admin/admins` });
-if (await poll(s, `document.body.innerText.includes('管理后台登录账号') && window.__q.row('root') !== null`)) {
+if (await poll(s, `document.body.innerText.includes('管理后台登录账号') && [...document.querySelectorAll('.ant-table-tbody tr')].some(tr => tr.innerText.includes('root'))`)) {
   ok('管理员页加载并列出 root');
 } else {
   fail('管理员页加载', (await s.evaluate('document.body.innerText')).slice(0, 300));
