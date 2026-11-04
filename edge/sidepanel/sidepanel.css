@@ -851,6 +851,22 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
 
 .model-option .model-name { flex: 1; }
 
+/* 模型分类分组标题，预设分类在上，未分类在最下 */
+
+.model-group {
+  padding: 3px 8px 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.model-option + .model-group {
+  margin-top: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
 /* 已添加的技能 / 插件 / 计划 / 目标 */
 .picks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 

@@ -517,14 +517,38 @@ function logoMarkup(model) {
 }
 
 function modelTip(model) {
-  return `切换大模型：${model.displayName} · 输入 ${model.inputRatePer1K}／输出 ${model.outputRatePer1K} 积分每千 token${model.supportsVision ? " · 支持图片" : ""}`;
+  const category = (model.category || "").trim();
+  return `切换大模型：${model.displayName}${category ? ` · ${category}` : ""} · 输入 ${model.inputRatePer1K}／输出 ${model.outputRatePer1K} 积分每千 token${model.supportsVision ? " · 支持图片" : ""}`;
+}
+
+// 预设分类按由省到强的顺序排，自定义分类按出现顺序，未填分类的放最后
+const MODEL_CATEGORY_ORDER = ["高性价比", "高级", "最智能"];
+
+function groupModelsByCategory(models) {
+  const groups = new Map();
+  for (const model of models) {
+    const name = (model.category || "").trim() || "未分类";
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(model);
+  }
+
+  const names = [...groups.keys()].filter((name) => name !== "未分类");
+  names.sort((a, b) => {
+    const ai = MODEL_CATEGORY_ORDER.indexOf(a);
+    const bi = MODEL_CATEGORY_ORDER.indexOf(b);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return 0;
+  });
+  if (groups.has("未分类")) names.push("未分类");
+
+  return names.map((name) => ({ name, models: groups.get(name) }));
 }
 
 function openModelMenu() {
   if (!state.config?.models?.length) return;
   els.modelMenu.hidden = false;
   els.modelButton.setAttribute("aria-expanded", "true");
-  const active = els.modelMenu.querySelector('[aria-selected="true"]') || els.modelMenu.firstElementChild;
+  const active = els.modelMenu.querySelector('[aria-selected="true"]') || els.modelMenu.querySelector(".model-option");
   active?.focus();
 }
 
@@ -640,25 +664,33 @@ function renderModels() {
   els.modelName.textContent = selected.displayName;
   els.modelButton.dataset.tip = modelTip(selected);
 
-  for (const model of models) {
-    const option = document.createElement("button");
-    option.type = "button";
-    option.className = "model-option";
-    option.dataset.model = model.modelId;
-    option.setAttribute("role", "option");
-    option.setAttribute("aria-selected", String(model.modelId === state.model));
+  for (const group of groupModelsByCategory(models)) {
+    const header = document.createElement("div");
+    header.className = "model-group";
+    header.setAttribute("role", "presentation");
+    header.textContent = group.name;
+    els.modelMenu.append(header);
 
-    const logo = document.createElement("span");
-    logo.className = "model-logo";
-    logo.setAttribute("aria-hidden", "true");
-    logo.innerHTML = logoMarkup(model);
+    for (const model of group.models) {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "model-option";
+      option.dataset.model = model.modelId;
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", String(model.modelId === state.model));
 
-    const name = document.createElement("span");
-    name.className = "model-name";
-    name.textContent = model.displayName;
+      const logo = document.createElement("span");
+      logo.className = "model-logo";
+      logo.setAttribute("aria-hidden", "true");
+      logo.innerHTML = logoMarkup(model);
 
-    option.append(logo, name);
-    els.modelMenu.append(option);
+      const name = document.createElement("span");
+      name.className = "model-name";
+      name.textContent = model.displayName;
+
+      option.append(logo, name);
+      els.modelMenu.append(option);
+    }
   }
 }
 
