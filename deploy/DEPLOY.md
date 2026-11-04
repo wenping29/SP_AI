@@ -96,9 +96,34 @@ sudo certbot --nginx -d sp.example.com
 
 > 如果暂时不接 Nginx、直接暴露 7788，记得在云安全组放行端口，并把 `ASPNETCORE_URLS` 改成 `http://0.0.0.0:7788`。
 
+### 5.1 后台静态站单独托管（可选）
+
+后台也可以不放进 `wwwroot/admin`，而是由另一个 nginx 站点托管，只把 `/api` 反代给后端：
+
+```bash
+# 本机构建（产物不含 /admin 前缀，路由挂在站点根路径）
+cd admin && npm run build:nginx     # 输出 admin/dist-nginx/
+
+# 上传解压到服务器
+sudo mkdir -p /var/www/sp-admin
+sudo unzip sp-admin-nginx-*.zip -d /var/www/sp-admin
+sudo chown -R www-data:www-data /var/www/sp-admin
+
+# nginx 站点
+sudo cp /opt/sp/deploy/nginx-admin.conf /etc/nginx/conf.d/sp-admin.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+要点：
+
+- `nginx-admin.conf` 里 `root` 指向解压目录，`location /api/` 反代到 `127.0.0.1:7788`；后台与接口同源，不涉及 CORS。
+- `try_files $uri $uri/ /index.html` 是必需的，否则刷新 `/users` 这类前端路由会 404。
+- 后端不需要 `wwwroot/admin`；访问入口是 `http://服务器:7789/`，不再是 `/admin/`。
+- 后端换机器时只改 `proxy_pass` 地址即可，后台包不用重新构建。
+
 ## 6. 首次配置（浏览器）
 
-1. 打开 `https://你的域名/admin/`，用 `/etc/sp/sp.env` 里的初始管理员登录，**立刻修改密码**。
+1. 打开 `https://你的域名/admin/`（后台独立托管时是 `http://服务器:7789/`），用 `/etc/sp/sp.env` 里的初始管理员登录，**立刻修改密码**。
 2. 「服务器配置」→ 填写 SMTP（QQ 邮箱用授权码，465 端口开隐式 TLS），点「发送测试邮件」确认能收到。
 3. 「KeyEnv 管理」→ 为 deepseek 等提供商的启用条目填入上游密钥（环境变量已注入的会显示来源为 env）。
 4. 「服务器配置」→ 插件允许来源填 `chrome-extension://<扩展ID>`。扩展 ID 在 Edge「扩展」页可以看到；留空则放开所有来源。

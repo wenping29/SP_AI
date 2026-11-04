@@ -24,7 +24,7 @@ dotnet publish "$ROOT/server/SpServer.csproj" -c Release -r linux-x64 --self-con
 
 echo "== 附加部署文件 =="
 mkdir -p "$STAGE/deploy"
-cp "$ROOT/deploy/sp.service" "$ROOT/deploy/nginx-sp.conf" "$ROOT/deploy/sp.env.example" "$STAGE/deploy/"
+cp "$ROOT/deploy/sp.service" "$ROOT/deploy/nginx-sp.conf" "$ROOT/deploy/nginx-admin.conf" "$ROOT/deploy/sp.env.example" "$STAGE/deploy/"
 cp "$ROOT/deploy/DEPLOY.md" "$STAGE/DEPLOY.md"
 chmod +x "$STAGE/SpServer"
 

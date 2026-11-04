@@ -18,6 +18,7 @@ web/node_modules/
 deploy/dist/
 admin/node_modules/
 admin/dist/
+admin/dist-nginx/
 server/wwwroot/admin/
 *.tsbuildinfo
 

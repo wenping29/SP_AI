@@ -4,7 +4,7 @@ import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
-  // 生产环境挂在后端 /admin/ 下，构建产物路径必须带这个前缀
+  // 默认挂在后端 /admin/ 下；独立 nginx 托管在根路径时用 vite.config.standalone.ts
   base: '/admin/',
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
