@@ -231,7 +231,9 @@ export default function CreditsList() {
   const preview = () => {
     if (!adjustTarget || typeof amount !== 'number') return null;
     if (adjustMode === 'set') return Math.max(0, Math.min(amount, 100_000_000));
-    return adjustMode === 'deduct' ? adjustTarget.balance - amount : adjustTarget.balance + amount;
+    return adjustMode === 'deduct'
+      ? Math.max(0, adjustTarget.balance - amount)
+      : adjustTarget.balance + amount;
   };
   const nextBalance = preview();
 

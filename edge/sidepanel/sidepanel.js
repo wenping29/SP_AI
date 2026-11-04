@@ -446,10 +446,28 @@ function positionAddMenu() {
   menu.style.top = `${Math.round(top)}px`;
 }
 
+// 各 tab 内容长度不同，统一按最高的那个撑开，切换时菜单不再跳动
+let menuBodyHeight = 0;
+
+function stabilizeMenuHeight() {
+  if (!menuBodyHeight) {
+    const current = state.menuTab;
+    for (const key of Object.keys(CAPABILITIES)) {
+      state.menuTab = key;
+      renderAddMenu();
+      menuBodyHeight = Math.max(menuBodyHeight, els.menuBody.scrollHeight);
+    }
+    state.menuTab = current;
+  }
+  els.menuBody.style.height = `${menuBodyHeight}px`;
+  renderAddMenu();
+}
+
 function openAddMenu() {
   renderAddMenu();
   els.addMenu.hidden = false;
   els.btnAdd.setAttribute("aria-expanded", "true");
+  stabilizeMenuHeight();
   positionAddMenu();
 }
 
