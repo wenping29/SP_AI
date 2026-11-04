@@ -1,0 +1,519 @@
+{
+  "steps": [],
+  "codeProbe": {
+    "len": 4394,
+    "hasThinkingBranch": true,
+    "hasReasoningPush": true,
+    "hasUploadVoice": true
+  },
+  "uptimeAfterReload": 5,
+  "before": {
+    "status": "已连接",
+    "busy": false,
+    "controller": false,
+    "model": "deepseek-reasoner",
+    "tip": "停止生成",
+    "stopHidden": true,
+    "point": {
+      "x": 0,
+      "y": 0
+    },
+    "boxClass": null,
+    "reasoningChars": 0,
+    "summary": null,
+    "body": "",
+    "meta": null,
+    "activeId": "967bb449",
+    "msgCount": 0,
+    "sessions": [
+      "967bb449/0/"
+    ],
+    "boxes": 0,
+    "uptime": 6
+  },
+  "creditsBefore": "{\"balance\":633,\"top\":[\"-8 chat\",\"-20 chat\",\"-20 chat\"]}",
+  "justSent": {
+    "status": "已连接",
+    "busy": false,
+    "controller": false,
+    "model": "deepseek-reasoner",
+    "tip": "停止生成",
+    "stopHidden": true,
+    "point": {
+      "x": 0,
+      "y": 0
+    },
+    "boxClass": "msg assistant",
+    "reasoningChars": 116,
+    "summary": "思考过程",
+    "body": "9.9 更大。\n\n理由：按小数比较，9.9 可以写成 9.90，而 9.90 >…",
+    "meta": "deepseek-reasoner · 输入 74／输出 155 token",
+    "activeId": "967bb449",
+    "msgCount": 2,
+    "sessions": [
+      "967bb449/2/user(23,r0,role+content+prompt+note+images+at) assistant(106,r116,role+content+reasoning+usage+at)"
+    ],
+    "boxes": 1,
+    "uptime": 9
+  },
+  "abort": {
+    "clicked": null,
+    "note": "没等到思考流",
+    "tail": [
+      {
+        "sec": 41,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 42,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 43,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 44,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      }
+    ],
+    "trace": [
+      {
+        "sec": 0,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 1,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 2,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 3,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 4,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 5,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 6,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 7,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 8,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 9,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 10,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 11,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 12,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 13,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 14,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 15,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 16,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 17,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 18,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 19,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 20,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 21,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 22,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 23,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 24,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 25,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 26,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 27,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 28,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 29,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 30,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 31,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 32,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 33,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 34,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 35,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 36,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 37,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 38,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 39,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 40,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 41,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 42,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 43,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      },
+      {
+        "sec": 44,
+        "busy": false,
+        "tip": "停止生成",
+        "r": 116,
+        "msgs": 2,
+        "status": "已连接"
+      }
+    ],
+    "credits": "{\"balance\":613,\"top\":[\"-20 chat\",\"-8 chat\",\"-20 chat\"]}",
+    "renderedAfterRerender": "[\"msg user|9.11 和 9.9 哪个数更大？请说明理由。\",\"msg assistant|思考过程我们需要回答中文。用户问9.11和9.9哪个大，说明\"]"
+  },
+  "completed": {
+    "snap": {
+      "status": "已连接",
+      "busy": false,
+      "controller": false,
+      "model": "deepseek-reasoner",
+      "tip": "停止生成",
+      "stopHidden": true,
+      "point": {
+        "x": 0,
+        "y": 0
+      },
+      "boxClass": "msg assistant",
+      "reasoningChars": 106,
+      "summary": "思考过程",
+      "body": "**9.9 更大。**\n\n理由：把 9.9 写成 9.90 后比较：\n\n- 9.…",
+      "meta": "deepseek-reasoner · 输入 173／输出 179 token",
+      "activeId": "967bb449",
+      "msgCount": 4,
+      "sessions": [
+        "967bb449/4/user(23,r0,role+content+prompt+note+images+at) assistant(106,r116,role+content+reasoning+usage+at) user(23,r0,role+content+prompt+note+images+at) assistant(157,r106,role+content+reasoning+usage+at)"
+      ],
+      "boxes": 2,
+      "uptime": 60
+    },
+    "credits": "{\"balance\":593,\"top\":[\"-20 chat deepseek-reasoner\",\"-20 chat deepseek-reasoner\",\"-8 chat deepseek-chat\"]}",
+    "trace": [
+      {
+        "sec": 1,
+        "busy": false,
+        "r": 106,
+        "b": 41,
+        "msgs": 4
+      },
+      {
+        "sec": 2,
+        "busy": false,
+        "r": 106,
+        "b": 41,
+        "msgs": 4
+      },
+      {
+        "sec": 3,
+        "busy": false,
+        "r": 106,
+        "b": 41,
+        "msgs": 4
+      },
+      {
+        "sec": 4,
+        "busy": false,
+        "r": 106,
+        "b": 41,
+        "msgs": 4
+      }
+    ]
+  },
+  "shot": true
+}
