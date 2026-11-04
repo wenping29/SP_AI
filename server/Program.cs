@@ -153,6 +153,29 @@ using (var scope = app.Services.CreateScope())
         logger.LogDebug(ex, "Models.IsDeprecated 列已存在，跳过补列");
     }
 
+    // 模型分类同理补列；只有这次真的加上了列才回填，避免覆盖后台已改过的分类
+    var categoryAdded = false;
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """ALTER TABLE "Models" ADD COLUMN "Category" TEXT NOT NULL DEFAULT '';""");
+        categoryAdded = true;
+    }
+    catch (Exception ex)
+    {
+        logger.LogDebug(ex, "Models.Category 列已存在，跳过补列");
+    }
+
+    if (categoryAdded)
+    {
+        await db.Database.ExecuteSqlRawAsync("""
+            UPDATE "Models" SET "Category" = '高性价比'
+                WHERE "ModelId" IN ('glm-4-flash','glm-5.3-flash','deepseek-chat','ernie-speed','deepseek-v3-sf','glm-4v-flash');
+            UPDATE "Models" SET "Category" = '高级' WHERE "ModelId" = 'qwen-plus';
+            UPDATE "Models" SET "Category" = '最智能' WHERE "ModelId" IN ('deepseek-reasoner','deepseek-v4-pro');
+            """);
+    }
+
     await db.SeedAsync();
     await scope.ServiceProvider.GetRequiredService<ProviderKey>().EnsureSeededAsync(CancellationToken.None);
 }
@@ -208,6 +231,7 @@ app.MapGet("/api/config", async (AppDbContext db, CreditService credits, Provide
             outputRatePer1K = m.OutputRatePer1K,
             maxContextChars = m.MaxContextChars,
             supportsVision = m.SupportsVision,
+            m.Category,
             m.Note,
         }),
         actions = PromptTemplates.Actions,
@@ -485,6 +509,7 @@ admin.MapPost("/models", async (ModelCreateRequest req, AppDbContext db, Provide
         SupportsVision = req.SupportsVision ?? false,
         IsEnabled = req.IsEnabled ?? true,
         SortOrder = req.SortOrder ?? (await db.Models.MaxAsync(m => (int?)m.SortOrder, ct) ?? 0) + 1,
+        Category = ClampText(req.Category, 20),
         Note = ClampText(req.Note, 200),
     };
 
@@ -518,6 +543,7 @@ admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDb
     if (req.MaxContextChars is { } maxChars) model.MaxContextChars = Math.Clamp(maxChars, 1000, 200000);
     if (req.SortOrder is { } sort) model.SortOrder = Math.Clamp(sort, 0, 9999);
     if (req.SupportsVision is { } vision) model.SupportsVision = vision;
+    if (req.Category is not null) model.Category = ClampText(req.Category, 20);
     if (req.Note is not null) model.Note = ClampText(req.Note, 200);
 
     await db.SaveChangesAsync(ct);
@@ -871,10 +897,10 @@ public record ChatRequest(string Model, List<ChatMessageDto>? Messages, string? 
 public record PolicyRequest(int? FreeCredits, bool? ChatEnabled, string? Notice);
 public record ModelRequest(string? DisplayName, bool? IsEnabled, int? InputRatePer1K, int? OutputRatePer1K,
     int? MaxContextChars, int? SortOrder, bool? SupportsVision, string? Note, string? Provider,
-    string? UpstreamModel);
+    string? UpstreamModel, string? Category);
 public record ModelCreateRequest(string? ModelId, string? DisplayName, string? Provider, string? UpstreamModel,
     int? InputRatePer1K, int? OutputRatePer1K, int? MaxContextChars, bool? SupportsVision, bool? IsEnabled,
-    int? SortOrder, string? Note);
+    int? SortOrder, string? Note, string? Category);
 public record GrantRequest(string DeviceId, int? Delta, string? Reason);
 public record BlockRequest(bool? Blocked);
 public record ProviderKeyRequest(string? Key);
