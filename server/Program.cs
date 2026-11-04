@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using SpServer.Data;
@@ -140,6 +141,18 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_AdminSessions_ExpiresAt" ON "AdminSessions" ("ExpiresAt");
         """);
 
+    // 老库的 Models 表没有废弃标记，EnsureCreated 不会补列，这里单独加一次
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """ALTER TABLE "Models" ADD COLUMN "IsDeprecated" INTEGER NOT NULL DEFAULT 0;""");
+    }
+    catch (Exception ex)
+    {
+        // 新库由 EnsureCreated 直接带上了该列，重复添加会报错，属正常情况
+        logger.LogDebug(ex, "Models.IsDeprecated 列已存在，跳过补列");
+    }
+
     await db.SeedAsync();
     await scope.ServiceProvider.GetRequiredService<ProviderKey>().EnsureSeededAsync(CancellationToken.None);
 }
@@ -172,7 +185,7 @@ app.MapGet("/api/config", async (AppDbContext db, CreditService credits, Provide
     var policy = await credits.GetPolicyAsync(ct);
     // 没有任何启用 KeyEnv 的提供商，其模型不下发，避免用户选中后才报错
     var usable = await keys.UsableProvidersAsync(ct);
-    var models = await db.Models.Where(m => m.IsEnabled && usable.Contains(m.Provider))
+    var models = await db.Models.Where(m => m.IsEnabled && !m.IsDeprecated && usable.Contains(m.Provider))
         .OrderBy(m => m.SortOrder).ToListAsync(ct);
 
     return Results.Ok(new
@@ -225,7 +238,8 @@ app.MapPost("/api/chat", async (HttpContext http, ChatRequest req, AppDbContext 
     var policy = await credits.GetPolicyAsync(ct);
     if (!policy.ChatEnabled) throw new ApiException(503, "chat_disabled", "服务当前已暂停，请稍后再试");
 
-    var model = await db.Models.FirstOrDefaultAsync(m => m.ModelId == req.Model && m.IsEnabled, ct)
+    var model = await db.Models.FirstOrDefaultAsync(m =>
+            m.ModelId == req.Model && m.IsEnabled && !m.IsDeprecated, ct)
         ?? throw new ApiException(404, "model_not_found", "模型不可用，请重新选择");
 
     if (!await keys.IsUsableAsync(model.Provider, ct))
@@ -439,24 +453,107 @@ admin.MapPut("/policy", async (PolicyRequest req, AppDbContext db, CancellationT
 }).RequireAdmin("policy.manage");
 
 admin.MapGet("/models", async (AppDbContext db, CancellationToken ct) =>
-    Results.Ok(await db.Models.OrderBy(m => m.SortOrder).ToListAsync(ct))).RequireAdmin("models.view");
+    Results.Ok(await db.Models
+        .OrderBy(m => m.IsDeprecated)
+        .ThenBy(m => m.SortOrder)
+        .ThenBy(m => m.Id)
+        .ToListAsync(ct))).RequireAdmin("models.view");
 
-admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDbContext db, CancellationToken ct) =>
+// 新增模型时给下拉框用，避免依赖 KeyEnv 查看权限
+admin.MapGet("/model-providers", (ProviderKey keys) =>
+    Results.Ok(keys.Providers().Select(p => new { p.Provider, p.BaseUrl })))
+    .RequireAdmin("models.view");
+
+admin.MapPost("/models", async (ModelCreateRequest req, AppDbContext db, ProviderKey keys,
+    CancellationToken ct) =>
+{
+    var modelId = NormalizeModelId(req.ModelId);
+    if (await db.Models.AnyAsync(m => m.ModelId.ToLower() == modelId.ToLower(), ct))
+    {
+        throw new ApiException(409, "model_id_exists", $"模型 ID {modelId} 已存在");
+    }
+
+    var model = new ModelSpec
+    {
+        ModelId = modelId,
+        DisplayName = RequireText(req.DisplayName, "显示名称", 60),
+        Provider = keys.CanonicalProvider(req.Provider ?? ""),
+        UpstreamModel = RequireText(req.UpstreamModel, "上游模型名", 128),
+        InputRatePer1K = Math.Clamp(req.InputRatePer1K ?? 0, 0, 100000),
+        OutputRatePer1K = Math.Clamp(req.OutputRatePer1K ?? 0, 0, 100000),
+        MaxContextChars = Math.Clamp(req.MaxContextChars ?? 12000, 1000, 200000),
+        SupportsVision = req.SupportsVision ?? false,
+        IsEnabled = req.IsEnabled ?? true,
+        SortOrder = req.SortOrder ?? (await db.Models.MaxAsync(m => (int?)m.SortOrder, ct) ?? 0) + 1,
+        Note = ClampText(req.Note, 200),
+    };
+
+    db.Models.Add(model);
+    await db.SaveChangesAsync(ct);
+    return Results.Ok(model);
+}).RequireAdmin("models.manage");
+
+admin.MapPut("/models/{modelId}", async (string modelId, ModelRequest req, AppDbContext db, ProviderKey keys,
+    CancellationToken ct) =>
 {
     var model = await db.Models.FirstOrDefaultAsync(m => m.ModelId == modelId, ct)
         ?? throw new ApiException(404, "model_not_found", "模型不存在");
 
-    if (req.DisplayName is { } name) model.DisplayName = name;
-    if (req.IsEnabled is { } enabled) model.IsEnabled = enabled;
-    if (req.InputRatePer1K is { } inputRate) model.InputRatePer1K = Math.Max(0, inputRate);
-    if (req.OutputRatePer1K is { } outputRate) model.OutputRatePer1K = Math.Max(0, outputRate);
+    if (req.DisplayName is not null) model.DisplayName = RequireText(req.DisplayName, "显示名称", 60);
+    if (req.Provider is not null) model.Provider = keys.CanonicalProvider(req.Provider);
+    if (req.UpstreamModel is not null) model.UpstreamModel = RequireText(req.UpstreamModel, "上游模型名", 128);
+
+    if (req.IsEnabled is { } enabled)
+    {
+        if (enabled && model.IsDeprecated)
+        {
+            throw new ApiException(409, "deprecated_model", "模型已废弃，请先恢复再启用");
+        }
+
+        model.IsEnabled = enabled;
+    }
+
+    if (req.InputRatePer1K is { } inputRate) model.InputRatePer1K = Math.Clamp(inputRate, 0, 100000);
+    if (req.OutputRatePer1K is { } outputRate) model.OutputRatePer1K = Math.Clamp(outputRate, 0, 100000);
     if (req.MaxContextChars is { } maxChars) model.MaxContextChars = Math.Clamp(maxChars, 1000, 200000);
-    if (req.SortOrder is { } sort) model.SortOrder = sort;
+    if (req.SortOrder is { } sort) model.SortOrder = Math.Clamp(sort, 0, 9999);
     if (req.SupportsVision is { } vision) model.SupportsVision = vision;
-    if (req.Note is { } note) model.Note = note;
+    if (req.Note is not null) model.Note = ClampText(req.Note, 200);
 
     await db.SaveChangesAsync(ct);
     return Results.Ok(model);
+}).RequireAdmin("models.manage");
+
+admin.MapPost("/models/{modelId}/deprecate", async (string modelId, DeprecateRequest req, AppDbContext db,
+    CancellationToken ct) =>
+{
+    if (req.Deprecated is null) throw new ApiException(400, "invalid_deprecated", "缺少废弃状态");
+
+    var model = await db.Models.FirstOrDefaultAsync(m => m.ModelId == modelId, ct)
+        ?? throw new ApiException(404, "model_not_found", "模型不存在");
+
+    model.IsDeprecated = req.Deprecated.Value;
+    // 废弃即下线；恢复后保持停用，由管理员确认后再启用
+    if (model.IsDeprecated) model.IsEnabled = false;
+
+    await db.SaveChangesAsync(ct);
+    return Results.Ok(model);
+}).RequireAdmin("models.manage");
+
+admin.MapDelete("/models/{modelId}", async (string modelId, AppDbContext db, CancellationToken ct) =>
+{
+    var model = await db.Models.FirstOrDefaultAsync(m => m.ModelId == modelId, ct)
+        ?? throw new ApiException(404, "model_not_found", "模型不存在");
+
+    // 调用记录按模型 ID 保存，直接删会丢失名称映射；有历史的模型只能废弃
+    if (await db.Transactions.AnyAsync(t => t.ModelId == model.ModelId, ct))
+    {
+        throw new ApiException(409, "model_in_use", "该模型已有调用记录，请改为废弃以保留历史");
+    }
+
+    db.Models.Remove(model);
+    await db.SaveChangesAsync(ct);
+    return Results.Ok(new { modelId, deleted = true });
 }).RequireAdmin("models.manage");
 
 admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService credits, CancellationToken ct) =>
@@ -484,8 +581,8 @@ admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
     var accounts = await db.Accounts.CountAsync(ct);
     var totalBalance = await db.Accounts.SumAsync(a => (int?)a.Balance, ct) ?? 0;
     var blocked = await db.Accounts.CountAsync(a => a.IsBlocked, ct);
-    var modelCount = await db.Models.CountAsync(ct);
-    var enabledModels = await db.Models.CountAsync(m => m.IsEnabled, ct);
+    var modelCount = await db.Models.CountAsync(m => !m.IsDeprecated, ct);
+    var enabledModels = await db.Models.CountAsync(m => m.IsEnabled && !m.IsDeprecated, ct);
     // 只统计真实消耗；后台手工扣分不算用户消费
     var calls24h = await db.Transactions
         .CountAsync(t => t.CreatedAt >= since && t.Delta < 0 && t.Reason != "admin_grant", ct);
@@ -516,7 +613,7 @@ admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
         accounts, totalBalance, blocked, modelCount, enabledModels,
         calls24h, consumed24h, active24h, recent,
     });
-});
+}).RequireAdmin("dashboard.view");
 
 admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContext db,
     CancellationToken ct) =>
@@ -566,7 +663,7 @@ admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContex
             };
         }),
     });
-});
+}).RequireAdmin("devices.view");
 
 admin.MapGet("/devices/{deviceId}/transactions", async (string deviceId, int? take, AppDbContext db,
     CancellationToken ct) =>
@@ -594,7 +691,7 @@ admin.MapGet("/devices/{deviceId}/transactions", async (string deviceId, int? ta
         isBlocked = account.IsBlocked,
         items,
     });
-});
+}).RequireAdmin("devices.view");
 
 admin.MapPost("/devices/{deviceId}/block", async (string deviceId, BlockRequest req, AppDbContext db,
     CancellationToken ct) =>
@@ -607,7 +704,50 @@ admin.MapPost("/devices/{deviceId}/block", async (string deviceId, BlockRequest 
     account.IsBlocked = req.Blocked.Value;
     await db.SaveChangesAsync(ct);
     return Results.Ok(new { deviceId = account.DeviceId, isBlocked = account.IsBlocked });
-});
+}).RequireAdmin("devices.manage");
+
+// 管理员账号：新增、修改、删除；自己不能删自己、不能停用自己
+admin.MapGet("/users", async (AdminAccounts accounts, CancellationToken ct) =>
+    Results.Ok(await accounts.ListUsersAsync(ct))).RequireAdmin("users.view");
+
+admin.MapPost("/users", async (AdminUserCreateRequest req, AdminAccounts accounts, CancellationToken ct) =>
+    Results.Ok(await accounts.CreateUserAsync(req.Username, req.DisplayName, req.RoleId, req.Password, ct)))
+    .RequireAdmin("users.manage");
+
+admin.MapPut("/users/{id:int}", async (int id, AdminUserUpdateRequest req, HttpContext http,
+    AdminAccounts accounts, CancellationToken ct) =>
+{
+    var current = (AdminIdentity)http.Items[AdminAuth.IdentityItem]!;
+    return Results.Ok(await accounts.UpdateUserAsync(id, req.DisplayName, req.RoleId, req.Password,
+        req.IsDisabled, current, ct));
+}).RequireAdmin("users.manage");
+
+admin.MapDelete("/users/{id:int}", async (int id, HttpContext http, AdminAccounts accounts,
+    CancellationToken ct) =>
+{
+    var current = (AdminIdentity)http.Items[AdminAuth.IdentityItem]!;
+    await accounts.DeleteUserAsync(id, current, ct);
+    return Results.Ok(new { id, deleted = true });
+}).RequireAdmin("users.manage");
+
+// 角色：列表同时给用户管理页选角色用，所以 users.manage 也能读
+admin.MapGet("/roles", async (AdminAccounts accounts, CancellationToken ct) =>
+    Results.Ok(await accounts.ListRolesAsync(ct))).RequireAdmin("roles.view", "users.manage");
+
+admin.MapPost("/roles", async (AdminRoleRequest req, AdminAccounts accounts, CancellationToken ct) =>
+    Results.Ok(await accounts.CreateRoleAsync(req.Name, req.Description, req.Permissions, ct)))
+    .RequireAdmin("roles.manage");
+
+admin.MapPut("/roles/{id:int}", async (int id, AdminRoleRequest req, AdminAccounts accounts,
+    CancellationToken ct) =>
+    Results.Ok(await accounts.UpdateRoleAsync(id, req.Name, req.Description, req.Permissions, ct)))
+    .RequireAdmin("roles.manage");
+
+admin.MapDelete("/roles/{id:int}", async (int id, AdminAccounts accounts, CancellationToken ct) =>
+{
+    await accounts.DeleteRoleAsync(id, ct);
+    return Results.Ok(new { id, deleted = true });
+}).RequireAdmin("roles.manage");
 
 var adminIndex = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
     "admin", "index.html");
@@ -629,6 +769,32 @@ app.Run();
 
 // SQLite 读出来的 DateTime 没有 Kind，统一按 UTC 输出，避免前端当成本地时间
 static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+static string NormalizeModelId(string? value)
+{
+    var id = (value ?? "").Trim();
+    if (!Regex.IsMatch(id, @"^[A-Za-z0-9][A-Za-z0-9._:-]{1,63}$"))
+    {
+        throw new ApiException(400, "invalid_model_id",
+            "模型 ID 需为 2-64 位字母、数字、点、下划线、冒号或短横线");
+    }
+
+    return id;
+}
+
+static string RequireText(string? value, string field, int max)
+{
+    var text = (value ?? "").Trim();
+    if (text.Length == 0) throw new ApiException(400, "invalid_model", $"{field}不能为空");
+    if (text.Length > max) throw new ApiException(400, "invalid_model", $"{field}最多 {max} 个字符");
+    return text;
+}
+
+static string ClampText(string? value, int max)
+{
+    var text = (value ?? "").Trim();
+    return text.Length <= max ? text : text[..max];
+}
 
 static string? Bearer(HttpRequest request) =>
     request.Headers.Authorization.ToString().Replace("Bearer ", "").Trim() is { Length: > 0 } v ? v : null;
@@ -704,10 +870,18 @@ public record ChatMessageDto(string Role, string Content, List<string>? Images);
 public record ChatRequest(string Model, List<ChatMessageDto>? Messages, string? System, int? MaxTokens);
 public record PolicyRequest(int? FreeCredits, bool? ChatEnabled, string? Notice);
 public record ModelRequest(string? DisplayName, bool? IsEnabled, int? InputRatePer1K, int? OutputRatePer1K,
-    int? MaxContextChars, int? SortOrder, bool? SupportsVision, string? Note);
+    int? MaxContextChars, int? SortOrder, bool? SupportsVision, string? Note, string? Provider,
+    string? UpstreamModel);
+public record ModelCreateRequest(string? ModelId, string? DisplayName, string? Provider, string? UpstreamModel,
+    int? InputRatePer1K, int? OutputRatePer1K, int? MaxContextChars, bool? SupportsVision, bool? IsEnabled,
+    int? SortOrder, string? Note);
 public record GrantRequest(string DeviceId, int? Delta, string? Reason);
 public record BlockRequest(bool? Blocked);
 public record ProviderKeyRequest(string? Key);
 public record KeyEnvCreateRequest(string? Provider, string? EnvName, string? Key, string? Note, bool? Activate);
 public record KeyEnvUpdateRequest(string? EnvName, string? Key, bool? ClearKey, string? Note);
 public record DeprecateRequest(bool? Deprecated);
+public record AdminLoginRequest(string? Username, string? Password);
+public record AdminUserCreateRequest(string? Username, string? DisplayName, int? RoleId, string? Password);
+public record AdminUserUpdateRequest(string? DisplayName, int? RoleId, string? Password, bool? IsDisabled);
+public record AdminRoleRequest(string? Name, string? Description, string[]? Permissions);

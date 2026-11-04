@@ -30,7 +30,7 @@ public static class AdminPermissions
 public sealed record AdminIdentity(int? UserId, string Username, string DisplayName, string RoleName,
     IReadOnlySet<string> PermissionSet, string Source)
 {
-    public bool IsSuper => PermissionSet.Contains(All);
+    public bool IsSuper => PermissionSet.Contains(AdminPermissions.All);
 
     public bool Has(string permission) =>
         IsSuper || PermissionSet.Contains(permission) ||

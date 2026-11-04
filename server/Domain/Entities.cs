@@ -36,6 +36,10 @@ public class ModelSpec
     public int MaxContextChars { get; set; } = 12000;
     public bool SupportsVision { get; set; }
     public bool IsEnabled { get; set; } = true;
+    // 分类用于插件里的模型分组，例如 高性价比 / 高级 / 最智能
+    public string Category { get; set; } = "";
+    // 废弃后不再下发给插件，但保留记录与调用历史，可恢复
+    public bool IsDeprecated { get; set; }
     public int SortOrder { get; set; }
     public string Note { get; set; } = "";
 }
