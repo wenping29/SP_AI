@@ -62,7 +62,7 @@ cd server
 dotnet run
 ```
 
-默认监听 `http://127.0.0.1:5080`，首次启动会自动创建 SQLite 数据库 `server/sp.db`、表结构与内置角色，并写入种子模型。
+默认监听 `http://127.0.0.1:5080`，首次启动会自动创建 SQLite 数据库 `server/sp.db`、表结构、内置角色与种子模型，并创建初始管理员 `admin`（密码见「管理员登录与初始化」）。
 
 健康检查：`GET http://127.0.0.1:5080/health`
 
@@ -95,36 +95,72 @@ npm run build:server
 
 ## 管理员登录与初始化
 
-系统**不预置任何管理员账号和密码**。首次部署有两种进入方式：
+**初始管理员账号**
 
-**方式一：应急密钥（Admin__Key）**
+| 用户名 | 初始密码 | 角色 |
+| --- | --- | --- |
+| `admin` | `SpInit@7Kq9xT2m` | 超级管理员 |
 
-启动后端时通过环境变量或配置提供：
+首次启动时，如果 `AdminUsers` 表为空，服务端会自动创建该账号（当前仓库内的 `server/sp.db` 已经创建好）。用「账号登录」页签登录即可，会话 12 小时过期。
+
+> 该密码写在 README 里，仅用于首次进入。登录后请立刻在「用户管理」中修改；生产环境也可以在启动前用环境变量 `Admin__InitialPassword` 覆盖，避免继续使用默认值。账号只在用户表为空时创建，重启不会重置已修改的密码。
+
+账号初始化配置：
+
+| 配置项 | 说明 | 默认 |
+| --- | --- | --- |
+| `Admin:InitialUsername` | 初始管理员用户名 | `admin` |
+| `Admin:InitialPassword` | 初始管理员密码，少于 8 位或留空则跳过自动创建 | `SpInit@7Kq9xT2m` |
+
+**应急密钥（Admin__Key）**
+
+当前配置的应急密钥（已写入 `server/appsettings.json`）：
+
+| 用途 | 值 |
+| --- | --- |
+| 登录页「应急密钥」 | `3591b2e1a3b697cfce19445b4a2a1bdebb7a1e7e2f4d4dd69fd1e19d647f3ea8` |
+
+生成一个 64 位十六进制随机串（任选一种）：
+
+```bash
+# Linux / macOS / Git Bash
+openssl rand -hex 32
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+```powershell
+# PowerShell
+[Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower()
+```
+
+把生成的串配置到环境变量（优先级更高）或 `appsettings.json`：
 
 ```bash
 # 示例：临时启动
-Admin__Key=请换成强随机串 dotnet run
+Admin__Key=生成的随机串 dotnet run
 ```
 
 ```json
 // 或 appsettings.json
-"Admin": { "Key": "请换成强随机串" }
+"Admin": { "Key": "生成的随机串" }
 ```
 
-登录页切到“应急密钥”页签输入即可，权限等同全部模块。未配置时该方式不可用。
+登录页切到“应急密钥”页签输入即可，权限等同全部模块；留空则禁用。该密钥不过期，属于长期总钥匙，建议只在应急时使用。
 
-**方式二：创建账号后使用账号登录**
+> 上面的密钥已随仓库提交，仅用于本地开发。对外部署前必须重新生成并替换，否则任何拿到仓库的人都能直接进入后台。
 
-用应急密钥调用管理接口创建账号：
+**手动创建账号**
+
+已有管理员或在应急密钥模式下，也可以调用接口新增账号：
 
 ```bash
 curl -X POST http://127.0.0.1:5080/api/admin/users \
   -H "X-Admin-Key: $Admin__Key" \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","displayName":"管理员","roleId":1,"password":"请换成强密码"}'
+  -d '{"username":"operator","displayName":"运营同学","roleId":2,"password":"请换成强密码"}'
 ```
 
-`roleId=1` 为内置“超级管理员”。之后在登录页使用「账号登录」，会话 12 小时过期。
+`roleId=1` 为内置“超级管理员”，`roleId=2` 为“运营”。
 
 内置角色：
 
@@ -207,7 +243,8 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 ## 部署建议
 
 - 对外部署时设置 `AllowedOrigins` 为固定的扩展来源（如 `chrome-extension://<扩展ID>`），并启用 HTTPS
-- 使用强随机 `Admin__Key`，或配置完账号后将其清空并只保留账号登录
+- 首次登录后立即修改 `admin` 的默认密码；或在启动前用 `Admin__InitialPassword` 指定自己的初始密码
+- 对外部署前重新生成 `Admin__Key` 并替换仓库里的默认值；不需要应急入口时直接清空，只保留账号登录
 - 按最小权限为运营人员分配角色，不要共用超级管理员账号
 - 反向代理（Nginx / Caddy）转发到 `5080` 或 `7788`，注意 SSE 需要关闭缓冲
 - 备份 `sp.db` 与 `server/keys`，两者需配套，只备份数据库无法解密密钥
@@ -220,7 +257,7 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 
 **登录页没有可用账号**
 
-系统不预置账号：先用 `Admin__Key` 登录，或在服务端用应急密钥创建账号。
+首次启动且用户表为空时会自动创建 `admin` / `SpInit@7Kq9xT2m`。如果已手动清空过管理员表，也可用 `Admin__Key` 登录后重新创建账号。
 
 **插件提示连不上服务**
 
