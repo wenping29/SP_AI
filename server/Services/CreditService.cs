@@ -55,8 +55,17 @@ public class CreditService(AppDbContext db)
             throw new ApiException(401, "no_token", "缺少访问令牌");
         }
 
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Token == bearerToken, ct)
-            ?? throw new ApiException(401, "bad_token", "令牌无效，请在扩展设置里重新注册设备");
+        // 登录用户的令牌存在 DeviceSessions，匿名设备仍用 Account.Token
+        var session = await db.DeviceSessions.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Token == bearerToken, ct);
+        var account = session is null
+            ? await db.Accounts.FirstOrDefaultAsync(a => a.Token == bearerToken, ct)
+            : await db.Accounts.FirstOrDefaultAsync(a => a.Id == session.AccountId, ct);
+
+        if (account is null)
+        {
+            throw new ApiException(401, "bad_token", "令牌无效，请在扩展设置里重新注册设备");
+        }
 
         if (account.IsBlocked) throw new ApiException(403, "blocked", "该账号已被封禁");
         return account;

@@ -1,0 +1,84 @@
+{
+  "steps": [],
+  "backupKeys": [
+    "activeSession",
+    "deviceId",
+    "label",
+    "launcher",
+    "model",
+    "panelCollapsed",
+    "server",
+    "sessions",
+    "token"
+  ],
+  "start": {
+    "balance": "1000",
+    "authLabel": "登录 / 注册",
+    "device": "自动化测试设备",
+    "hasAuthItem": true
+  },
+  "dialogLogin": {
+    "open": true,
+    "title": "登录账号",
+    "nameRowHidden": true,
+    "activeTab": "login"
+  },
+  "registerMode": {
+    "title": "注册账号",
+    "nameRowVisible": true,
+    "submitText": "注册并登录"
+  },
+  "afterRegister": {
+    "dialogOpen": false,
+    "authLabel": "退出登录",
+    "accountName": "UI 测试用户",
+    "balance": "1000",
+    "status": "注册成功，已合并本机 1000 积分",
+    "storedUser": {
+      "displayName": "UI 测试用户",
+      "email": "sp-ui-1793788337241@example.com"
+    },
+    "rechargeId": "uf3ca4bc000ef457f84b80953d812052a",
+    "authError": ""
+  },
+  "serverCredits": {
+    "balance": 1000,
+    "deviceId": "uf3ca4bc000ef457f84b80953d812052a",
+    "transactions": [
+      {
+        "delta": 1000,
+        "reason": "device_merge",
+        "modelId": "",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "at": "2026-11-04 18:32:19"
+      }
+    ]
+  },
+  "afterLogout": {
+    "authLabel": "登录 / 注册",
+    "accountName": "自动化测试设备",
+    "balance": "0",
+    "status": "已退出登录",
+    "storedUser": null,
+    "serverUser": {
+      "loggedIn": false,
+      "email": null,
+      "displayName": null,
+      "balance": 0,
+      "accountDeviceId": "22a5d4f7-8ae9-40d6-a521-7ea4e16e4906"
+    }
+  },
+  "afterRelogin": {
+    "authLabel": "退出登录",
+    "accountName": "UI 测试用户",
+    "balance": "1000",
+    "status": "已登录"
+  },
+  "restored": {
+    "server": null,
+    "status": "已连接",
+    "authLabel": "登录 / 注册",
+    "balance": "401"
+  }
+}

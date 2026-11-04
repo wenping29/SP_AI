@@ -8,6 +8,33 @@ public class Account
     public string Label { get; set; } = "";
     public int Balance { get; set; }
     public bool IsBlocked { get; set; }
+    // 登录用户的计费账号指向 User；匿名设备账号为 null
+    public int? UserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastUsedAt { get; set; }
+}
+
+// 普通用户：邮箱 + 密码；积分与流水归账号，设备只是登录入口
+public class User
+{
+    public int Id { get; set; }
+    public string Email { get; set; } = "";
+    public string PasswordHash { get; set; } = "";
+    public string DisplayName { get; set; } = "";
+    public bool IsDisabled { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastLoginAt { get; set; }
+}
+
+// 设备登录态：令牌指向账号；退出登录时回落到该设备的匿名账号
+public class DeviceSession
+{
+    public int Id { get; set; }
+    public int AccountId { get; set; }
+    public int AnonAccountId { get; set; }
+    public string DeviceId { get; set; } = "";
+    public string Token { get; set; } = "";
+    public string Label { get; set; } = "";
     public DateTime CreatedAt { get; set; }
     public DateTime LastUsedAt { get; set; }
 }

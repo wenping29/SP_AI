@@ -14,6 +14,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<AdminRole> AdminRoles => Set<AdminRole>();
     public DbSet<AdminSession> AdminSessions => Set<AdminSession>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<DeviceSession> DeviceSessions => Set<DeviceSession>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -27,6 +29,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         model.Entity<AdminSession>().HasIndex(s => s.TokenHash).IsUnique();
         model.Entity<AdminSession>().HasIndex(s => s.UserId);
         model.Entity<AdminSession>().HasIndex(s => s.ExpiresAt);
+        model.Entity<Account>().HasIndex(a => a.UserId);
+        model.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        model.Entity<DeviceSession>().HasIndex(s => s.Token).IsUnique();
+        model.Entity<DeviceSession>().HasIndex(s => s.DeviceId).IsUnique();
+        model.Entity<DeviceSession>().HasIndex(s => s.AccountId);
     }
 
     public async Task SeedAsync(CancellationToken ct = default)

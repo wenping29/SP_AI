@@ -1,0 +1,193 @@
+{
+  "steps": [],
+  "anon1": {
+    "status": 200,
+    "data": {
+      "token": "4085b74597104d01946f475a03d32dd3",
+      "balance": 1000,
+      "deviceId": "ccbb9799-3ae2-4bd4-8684-41948c749465"
+    }
+  },
+  "register": {
+    "status": 200,
+    "data": {
+      "token": "jE3XVOeqM1UFGsYP_5gMKJFg48N_mACLMPtcYL0I_As",
+      "balance": 1000,
+      "mergedCredits": 1000,
+      "user": {
+        "email": "sp-test-1793788316075@example.com",
+        "displayName": "测试用户"
+      },
+      "accountDeviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8"
+    }
+  },
+  "meLoggedIn": {
+    "status": 200,
+    "data": {
+      "loggedIn": true,
+      "email": "sp-test-1793788316075@example.com",
+      "displayName": "测试用户",
+      "balance": 1000,
+      "accountDeviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8"
+    }
+  },
+  "creditsUser": {
+    "status": 200,
+    "data": {
+      "balance": 1000,
+      "deviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8",
+      "transactions": [
+        {
+          "delta": 1000,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 18:31:56"
+        }
+      ]
+    }
+  },
+  "anon2": {
+    "status": 200,
+    "data": {
+      "token": "af4a342de1c3498ea45af9ab57273863",
+      "balance": 1000,
+      "deviceId": "66e4f255-4a94-44e7-9219-70c41a6814f2"
+    }
+  },
+  "login2": {
+    "status": 200,
+    "data": {
+      "token": "AHgii95SiV3WZA_4Suolzw3UfvmpI_WPtjzAIc1f2IA",
+      "balance": 2000,
+      "mergedCredits": 1000,
+      "user": {
+        "email": "sp-test-1793788316075@example.com",
+        "displayName": "测试用户"
+      },
+      "accountDeviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8"
+    }
+  },
+  "creditsDevice1": {
+    "status": 200,
+    "data": {
+      "balance": 2000,
+      "deviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8",
+      "transactions": [
+        {
+          "delta": 1000,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 18:31:56"
+        },
+        {
+          "delta": 1000,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 18:31:56"
+        }
+      ]
+    }
+  },
+  "logout2": {
+    "status": 200,
+    "data": {
+      "token": "AKrWB22vnueG6xbIBsT7ckAXFZQmebETqJf1Uvcv0WI",
+      "balance": 0,
+      "mergedCredits": 0,
+      "user": {
+        "email": "",
+        "displayName": ""
+      },
+      "accountDeviceId": "66e4f255-4a94-44e7-9219-70c41a6814f2"
+    }
+  },
+  "meAfterLogout": {
+    "status": 200,
+    "data": {
+      "loggedIn": false,
+      "email": null,
+      "displayName": null,
+      "balance": 0,
+      "accountDeviceId": "66e4f255-4a94-44e7-9219-70c41a6814f2"
+    }
+  },
+  "creditsAfterLogout": {
+    "status": 200,
+    "data": {
+      "balance": 0,
+      "deviceId": "66e4f255-4a94-44e7-9219-70c41a6814f2",
+      "transactions": [
+        {
+          "delta": 1000,
+          "reason": "free_grant",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 18:31:56"
+        }
+      ]
+    }
+  },
+  "meDevice1StillIn": {
+    "status": 200,
+    "data": {
+      "loggedIn": true,
+      "email": "sp-test-1793788316075@example.com",
+      "displayName": "测试用户",
+      "balance": 2000,
+      "accountDeviceId": "ueac86a3bb1ab454eb3d77a6aa948c8f8"
+    }
+  },
+  "wrongPassword": {
+    "status": 401,
+    "data": {
+      "code": "bad_credentials",
+      "message": "邮箱或密码不正确"
+    }
+  },
+  "duplicateEmail": {
+    "status": 409,
+    "data": {
+      "code": "email_exists",
+      "message": "该邮箱已注册，请直接登录"
+    }
+  },
+  "badEmail": {
+    "status": 400,
+    "data": {
+      "code": "invalid_email",
+      "message": "请输入有效的邮箱地址"
+    }
+  },
+  "shortPassword": {
+    "status": 400,
+    "data": {
+      "code": "weak_password",
+      "message": "密码至少 8 位"
+    }
+  },
+  "checks": {
+    "anonBalance": true,
+    "registerMerged": true,
+    "accountIdSynthetic": true,
+    "meLoggedIn": true,
+    "creditsShared": true,
+    "login2Merged": true,
+    "device1SeesShared": true,
+    "logoutAnon": true,
+    "meAfterLogout": true,
+    "anonTokenWorks": true,
+    "device1StillIn": true,
+    "wrongPassword401": true,
+    "duplicate409": true,
+    "badEmail400": true,
+    "shortPassword400": true
+  },
+  "allPassed": true
+}

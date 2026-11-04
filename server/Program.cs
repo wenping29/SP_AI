@@ -42,6 +42,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connect
 builder.Services.AddScoped<CreditService>();
 builder.Services.AddScoped<AdminAuth>();
 builder.Services.AddScoped<AdminAccounts>();
+builder.Services.AddScoped<UserAuth>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
@@ -141,6 +142,54 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_AdminSessions_ExpiresAt" ON "AdminSessions" ("ExpiresAt");
         """);
 
+    // 普通用户账号与设备登录态：老库靠这段补表补列
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "Users" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_Users" PRIMARY KEY AUTOINCREMENT,
+            "Email" TEXT NOT NULL,
+            "PasswordHash" TEXT NOT NULL,
+            "DisplayName" TEXT NOT NULL,
+            "IsDisabled" INTEGER NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "LastLoginAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Email" ON "Users" ("Email" COLLATE NOCASE);
+
+        CREATE TABLE IF NOT EXISTS "DeviceSessions" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_DeviceSessions" PRIMARY KEY AUTOINCREMENT,
+            "AccountId" INTEGER NOT NULL,
+            "AnonAccountId" INTEGER NOT NULL,
+            "DeviceId" TEXT NOT NULL,
+            "Token" TEXT NOT NULL,
+            "Label" TEXT NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "LastUsedAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_DeviceSessions_DeviceId" ON "DeviceSessions" ("DeviceId");
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_DeviceSessions_Token" ON "DeviceSessions" ("Token");
+        CREATE INDEX IF NOT EXISTS "IX_DeviceSessions_AccountId" ON "DeviceSessions" ("AccountId");
+        """);
+
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """ALTER TABLE "Accounts" ADD COLUMN "UserId" INTEGER NULL;""");
+    }
+    catch (Exception ex)
+    {
+        logger.LogDebug(ex, "Accounts.UserId 列已存在，跳过补列");
+    }
+
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """CREATE INDEX IF NOT EXISTS "IX_Accounts_UserId" ON "Accounts" ("UserId");""");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Accounts.UserId 索引创建失败");
+    }
+
     // 老库的 Models 表没有废弃标记，EnsureCreated 不会补列，这里单独加一次
     try
     {
@@ -238,6 +287,19 @@ app.MapPost("/api/device/register", async (RegisterRequest req, AppDbContext db,
     var account = await credits.RegisterDeviceAsync(req.DeviceId, req.Label ?? "", ct);
     return Results.Ok(new { token = account.Token, balance = account.Balance, deviceId = account.DeviceId });
 });
+
+// 普通用户账号：注册/登录时把本机匿名积分并入账号，退出后回落到本机匿名账号
+app.MapPost("/api/auth/register", async (AuthRegisterRequest req, UserAuth auth, CancellationToken ct) =>
+    Results.Ok(await auth.RegisterAsync(req.Email, req.Password, req.DisplayName, req.DeviceId, req.Label, ct)));
+
+app.MapPost("/api/auth/login", async (AuthLoginRequest req, UserAuth auth, CancellationToken ct) =>
+    Results.Ok(await auth.LoginAsync(req.Email, req.Password, req.DeviceId, req.Label, ct)));
+
+app.MapPost("/api/auth/logout", async (HttpContext http, UserAuth auth, CancellationToken ct) =>
+    Results.Ok(await auth.LogoutAsync(Bearer(http.Request), ct)));
+
+app.MapGet("/api/auth/me", async (HttpContext http, UserAuth auth, CancellationToken ct) =>
+    Results.Ok(await auth.MeAsync(Bearer(http.Request), ct)));
 
 app.MapGet("/api/config", async (AppDbContext db, CreditService credits, ProviderKey keys,
     CancellationToken ct) =>
@@ -992,6 +1054,9 @@ static string ClampLength(string text, int max) =>
     string.IsNullOrEmpty(text) ? "" : text.Length <= max ? text : text[..max];
 
 public record RegisterRequest(string DeviceId, string? Label);
+public record AuthRegisterRequest(string? Email, string? Password, string? DisplayName, string? DeviceId,
+    string? Label);
+public record AuthLoginRequest(string? Email, string? Password, string? DeviceId, string? Label);
 public record ChatMessageDto(string Role, string Content, List<string>? Images);
 public record ChatRequest(string Model, List<ChatMessageDto>? Messages, string? System, int? MaxTokens);
 public record PolicyRequest(int? FreeCredits, bool? ChatEnabled, string? Notice);

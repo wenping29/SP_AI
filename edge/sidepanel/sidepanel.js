@@ -1,7 +1,8 @@
 const DEFAULT_SERVER = "http://127.0.0.1:5080";
-const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession"];
+const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession", "user"];
 const REASON_LABELS = {
   free_grant: "注册赠送",
+  device_merge: "本机积分合并",
   chat: "对话消耗",
   refund: "失败退款",
   voice: "语音输入",
@@ -140,6 +141,19 @@ const els = {
   popBalance: document.getElementById("popBalance"),
   popRecharge: document.getElementById("popRecharge"),
   popVersion: document.getElementById("popVersion"),
+  popAuth: document.getElementById("popAuth"),
+  popAuthIcon: document.getElementById("popAuthIcon"),
+  popAuthLabel: document.getElementById("popAuthLabel"),
+  authDialog: document.getElementById("authDialog"),
+  authTitle: document.getElementById("authTitle"),
+  authEmail: document.getElementById("authEmail"),
+  authName: document.getElementById("authName"),
+  authNameRow: document.getElementById("authNameRow"),
+  authPassword: document.getElementById("authPassword"),
+  authError: document.getElementById("authError"),
+  authTip: document.getElementById("authTip"),
+  authSubmit: document.getElementById("authSubmit"),
+  authCancel: document.getElementById("authCancel"),
 };
 
 const state = {
@@ -162,6 +176,9 @@ const state = {
   voice: null,
   busy: false,
   balance: undefined,
+  user: null,
+  accountDeviceId: "",
+  authMode: "login",
   lastRequest: null,
   collapsed: false,
 };
@@ -230,6 +247,8 @@ const ICONS = {
   fold: '<path d="M11 5l6 7-6 7"/><path d="M20 4v16"/>',
   unfold: '<path d="M13 5l-6 7 6 7"/><path d="M4 4v16"/>',
   expand: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/>',
+  user: '<circle cx="12" cy="8.2" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/>',
+  logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -603,6 +622,7 @@ async function loadState() {
   state.model = saved.model || "";
   state.sessions = Array.isArray(saved.sessions) ? saved.sessions : [];
   state.activeId = saved.activeSession || "";
+  state.user = saved.user && saved.user.email ? saved.user : null;
 }
 
 function saveState(patch) {
@@ -641,8 +661,11 @@ async function registerDevice() {
   const data = await readJson(response);
   state.token = data.token;
   state.balance = data.balance;
-  await saveState({ token: data.token });
+  state.user = null;
+  state.accountDeviceId = data.deviceId || "";
+  await saveState({ token: data.token, user: null });
   renderBalance();
+  renderAccountCard();
 }
 
 async function loadConfig() {
@@ -725,9 +748,15 @@ function renderBalance() {
 }
 
 function renderAccountCard() {
-  els.popDevice.textContent = state.label || "本机设备";
+  const user = state.user;
+  els.popDevice.textContent = user ? (user.displayName || user.email) : (state.label || "本机设备");
+  els.popDevice.title = user ? user.email : "";
+  const authLabel = user ? "退出登录" : "登录 / 注册";
+  els.popAuthLabel.textContent = authLabel;
+  els.popAuth.dataset.pop = "auth";
+  els.popAuthIcon.innerHTML = iconSvg(user ? "logout" : "user");
   els.popVersion.textContent = `v${chrome.runtime.getManifest().version}`;
-  els.rechargeDevice.value = state.deviceId || "";
+  els.rechargeDevice.value = state.accountDeviceId || state.deviceId || "";
 }
 
 function syncBusy() {
@@ -755,7 +784,9 @@ async function refreshCredits() {
   });
   const data = await readJson(response);
   state.balance = data.balance;
+  state.accountDeviceId = data.deviceId || state.accountDeviceId;
   renderBalance();
+  renderAccountCard();
   return data;
 }
 
@@ -1967,6 +1998,10 @@ els.accountPop.addEventListener("click", (event) => {
     renderHistory();
     els.historyDialog.showModal();
   } else if (item.dataset.pop === "settings") showView("settings");
+  else if (item.dataset.pop === "auth") {
+    if (state.user) logoutAccount().catch(showError);
+    else openAuthDialog("login");
+  }
 });
 
 els.popRecharge.addEventListener("click", () => {
@@ -1989,6 +2024,128 @@ document.addEventListener("keydown", (event) => {
 
 els.refreshCredits.addEventListener("click", loadCreditsList);
 els.closeCredits.addEventListener("click", () => els.creditsDialog.close());
+
+// ---------- 用户账号：登录 / 注册 / 退出 ----------
+
+function setAuthMode(mode) {
+  state.authMode = mode;
+  const register = mode === "register";
+  els.authTitle.textContent = register ? "注册账号" : "登录账号";
+  els.authSubmit.textContent = register ? "注册并登录" : "登录";
+  els.authNameRow.hidden = !register;
+  els.authPassword.autocomplete = register ? "new-password" : "current-password";
+  els.authTip.textContent = register
+    ? "注册后积分归账号所有，本机还没用完的积分会自动并入。"
+    : "登录后积分与充值记录跟随账号，换设备登录同一账号即可继续使用。";
+  els.authError.hidden = true;
+  for (const tab of els.authDialog.querySelectorAll("[data-auth-tab]")) {
+    tab.classList.toggle("active", tab.dataset.authTab === mode);
+  }
+}
+
+function openAuthDialog(mode = "login") {
+  closeAccountPop();
+  setAuthMode(mode);
+  els.authEmail.value = "";
+  els.authName.value = "";
+  els.authPassword.value = "";
+  els.authSubmit.disabled = false;
+  els.authDialog.showModal();
+  setTimeout(() => els.authEmail.focus(), 0);
+}
+
+function showAuthError(text) {
+  els.authError.textContent = text;
+  els.authError.hidden = false;
+}
+
+async function submitAuth() {
+  const register = state.authMode === "register";
+  const email = els.authEmail.value.trim();
+  const password = els.authPassword.value;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAuthError("请输入有效的邮箱地址");
+  if (password.length < 8) return showAuthError("密码至少 8 位");
+
+  els.authError.hidden = true;
+  els.authSubmit.disabled = true;
+  try {
+    const response = await fetch(`${state.server}/api/auth/${register ? "register" : "login"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        displayName: register ? els.authName.value.trim() : "",
+        deviceId: state.deviceId,
+        label: state.label || "Edge 扩展",
+      }),
+    });
+    const data = await readJson(response);
+    state.token = data.token;
+    state.user = data.user?.email ? data.user : { email, displayName: email.split("@")[0] };
+    state.accountDeviceId = data.accountDeviceId || "";
+    state.balance = data.balance;
+    await saveState({ token: state.token, user: state.user });
+    els.authDialog.close();
+    renderBalance();
+    renderAccountCard();
+    refreshCredits().catch(() => {});
+    const merged = data.mergedCredits > 0 ? `，已合并本机 ${data.mergedCredits} 积分` : "";
+    setStatus(`${register ? "注册成功" : "已登录"}${merged}`);
+  } catch (err) {
+    els.authSubmit.disabled = false;
+    if (err instanceof TypeError) showAuthError(`连不上服务器：${state.server}`);
+    else showAuthError(err.message || "操作失败，请重试");
+  }
+}
+
+async function logoutAccount() {
+  closeAccountPop();
+  try {
+    const response = await fetch(`${state.server}/api/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    const data = await readJson(response);
+    state.token = data.token;
+    state.user = null;
+    state.accountDeviceId = data.accountDeviceId || "";
+    state.balance = data.balance;
+    await saveState({ token: state.token, user: null });
+    renderBalance();
+    renderAccountCard();
+    setStatus("已退出登录");
+  } catch (err) {
+    showError(err);
+  }
+}
+
+async function loadMe() {
+  if (!state.token) return;
+  const response = await fetch(`${state.server}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${state.token}` },
+  });
+  const data = await readJson(response);
+  state.user = data.loggedIn ? { email: data.email, displayName: data.displayName } : null;
+  state.accountDeviceId = data.accountDeviceId || "";
+  state.balance = data.balance;
+  await saveState({ user: state.user });
+  renderBalance();
+  renderAccountCard();
+}
+
+els.authDialog.addEventListener("click", (event) => {
+  const tab = event.target.closest("[data-auth-tab]");
+  if (tab) setAuthMode(tab.dataset.authTab);
+});
+els.authSubmit.addEventListener("click", () => submitAuth());
+els.authCancel.addEventListener("click", () => els.authDialog.close());
+els.authDialog.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.tagName === "INPUT") {
+    event.preventDefault();
+    submitAuth();
+  }
+});
 
 async function loadCreditsList() {
   try {
@@ -2026,17 +2183,23 @@ els.saveSettings.addEventListener("click", async () => {
   state.server = server;
   state.label = els.labelInput.value.trim();
   state.pageCache = null;
-  if (server !== oldServer) state.token = ""; // 换服务器后旧令牌无效，重新注册
-  await saveState({ server, label: state.label, token: state.token });
+  if (server !== oldServer) {
+    // 换服务器后旧令牌无效，账号态一起清掉，重新走匿名注册
+    state.token = "";
+    state.user = null;
+    state.accountDeviceId = "";
+  }
+  await saveState({ server, label: state.label, token: state.token, user: state.user });
   const ok = await boot();
   if (ok) setStatus("已保存设置");
 });
 
 els.reregister.addEventListener("click", async () => {
   try {
+    const wasUser = !!state.user;
     await registerDevice();
     fillSettings();
-    setStatus("已重新注册");
+    setStatus(wasUser ? "已重新注册，账号已退出" : "已重新注册");
   } catch (err) {
     showError(err);
   }
@@ -2110,6 +2273,7 @@ async function boot() {
         return registerDevice();
       });
     }
+    await loadMe().catch(() => {});
     await loadConfig();
     activeSession();
     renderThread();

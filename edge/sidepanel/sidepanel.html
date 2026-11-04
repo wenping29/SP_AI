@@ -180,6 +180,7 @@
           <button id="popRecharge" class="primary ico tip-top" data-icon="wallet" data-tip="充值积分"></button>
         </div>
         <div class="pop-menu">
+          <button class="pop-item" id="popAuth" data-pop="auth"><i class="pop-ico" id="popAuthIcon" data-icon="user"></i><span id="popAuthLabel">登录 / 注册</span></button>
           <button class="pop-item" data-pop="credits"><i class="pop-ico" data-icon="coin"></i>积分明细</button>
           <button class="pop-item" data-pop="history"><i class="pop-ico" data-icon="history"></i>聊天记录</button>
           <button class="pop-item" data-pop="settings"><i class="pop-ico" data-icon="gear"></i>设置</button>
@@ -219,6 +220,30 @@
       <button id="refreshCredits" class="ghost">刷新</button>
       <span class="spacer"></span>
       <button id="closeCredits" class="primary">关闭</button>
+    </div>
+  </dialog>
+
+  <dialog id="authDialog" class="auth-dialog">
+    <h2 id="authTitle">登录账号</h2>
+    <div class="auth-tabs" role="tablist">
+      <button type="button" role="tab" data-auth-tab="login" class="active">登录</button>
+      <button type="button" role="tab" data-auth-tab="register">注册</button>
+    </div>
+    <label>邮箱
+      <input id="authEmail" type="email" autocomplete="email" spellcheck="false" placeholder="you@example.com">
+    </label>
+    <label id="authNameRow" hidden>昵称（可选）
+      <input id="authName" type="text" autocomplete="nickname" maxlength="32" placeholder="不填就用邮箱前缀">
+    </label>
+    <label>密码
+      <input id="authPassword" type="password" autocomplete="current-password" placeholder="至少 8 位">
+    </label>
+    <p id="authError" class="auth-error" hidden></p>
+    <p id="authTip" class="tip">登录后积分与充值记录跟随账号，换设备登录同一账号即可继续使用。</p>
+    <div class="row">
+      <button id="authCancel" class="ghost">取消</button>
+      <span class="spacer"></span>
+      <button id="authSubmit" class="primary">登录</button>
     </div>
   </dialog>
 

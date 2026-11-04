@@ -629,6 +629,38 @@ dialog::backdrop { background: var(--backdrop); }
 
 dialog h2 { margin: 0 0 12px; font-size: 15px; }
 
+/* 账号对话框：登录/注册共用一套表单 */
+.auth-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.auth-tabs button {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.auth-tabs button.active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.auth-dialog label { display: block; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+.auth-dialog input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+}
+.auth-dialog input:focus { outline: none; border-color: var(--accent-border); }
+.auth-error { margin: 0 0 8px; color: var(--danger); font-size: 12px; }
+
 .balance-line { margin-bottom: 8px; font-size: 13px; }
 .balance-line strong { font-size: 16px; }
 
