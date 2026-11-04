@@ -26,6 +26,7 @@ const els = {
   status: document.getElementById("status"),
   notice: document.getElementById("notice"),
   viewTitle: document.getElementById("viewTitle"),
+  panelClose: document.getElementById("panelClose"),
   newChat: document.getElementById("newChat"),
   openHistory: document.getElementById("openHistory"),
   brandVersion: document.getElementById("brandVersion"),
@@ -160,6 +161,7 @@ const ICONS = {
   aZh: '<path d="M4 6h8"/><path d="M8 3.5V6"/><path d="M4.8 9.6c1.4 2.6 3.4 4.2 5.8 4.9"/><path d="M9.8 9.6C8.4 12.2 6.4 13.8 4 14.6"/><path d="M13.6 20l3.4-8 3.4 8"/><path d="M15 17h4"/>',
   coin: '<circle cx="12" cy="12" r="8.6"/><path d="M8.8 9.2h6.4M12 9.2v5.6M9.6 14.8h4.8"/>',
   wallet: '<rect x="3" y="6.6" width="18" height="12.8" rx="2.6"/><path d="M3 10.8h18"/><circle cx="16.6" cy="15" r="1.3"/>',
+  close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -665,7 +667,7 @@ function activeSession() {
 }
 
 function appendMessage(kind, text) {
-  document.querySelector(".hint")?.remove();
+  document.querySelector(".thread .hint, .thread .empty-hero")?.remove();
   const box = document.createElement("div");
   box.className = `msg ${kind}`;
   box.textContent = text;
@@ -696,7 +698,7 @@ function appendThinking(box) {
 }
 
 function messageBox(msg, index) {
-  document.querySelector(".hint")?.remove();
+  document.querySelector(".thread .hint, .thread .empty-hero")?.remove();
   const box = document.createElement("div");
   box.className = `msg ${msg.role}`;
   if (msg.reasoning) {
@@ -761,10 +763,32 @@ function renderThread() {
   els.thread.textContent = "";
   const messages = activeSession().messages;
   if (!messages.length) {
-    const hint = document.createElement("p");
-    hint.className = "hint";
-    hint.textContent = "可以直接提问，或用右侧「提问」「工具」处理整页与划线内容。";
-    els.thread.append(hint);
+    // 空会话时仿 Sider 的居中引导区：图标 + 标题 + 快捷提问
+    const hero = document.createElement("div");
+    hero.className = "empty-hero";
+    const logo = document.createElement("img");
+    logo.src = "../icons/icon48.png";
+    logo.alt = "";
+    const heading = document.createElement("h2");
+    heading.textContent = "有什么可以帮你？";
+    const sub = document.createElement("p");
+    sub.textContent = "直接提问，或用右侧「工具」处理整页与划线内容";
+    const chips = document.createElement("div");
+    chips.className = "hero-chips";
+    for (const item of QUICK_ASKS.slice(0, 4)) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.textContent = item.text;
+      chip.addEventListener("click", () => {
+        els.input.value = item.text;
+        setReadPage(item.page);
+        els.input.focus();
+        setStatus("已填入快捷提问，可直接发送");
+      });
+      chips.append(chip);
+    }
+    hero.append(logo, heading, sub, chips);
+    els.thread.append(hero);
     return;
   }
   messages.forEach((msg, index) => els.thread.append(messageBox(msg, index)));
@@ -1209,6 +1233,8 @@ async function send() {
 }
 
 els.stop.addEventListener("click", () => state.controller?.abort());
+
+els.panelClose.addEventListener("click", () => window.close());
 
 els.newChat.addEventListener("click", () => newChat().catch(showError));
 

@@ -19,15 +19,15 @@
     <div class="main">
       <div id="notice" class="notice" hidden></div>
 
-      <section class="toolbar">
-        <div id="viewTitle" class="view-title">聊天</div>
+      <!-- <div class="titlebar">
+        <strong>SP 助手</strong>
+        <span id="viewTitle" class="view-title">聊天</span>
         <span class="spacer"></span>
-      </section>
+        <button id="panelClose" class="tool ico tip-top tip-in" data-icon="close" data-tip="关闭侧边栏"></button>
+      </div> -->
 
       <div id="chatView" class="chat-view">
-        <main id="thread" class="thread">
-          <p class="hint">可以直接提问，或用右侧「工具」处理整页与划线内容。</p>
-        </main>
+        <main id="thread" class="thread"></main>
 
         <section id="composer" class="composer">
           <div id="selectionCard" class="selection-card" hidden>
@@ -124,33 +124,32 @@
       <button data-view="ask" class="tip-left" data-icon="sparkle" data-tip="提问"></button>
       <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>
       <button data-view="tools" class="tip-left" data-icon="grid" data-tip="工具"></button>
+    </nav>
+    <div class="rail avatar-dock" id="avatarDock">
       <button data-view="settings" class="tip-left" data-icon="gear" data-tip="设置"></button>
-
-      <div class="avatar-dock" id="avatarDock">
-        <button id="avatar" class="avatar" aria-label="积分与账户" aria-haspopup="true" aria-expanded="false">
-          <img src="../icons/icon32.png" alt="" width="22" height="22">
-        </button>
-        <div class="account-pop" id="accountPop">
-          <div class="pop-card">
-            <div class="pop-id">
-              <strong id="popDevice">本机设备</strong>
-              <span id="popStatus" class="pop-status">准备中</span>
-            </div>
-            <div class="pop-credits" id="popCredits"><strong id="popBalance">—</strong><span>积分</span></div>
-            <button id="popRecharge" class="primary ico tip-top" data-icon="wallet" data-tip="充值积分"></button>
+      <button id="avatar" class="avatar" aria-label="积分与账户" aria-haspopup="true" aria-expanded="false">
+        <img src="../icons/icon32.png" alt="" width="22" height="22">
+      </button>
+      <div class="account-pop" id="accountPop">
+        <div class="pop-card">
+          <div class="pop-id">
+            <strong id="popDevice">本机设备</strong>
+            <span id="popStatus" class="pop-status">准备中</span>
           </div>
-          <div class="pop-menu">
-            <button class="pop-item" data-pop="credits"><i class="pop-ico" data-icon="coin"></i>积分明细</button>
-            <button class="pop-item" data-pop="history"><i class="pop-ico" data-icon="history"></i>聊天记录</button>
-            <button class="pop-item" data-pop="settings"><i class="pop-ico" data-icon="gear"></i>设置</button>
-          </div>
-          <div class="pop-foot">
-            <span id="popVersion"></span>
-            <span>移开自动收起</span>
-          </div>
+          <div class="pop-credits" id="popCredits"><strong id="popBalance">—</strong><span>积分</span></div>
+          <button id="popRecharge" class="primary ico tip-top" data-icon="wallet" data-tip="充值积分"></button>
+        </div>
+        <div class="pop-menu">
+          <button class="pop-item" data-pop="credits"><i class="pop-ico" data-icon="coin"></i>积分明细</button>
+          <button class="pop-item" data-pop="history"><i class="pop-ico" data-icon="history"></i>聊天记录</button>
+          <button class="pop-item" data-pop="settings"><i class="pop-ico" data-icon="gear"></i>设置</button>
+        </div>
+        <div class="pop-foot">
+          <span id="popVersion"></span>
+          <span>移开自动收起</span>
         </div>
       </div>
-    </nav>
+    </div>
   </div>
 
   <dialog id="historyDialog">

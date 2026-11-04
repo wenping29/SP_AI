@@ -188,6 +188,32 @@ header {
   border-bottom: 1px solid var(--line);
 }
 
+/* 仿 Sider 的深色标题栏：产品名 + 当前视图 + 关闭，任何主题下都是深色 */
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 12px;
+  background: #17191e;
+  color: #f2f4f7;
+  border-bottom: 1px solid #262a31;
+}
+
+.titlebar strong { font-size: 13px; }
+.titlebar .view-title { color: #9aa3af; font-size: 12px; }
+
+.titlebar .tool {
+  border-color: transparent;
+  background: transparent;
+  color: #cfd4da;
+}
+
+.titlebar .tool:hover {
+  color: #fff;
+  border-color: transparent;
+  background: rgba(255, 255, 255, .09);
+}
+
 select {
   width: 100%;
   padding: 6px 8px;
@@ -222,6 +248,44 @@ select {
 }
 
 .hint { color: var(--muted); font-size: 12px; text-align: center; margin: 12px 0; }
+
+/* 空会话的居中引导区：图标 + 标题 + 快捷提问 chips */
+.empty-hero {
+  margin: auto 0;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-hero img { width: 52px; height: 52px; border-radius: 12px; }
+.empty-hero h2 { margin: 12px 0 4px; font-size: 16px; }
+.empty-hero p { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.hero-chips button {
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hero-chips button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 
 .msg {
   padding: 9px 11px;
@@ -703,6 +767,8 @@ button.ico.recording {
   position: relative;
   margin-top: auto;
   align-self: stretch;
+  display: flex;
+  height: 46px;
 }
 
 .rail .avatar {
