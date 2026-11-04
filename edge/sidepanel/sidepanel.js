@@ -24,7 +24,6 @@ const MAX_TEXT_FILE_CHARS = 6000;
 const els = {
   rail: document.getElementById("rail"),
   status: document.getElementById("status"),
-  balance: document.getElementById("balance"),
   notice: document.getElementById("notice"),
   viewTitle: document.getElementById("viewTitle"),
   newChat: document.getElementById("newChat"),
@@ -72,6 +71,17 @@ const els = {
   transactions: document.getElementById("transactions"),
   refreshCredits: document.getElementById("refreshCredits"),
   closeCredits: document.getElementById("closeCredits"),
+  rechargeDevice: document.getElementById("rechargeDevice"),
+  copyRechargeDevice: document.getElementById("copyRechargeDevice"),
+  avatarDock: document.getElementById("avatarDock"),
+  avatar: document.getElementById("avatar"),
+  accountPop: document.getElementById("accountPop"),
+  popDevice: document.getElementById("popDevice"),
+  popStatus: document.getElementById("popStatus"),
+  popCredits: document.getElementById("popCredits"),
+  popBalance: document.getElementById("popBalance"),
+  popRecharge: document.getElementById("popRecharge"),
+  popVersion: document.getElementById("popVersion"),
 };
 
 const state = {
@@ -102,6 +112,9 @@ class UiError extends Error {}
 function setStatus(text, kind = "") {
   els.status.textContent = text;
   els.status.className = `status${kind ? ` ${kind}` : ""}`;
+  // 顶部状态条搬进了头像浮层，两处保持同一份状态
+  els.popStatus.textContent = text;
+  els.popStatus.className = `pop-status${kind ? ` ${kind}` : ""}`;
 }
 
 function showError(err) {
@@ -145,6 +158,8 @@ const ICONS = {
   bulb: '<path d="M9.5 18h5"/><path d="M10.5 21h3"/><path d="M12 3a6.5 6.5 0 0 0-3.6 11.9V17h7.2v-2.1A6.5 6.5 0 0 0 12 3z"/>',
   polish: '<path d="M12 3.5l1.9 4.6L18.5 10l-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
   aZh: '<path d="M4 6h8"/><path d="M8 3.5V6"/><path d="M4.8 9.6c1.4 2.6 3.4 4.2 5.8 4.9"/><path d="M9.8 9.6C8.4 12.2 6.4 13.8 4 14.6"/><path d="M13.6 20l3.4-8 3.4 8"/><path d="M15 17h4"/>',
+  coin: '<circle cx="12" cy="12" r="8.6"/><path d="M8.8 9.2h6.4M12 9.2v5.6M9.6 14.8h4.8"/>',
+  wallet: '<rect x="3" y="6.6" width="18" height="12.8" rx="2.6"/><path d="M3 10.8h18"/><circle cx="16.6" cy="15" r="1.3"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -278,8 +293,14 @@ function renderNotice() {
 
 function renderBalance() {
   const balance = state.balance;
-  els.balance.textContent = balance === undefined || balance === null ? "积分 —" : `积分 ${balance}`;
-  els.balance.classList.toggle("low", typeof balance === "number" && balance <= 50);
+  els.popBalance.textContent = balance === undefined || balance === null ? "—" : String(balance);
+  els.popCredits.classList.toggle("low", typeof balance === "number" && balance <= 50);
+}
+
+function renderAccountCard() {
+  els.popDevice.textContent = state.label || "本机设备";
+  els.popVersion.textContent = `v${chrome.runtime.getManifest().version}`;
+  els.rechargeDevice.value = state.deviceId || "";
 }
 
 function syncBusy() {
@@ -310,7 +331,7 @@ async function refreshCredits() {
 
 function showView(name, { focusInput = false } = {}) {
   state.view = name;
-  for (const button of els.rail.querySelectorAll("button")) {
+  for (const button of els.rail.querySelectorAll("button[data-view]")) {
     button.classList.toggle("active", button.dataset.view === name);
   }
   els.chatView.hidden = name !== "chat";
@@ -331,6 +352,7 @@ function fillSettings() {
   els.deviceInput.value = state.deviceId;
   els.tokenInput.value = state.token;
   els.brandVersion.textContent = `v${chrome.runtime.getManifest().version}`;
+  renderAccountCard();
 }
 
 // ---------- 页面正文、划词与截图 ----------
@@ -1215,11 +1237,58 @@ els.refreshSelection.addEventListener("click", () => syncSelection().catch(showE
 els.translateZh.addEventListener("click", () => runAction("translate", { selection: state.selection }).catch(showError));
 els.translateEn.addEventListener("click", () => runAction("translate-en", { selection: state.selection }).catch(showError));
 
-els.openCredits.addEventListener("click", async () => {
+function openCreditsDialog() {
   els.creditsBalance.textContent = "…";
   els.transactions.textContent = "";
+  renderAccountCard();
   els.creditsDialog.showModal();
-  await loadCreditsList();
+  return loadCreditsList();
+}
+
+els.openCredits.addEventListener("click", () => openCreditsDialog().catch(showError));
+
+els.copyRechargeDevice.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(state.deviceId || "");
+    setStatus("已复制设备 ID");
+  } catch {
+    setStatus("复制失败，请手动选择", "error");
+  }
+});
+
+// 头像浮层：悬浮即出（CSS），点击/键盘也能开，离开或选中菜单后收起
+function closeAccountPop() {
+  els.avatarDock.classList.remove("open");
+  els.avatar.setAttribute("aria-expanded", "false");
+}
+
+els.avatar.addEventListener("click", () => {
+  const open = els.avatarDock.classList.toggle("open");
+  els.avatar.setAttribute("aria-expanded", String(open));
+});
+
+els.accountPop.addEventListener("click", (event) => {
+  const item = event.target.closest("[data-pop]");
+  if (!item) return;
+  closeAccountPop();
+  if (item.dataset.pop === "credits") openCreditsDialog().catch(showError);
+  else if (item.dataset.pop === "history") {
+    renderHistory();
+    els.historyDialog.showModal();
+  } else if (item.dataset.pop === "settings") showView("settings");
+});
+
+els.popRecharge.addEventListener("click", () => {
+  closeAccountPop();
+  openCreditsDialog().catch(showError);
+});
+
+document.addEventListener("click", (event) => {
+  if (!els.avatarDock.contains(event.target)) closeAccountPop();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAccountPop();
 });
 
 els.refreshCredits.addEventListener("click", loadCreditsList);
@@ -1348,6 +1417,7 @@ async function boot() {
     showError(err);
     setStatus(err.message || "后端未就绪", "error");
   } finally {
+    renderAccountCard();
     syncBusy();
   }
 }

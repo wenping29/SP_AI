@@ -697,3 +697,98 @@ button.ico.recording {
   color: var(--muted);
   font-size: 12px;
 }
+
+/* ---------- 右下角头像与账户浮层：积分从顶部搬到这里 ---------- */
+.rail .avatar-dock {
+  position: relative;
+  margin-top: auto;
+  align-self: stretch;
+}
+
+.rail .avatar {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  padding: 0;
+  border: 1px solid var(--accent-border);
+  border-radius: 50%;
+  background: var(--panel);
+  align-self: center;
+}
+
+.rail .avatar img { display: block; border-radius: 50%; }
+.avatar-dock:hover .avatar,
+.avatar-dock.open .avatar { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.account-pop {
+  position: absolute;
+  right: calc(100% + 10px);
+  bottom: 0;
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 240px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+}
+
+/* 悬浮桥：填掉头像与浮层之间的空隙，鼠标移过去不会断 */
+.account-pop::after { content: ""; position: absolute; top: 0; right: -10px; width: 10px; height: 100%; }
+
+.avatar-dock:hover .account-pop,
+.avatar-dock:focus-within .account-pop,
+.avatar-dock.open .account-pop { display: flex; }
+
+.pop-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+
+.pop-id { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.pop-id strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.pop-status { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.pop-status.error { color: var(--danger); }
+
+.pop-credits { display: flex; align-items: baseline; gap: 4px; color: var(--muted); font-size: 12px; }
+.pop-credits strong { color: var(--text); font-size: 20px; }
+.pop-credits.low strong { color: var(--danger); }
+
+.pop-menu { display: flex; flex-direction: column; }
+
+.rail .pop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  text-align: left;
+}
+
+.rail .pop-item:hover { background: var(--accent-soft); color: var(--accent-text); }
+.pop-ico { display: flex; color: var(--muted); }
+.pop-ico svg { width: 16px; height: 16px; display: block; }
+.pop-foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+
+.recharge {
+  margin: 10px 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.recharge .tip { margin: 0 0 8px; }
+.recharge input { flex: 1; min-width: 0; }

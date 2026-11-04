@@ -1,0 +1,56 @@
+{
+  "steps": [
+    "reload-sent",
+    "docked"
+  ],
+  "hostUrl": "https://juejin.cn/post/7674372498315460658",
+  "launcherBox": {
+    "found": false
+  },
+  "worldFound": false,
+  "layout": {
+    "headerGone": true,
+    "statusInSendbar": true,
+    "statusText": "已连接",
+    "avatar": {
+      "x": 343,
+      "y": 812,
+      "w": 34,
+      "rightGap": 5,
+      "bottomGap": 10
+    },
+    "avatarHasLogo": true,
+    "popHiddenByDefault": "none",
+    "balance": "593",
+    "device": "本机设备",
+    "version": "v0.1.0",
+    "popStatus": "已连接",
+    "menuItems": [
+      "积分明细/svg",
+      "聊天记录/svg",
+      "设置/svg"
+    ],
+    "rechargeIcon": "svg",
+    "rechargeTip": "充值积分"
+  },
+  "hoverOpen": {
+    "display": "flex",
+    "opacity": "1",
+    "visible": true,
+    "left": 93,
+    "bottom": 10,
+    "inViewport": true
+  },
+  "hoverClosed": "none",
+  "clickOpen": "{\"open\":true,\"display\":\"flex\",\"aria\":\"true\"}",
+  "creditsDialog": {
+    "open": true,
+    "balance": "593",
+    "rows": 30,
+    "hasRecharge": true,
+    "device": "26b78139-8621-45b4-83bd-794407a480b8",
+    "popClosed": true
+  },
+  "settingsView": "{\"view\":\"settings\",\"title\":\"设置\",\"popClosed\":true}",
+  "shot": true
+}

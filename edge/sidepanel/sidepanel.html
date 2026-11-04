@@ -17,12 +17,6 @@
 <body>
   <div class="layout">
     <div class="main">
-      <header>
-        <span class="brand"><img class="brand-mark" src="../icons/icon32.png" alt="SP 图标" width="18" height="18">SP 助手</span>
-        <span id="status" class="status">准备中</span>
-        <button id="balance" class="chip" title="查看积分明细">积分 —</button>
-      </header>
-
       <div id="notice" class="notice" hidden></div>
 
       <section class="toolbar">
@@ -54,7 +48,7 @@
           </div>
           <textarea id="input" rows="3" placeholder="输入问题，Enter 发送，Shift + Enter 换行"></textarea>
           <div class="composer-row sendbar">
-            <span class="spacer"></span>
+            <span id="status" class="status" aria-live="polite">准备中</span>
             <button id="stop" class="tool danger ico lg tip-top" data-icon="stop" data-tip="停止生成" hidden></button>
             <button id="send" class="primary ico lg tip-top tip-in" data-icon="send" data-tip="发送"></button>
           </div>
@@ -131,6 +125,31 @@
       <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>
       <button data-view="tools" class="tip-left" data-icon="grid" data-tip="工具"></button>
       <button data-view="settings" class="tip-left" data-icon="gear" data-tip="设置"></button>
+
+      <div class="avatar-dock" id="avatarDock">
+        <button id="avatar" class="avatar" aria-label="积分与账户" aria-haspopup="true" aria-expanded="false">
+          <img src="../icons/icon32.png" alt="" width="22" height="22">
+        </button>
+        <div class="account-pop" id="accountPop">
+          <div class="pop-card">
+            <div class="pop-id">
+              <strong id="popDevice">本机设备</strong>
+              <span id="popStatus" class="pop-status">准备中</span>
+            </div>
+            <div class="pop-credits" id="popCredits"><strong id="popBalance">—</strong><span>积分</span></div>
+            <button id="popRecharge" class="primary ico tip-top" data-icon="wallet" data-tip="充值积分"></button>
+          </div>
+          <div class="pop-menu">
+            <button class="pop-item" data-pop="credits"><i class="pop-ico" data-icon="coin"></i>积分明细</button>
+            <button class="pop-item" data-pop="history"><i class="pop-ico" data-icon="history"></i>聊天记录</button>
+            <button class="pop-item" data-pop="settings"><i class="pop-ico" data-icon="gear"></i>设置</button>
+          </div>
+          <div class="pop-foot">
+            <span id="popVersion"></span>
+            <span>移开自动收起</span>
+          </div>
+        </div>
+      </div>
     </nav>
   </div>
 
@@ -147,6 +166,13 @@
   <dialog id="creditsDialog">
     <h2>积分明细</h2>
     <div class="balance-line">当前余额 <strong id="creditsBalance">—</strong></div>
+    <div class="recharge">
+      <p class="tip">积分由后台统一发放，免费额度用完后可把下面的设备 ID 发给管理员充值。</p>
+      <div class="row">
+        <input id="rechargeDevice" type="text" readonly spellcheck="false">
+        <button id="copyRechargeDevice" class="ghost">复制设备 ID</button>
+      </div>
+    </div>
     <ul id="transactions" class="transactions"></ul>
     <div class="row">
       <button id="refreshCredits" class="ghost">刷新</button>
