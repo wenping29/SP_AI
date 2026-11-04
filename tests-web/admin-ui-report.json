@@ -1,0 +1,66 @@
+{
+  "steps": [
+    {
+      "name": "用户管理页加载",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "菜单含用户管理和管理员",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "用户表列名",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "打新增用户弹窗",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "新增用户出现在列表",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "编辑用户信息",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "封禁用户",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "解封用户",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "删除用户",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "管理员页加载",
+      "ok": false,
+      "detail": "SP 管理后台\n仪表盘\n设备管理\n积分管理\n模型管理\n运营策略\nKeyEnv 管理\n用户管理\n管理员\n角色管理\nAI 助手运营控制台\n初始管理员\n超级管理员\n退出\n管理员\n管理后台登录账号；与插件端注册的普通用户分表管理。角色决定可访问的模块，密码只保存哈希。\n刷新\n新增管理员\n管理员\t角色\t状态\t最近登录\t创建时间\t操作\n\n初始管理员\nroot\n\t超级管理员\t启用\t2026/11/4 18:39:07\t2026/11/4 18:37:10\t\n编辑\n停用\n删除"
+    },
+    {
+      "name": "管理员页按钮为新增管理员",
+      "ok": true,
+      "detail": true
+    }
+  ],
+  "shots": [
+    "admin-users-page.png",
+    "admin-users-create.png",
+    "admin-users-blocked.png",
+    "admin-admins-page.png"
+  ],
+  "failed": 1
+}

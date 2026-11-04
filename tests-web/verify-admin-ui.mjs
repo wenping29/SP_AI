@@ -71,17 +71,19 @@ window.__q = {
   row(match) {
     return [...document.querySelectorAll('.ant-table-tbody tr')].find(tr => tr.innerText.includes(match)) || null;
   },
+  norm(text) { return (text || '').replace(/\\s+/g, ''); },
   clickInRow(match, label) {
     const row = this.row(match);
     if (!row) throw new Error('row not found: ' + match);
-    const btn = [...row.querySelectorAll('button, a')].find(el => el.innerText.trim() === label);
+    const btn = [...row.querySelectorAll('button, a')].find(el => this.norm(el.innerText) === this.norm(label));
     if (!btn) throw new Error('button not found: ' + label);
     btn.click();
     return true;
   },
   clickButton(label, scope) {
     const root = scope ? document.querySelector(scope) : document;
-    const btn = [...root.querySelectorAll('button')].find(el => el.innerText.trim() === label);
+    if (!root) throw new Error('scope not found: ' + scope);
+    const btn = [...root.querySelectorAll('button')].find(el => this.norm(el.innerText) === this.norm(label));
     if (!btn) throw new Error('button not found: ' + label);
     btn.click();
     return true;
@@ -94,6 +96,15 @@ window.__q = {
     Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, value);
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  },
+  clickPop(titlePart) {
+    const pop = [...document.querySelectorAll('.ant-popover')].find(p =>
+      !p.className.includes('ant-popover-hidden') && p.innerText.includes(titlePart));
+    if (!pop) throw new Error('popconfirm not found: ' + titlePart);
+    const btn = pop.querySelector('.ant-btn-primary');
+    if (!btn) throw new Error('popconfirm primary not found: ' + titlePart);
+    btn.click();
     return true;
   },
   menuLabels() {
@@ -172,8 +183,8 @@ if (await poll(s, `window.__q.row('界面改名') !== null && window.__q.row('�
 
 // 封禁
 await s.evaluate(`window.__q.clickInRow('ui-member@example.com', '封禁')`);
-await poll(s, `document.querySelector('.ant-popover') !== null`);
-await s.evaluate(`window.__q.clickButton('确认', '.ant-popover')`);
+await poll(s, `[...document.querySelectorAll('.ant-popover')].some(p => !p.className.includes('ant-popover-hidden') && p.innerText.includes('封禁该用户'))`);
+await s.evaluate(`window.__q.clickPop('封禁该用户')`);
 if (await poll(s, `window.__q.row('ui-member@example.com')?.innerText.includes('已封禁')`)) {
   ok('封禁用户');
 } else {
@@ -183,14 +194,14 @@ await shot(s, 'admin-users-blocked');
 
 // 解封再删除
 await s.evaluate(`window.__q.clickInRow('ui-member@example.com', '解封')`);
-await poll(s, `document.querySelector('.ant-popover') !== null`);
-await s.evaluate(`window.__q.clickButton('确认', '.ant-popover')`);
+await poll(s, `[...document.querySelectorAll('.ant-popover')].some(p => !p.className.includes('ant-popover-hidden') && p.innerText.includes('解封该用户'))`);
+await s.evaluate(`window.__q.clickPop('解封该用户')`);
 if (await poll(s, `window.__q.row('ui-member@example.com')?.innerText.includes('正常')`)) ok('解封用户');
 else fail('解封用户');
 
 await s.evaluate(`window.__q.clickInRow('ui-member@example.com', '删除')`);
-await poll(s, `document.querySelector('.ant-popover') !== null`);
-await s.evaluate(`window.__q.clickButton('删除', '.ant-popover')`);
+await poll(s, `[...document.querySelectorAll('.ant-popover')].some(p => !p.className.includes('ant-popover-hidden') && p.innerText.includes('删除该用户'))`);
+await s.evaluate(`window.__q.clickPop('删除该用户')`);
 if (await poll(s, `window.__q.row('ui-member@example.com') === null`)) ok('删除用户');
 else fail('删除用户');
 
