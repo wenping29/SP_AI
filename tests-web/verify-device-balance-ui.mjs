@@ -1,11 +1,10 @@
-// 设备管理 UI：显示账号余额、调分按钮与调分结果
+// 后台 UI：设备页只显示绑定用户，积分管理按用户调分并查看流水
 import fs from "node:fs/promises";
 
 const CDP = "http://127.0.0.1:9333";
 const BASE = "http://127.0.0.1:5098";
+const ADMIN_KEY = "sp-test-admin-key-2026";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const cfg = JSON.parse(await fs.readFile(new URL("../server/appsettings.json", import.meta.url), "utf8"));
-const ADMIN_KEY = cfg.Admin.Key;
 const out = { steps: [] };
 
 function connect(target) {
@@ -57,9 +56,10 @@ const check = (name, okValue, detail = "") => {
   console.log(`${okValue ? "PASS" : "FAIL"} ${name}${detail ? " — " + detail : ""}`);
 };
 
-// 准备一个已登录设备
-const email = `devui-${Date.now()}@example.com`;
-const deviceId = `devui-${Date.now()}`;
+// 准备一个已登录设备与用户
+const stamp = Date.now();
+const email = `userui-${stamp}@example.com`;
+const deviceId = `userui-${stamp}`;
 const code = await (await fetch(`${BASE}/api/auth/email-code`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -68,7 +68,7 @@ const code = await (await fetch(`${BASE}/api/auth/email-code`, {
 await fetch(`${BASE}/api/auth/register`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email, password: "DevUi@2026", deviceId, label: "界面余额设备", code: code.devCode }),
+  body: JSON.stringify({ email, password: "UserUi@2026", displayName: "界面积分用户", deviceId, label: "界面积分设备", code: code.devCode }),
 });
 
 const created = await (await fetch(`${CDP}/json/new?${encodeURIComponent(`${BASE}/admin/login`)}`, { method: "PUT" })).json();
@@ -85,10 +85,8 @@ await s.send("Page.navigate", { url: `${BASE}/admin/login` });
 await poll(s, `document.readyState === "complete" && location.pathname.includes("/admin")`);
 await sleep(300);
 await s.evaluate(`sessionStorage.setItem('sp_admin_key', ${JSON.stringify(ADMIN_KEY)}); sessionStorage.removeItem('sp_admin_token'); 'ok'`);
-await s.send("Page.navigate", { url: `${BASE}/admin/devices` });
-await poll(s, `document.body.innerText.includes("设备管理") && document.body.innerText.includes("积分余额")`);
 
-await s.evaluate(`window.__row = (match) => [...document.querySelectorAll('.ant-table-tbody tr')].find(tr => tr.innerText.includes(match)) || null;
+const installHelpers = () => s.evaluate(`window.__row = (match) => [...document.querySelectorAll('.ant-table-tbody tr')].find(tr => tr.innerText.includes(match)) || null;
 window.__clickInRow = (match, label) => {
   const row = window.__row(match);
   if (!row) throw new Error('row not found');
@@ -97,39 +95,72 @@ window.__clickInRow = (match, label) => {
   btn.click(); return true;
 }; 'ok'`);
 
-const headers = await s.evaluate(`[...document.querySelectorAll('.ant-table-thead th')].map(th => th.innerText.trim())`);
-check("表头包含积分余额", headers.includes("积分余额"), headers.join(" / "));
+// 设备页：只显示绑定用户，不再有积分入口
+await s.send("Page.navigate", { url: `${BASE}/admin/devices` });
+await poll(s, `document.body.innerText.includes("设备管理") && document.body.innerText.includes("绑定用户")`);
+await installHelpers();
+const deviceHeaders = await s.evaluate(`[...document.querySelectorAll('.ant-table-thead th')].map(th => th.innerText.trim())`);
+check("设备页含绑定用户列", deviceHeaders.includes("绑定用户"), deviceHeaders.join(" / "));
+check("设备页不再显示积分列",
+  !deviceHeaders.includes("积分余额") && !deviceHeaders.includes("累计消耗") &&
+  !deviceHeaders.includes("调用次数"),
+  deviceHeaders.join(" / "));
 
-const rowText = await s.evaluate(`window.__row(${JSON.stringify(deviceId)})?.innerText || ""`);
-check("设备行显示账号余额 1000", rowText.includes("1000"), rowText.replace(/\s+/g, " "));
-check("设备行标记已登录账号", rowText.includes("已登录") && rowText.includes(email), rowText.replace(/\s+/g, " "));
+const deviceRow = await s.evaluate(`window.__row(${JSON.stringify(deviceId)})?.innerText || ""`);
+check("设备行显示绑定邮箱", deviceRow.includes(email), deviceRow.replace(/\s+/g, " "));
+const deviceButtons = await s.evaluate(`[...(window.__row(${JSON.stringify(deviceId)})?.querySelectorAll('button') || [])].map(b => b.innerText.replace(/\\s+/g, ''))`);
+check("设备行没有调分/流水入口",
+  !deviceButtons.includes("调整积分") && !deviceButtons.includes("流水"),
+  deviceButtons.join(" / "));
 
-await s.evaluate(`window.__clickInRow(${JSON.stringify(deviceId)}, '调整积分')`);
+// 积分页：按用户列出，调分落到账号
+await s.send("Page.navigate", { url: `${BASE}/admin/credits` });
+await poll(s, `document.body.innerText.includes("积分管理") && document.body.innerText.includes(${JSON.stringify(email)})`);
+await installHelpers();
+const creditHeaders = await s.evaluate(`[...document.querySelectorAll('.ant-table-thead th')].map(th => th.innerText.trim())`);
+check("积分页按用户展示余额与消耗",
+  creditHeaders.includes("用户") && creditHeaders.includes("当前余额") &&
+  creditHeaders.includes("累计消耗") && creditHeaders.includes("调用次数"),
+  creditHeaders.join(" / "));
+
+const creditRow = await s.evaluate(`window.__row(${JSON.stringify(email)})?.innerText || ""`);
+check("积分行显示用户与余额 1000",
+  creditRow.includes("界面积分用户") && creditRow.includes("1000"),
+  creditRow.replace(/\s+/g, " "));
+
+await s.evaluate(`window.__clickInRow(${JSON.stringify(email)}, '修改积分')`);
 await poll(s, `document.querySelector('.ant-modal-content') !== null`);
 const modalText = await s.evaluate(`document.querySelector('.ant-modal-content')?.innerText || ""`);
-check("调分弹窗显示当前余额", modalText.includes("当前余额 1000"), modalText.replace(/\s+/g, " ").slice(0, 120));
-check("调分弹窗提示记在账号上", modalText.includes("该设备已登录账号"), "");
+check("调分弹窗显示当前余额与邮箱",
+  modalText.includes("当前余额 1000") && modalText.includes(email),
+  modalText.replace(/\s+/g, " ").slice(0, 160));
+check("调分弹窗说明多设备共享",
+  modalText.includes("所有登录同一账号的设备同步生效"), "");
 
-await s.evaluate(`[...document.querySelectorAll('.ant-modal-footer button')].find(b => b.innerText.replace(/\\s+/g, '') === '确认调整').click(); 'ok'`);
-const adjusted = await poll(s, `document.body.innerText.includes("当前余额 1100")`);
+await s.evaluate(`[...document.querySelectorAll('.ant-modal-footer button')].find(b => b.innerText.replace(/\\s+/g, '') === '确认修改').click(); 'ok'`);
+const adjusted = await poll(s, `window.__row(${JSON.stringify(email)})?.innerText.includes("1100")`);
 await sleep(500);
-const afterText = await s.evaluate(`window.__row(${JSON.stringify(deviceId)})?.innerText || ""`);
-check("调分后余额更新为 1100", adjusted && afterText.includes("1100"), afterText.replace(/\s+/g, " "));
+const afterRow = await s.evaluate(`window.__row(${JSON.stringify(email)})?.innerText || ""`);
+check("调分后余额更新为 1100", adjusted && afterRow.includes("1100"), afterRow.replace(/\s+/g, " "));
 
-// 通过账号接口复核
-const accountRow = await (await fetch(`${BASE}/api/admin/devices?scope=device&q=${encodeURIComponent(deviceId)}`, {
+const memberRow = await (await fetch(`${BASE}/api/admin/members?q=${encodeURIComponent(email)}`, {
   headers: { "X-Admin-Key": ADMIN_KEY },
 })).json();
-const row = accountRow.items?.[0];
-const credits = await (await fetch(`${BASE}/api/admin/devices/${encodeURIComponent(row.accountDeviceId)}/transactions`, {
-  headers: { "X-Admin-Key": ADMIN_KEY },
-})).json();
-check("服务端账号余额同步", credits.balance === 1100, String(credits.balance));
+check("服务端用户余额同步", memberRow.items?.[0]?.balance === 1100, String(memberRow.items?.[0]?.balance));
+
+await s.evaluate(`window.__clickInRow(${JSON.stringify(email)}, '流水')`);
+const flowShown = await poll(s, `(() => {
+  const m = [...document.querySelectorAll('.ant-modal-content')].find(x => x.innerText.includes('积分流水'));
+  return !!m && m.innerText.includes('后台调整') && m.innerText.includes('+100');
+})()`, 12000);
+const flowText = await s.evaluate(`([...document.querySelectorAll('.ant-modal-content')].find(x => x.innerText.includes('积分流水')) || {}).innerText || ''`);
+check("流水弹窗显示后台调整记录", flowShown, flowText.replace(/\s+/g, " ").slice(0, 200));
 
 s.close();
 await fetch(`${CDP}/json/close/${created.id}`).catch(() => {});
 
 out.allPassed = out.steps.every((x) => x.ok);
-await fs.writeFile(new URL("./device-balance-ui-report.json", import.meta.url), JSON.stringify(out, null, 2), "utf8");
+await fs.writeFile(new URL("./device-balance-ui-report.json", import.meta.url),
+  JSON.stringify(out, null, 2), "utf8");
 console.log(JSON.stringify({ allPassed: out.allPassed }, null, 2));
 process.exit(out.allPassed ? 0 : 1);

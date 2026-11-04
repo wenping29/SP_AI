@@ -257,7 +257,7 @@ public class UserAuth(AppDbContext db, EmailVerification verification, ILogger<U
         var anon = await db.Accounts.FirstOrDefaultAsync(a => a.DeviceId == id, ct);
         if (anon is not null) return anon;
 
-        // 登录/注册时缺失匿名账号只补 0 余额，避免换设备反复领注册赠送
+        // 登录/注册时缺失匿名账号只补 0 余额：体验额度只在设备匿名注册时发放一次，避免换设备反复领取
         anon = new Account
         {
             DeviceId = id,

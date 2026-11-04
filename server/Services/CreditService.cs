@@ -6,6 +6,9 @@ namespace SpServer.Services;
 
 public class CreditService(AppDbContext db)
 {
+    // 未登录设备的体验额度；登录/注册时随匿名账号余额一并并入用户账号
+    public const int TrialCredits = 200;
+
     public async Task<CreditPolicy> GetPolicyAsync(CancellationToken ct) =>
         await db.Policies.FirstAsync(ct);
 
@@ -19,18 +22,28 @@ public class CreditService(AppDbContext db)
         var existing = await db.Accounts.FirstOrDefaultAsync(a => a.DeviceId == deviceId, ct);
         if (existing is not null) return existing;
 
-        // 新设备不再赠送积分：免费额度只在邮箱验证注册成功后发放到用户账号
+        // 新设备先给匿名体验额度；登录/注册时并入用户账号，注册赠送仍只认邮箱验证
+        var now = DateTime.UtcNow;
         var account = new Account
         {
             DeviceId = deviceId,
             Label = label,
             Token = Guid.NewGuid().ToString("N"),
-            Balance = 0,
-            CreatedAt = DateTime.UtcNow,
-            LastUsedAt = DateTime.UtcNow,
+            Balance = TrialCredits,
+            CreatedAt = now,
+            LastUsedAt = now,
         };
 
         db.Accounts.Add(account);
+        await db.SaveChangesAsync(ct);
+
+        db.Transactions.Add(new CreditTransaction
+        {
+            AccountId = account.Id,
+            Delta = TrialCredits,
+            Reason = "device_trial",
+            CreatedAt = now,
+        });
         await db.SaveChangesAsync(ct);
         return account;
     }

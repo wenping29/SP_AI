@@ -1,6 +1,7 @@
 const DEFAULT_SERVER = "http://127.0.0.1:5080";
 const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession", "user", "historyOwner", "deletedConversations"];
 const REASON_LABELS = {
+  device_trial: "新设备体验",
   free_grant: "注册赠送",
   device_merge: "本机积分合并",
   chat: "对话消耗",

@@ -84,7 +84,7 @@ for (const target of await (await fetch(`${DEBUG}/json`)).json()) {
 }
 await sleep(1200);
 
-// 1. 没有设备号时清空 storage，用新设备从赠送 1000 分开始算账
+// 1. 没有设备号时清空 storage，用新设备从 200 体验积分开始算账
 let first = await connectPage(`chrome-extension://${EXT}/sidepanel/sidepanel.html`);
 let panel = first.session;
 report.cleared = await panel.evaluate(

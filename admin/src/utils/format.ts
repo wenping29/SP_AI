@@ -1,4 +1,5 @@
 const reasonLabels: Record<string, string> = {
+  device_trial: '新设备体验',
   chat: '对话',
   refund: '失败退回',
   voice: '语音输入',

@@ -1,66 +1,67 @@
 {
-  "codeSent": true,
-  "register": {
-    "status": 200,
-    "balance": 1000,
-    "gift": 1000
-  },
   "checks": {
     "codeSent": true,
-    "gift1000": true,
-    "deviceShowsAccountBalance": true,
-    "deviceMarkedLoggedIn": true,
-    "syntheticRowHidden": true,
-    "grantAppliedToAccount": true,
-    "accountBalanceAfterGrant": true,
-    "transactionUsesAccount": true,
-    "accountsPageStaysRaw": true,
-    "logoutFallsBack": true
+    "registerGift": true,
+    "deviceShowsBoundUser": true,
+    "deviceHasNoCreditFields": true,
+    "userAccountHiddenFromDevices": true,
+    "memberHasCreditFields": true,
+    "summaryIsUserScoped": true,
+    "grantAppliedToUser": true,
+    "tokenSeesUserBalance": true,
+    "flowUsesUserAccount": true,
+    "manualAdjustNotConsumption": true,
+    "setBalanceWorks": true,
+    "summaryFollowsUserBalance": true,
+    "logoutUnbindsDevice": true,
+    "userKeepsBalanceAfterLogout": true,
+    "opsRoleCanListUsers": true,
+    "opsRoleCanAdjust": true,
+    "readonlyRoleCanListUsers": true,
+    "readonlyRoleCannotAdjust": true
   },
   "sample": {
-    "row": {
-      "deviceId": "devbal-1793790375338",
+    "deviceRow": {
+      "deviceId": "usercred-1793791494839",
       "label": "",
-      "balance": 1000,
       "isBlocked": false,
       "loggedIn": true,
-      "accountDeviceId": "ua40567fee7284f4a8d931665c568dfcb",
-      "accountEmail": "devbal-1793790375338@example.com",
-      "createdAt": "2026-11-04T11:06:15.7656606Z",
-      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
+      "accountEmail": "usercred-1793791494839@example.com",
+      "createdAt": "2026-11-04T11:24:55.0446636Z",
+      "lastUsedAt": "2026-11-04T11:24:55.0446636Z"
+    },
+    "member": {
+      "id": 1,
+      "email": "usercred-1793791494839@example.com",
+      "displayName": "积分用户测试",
+      "isBlocked": false,
+      "balance": 1000,
+      "spent": 0,
+      "calls": 0,
+      "accountDeviceId": "ufba54d3f9393484096ae0ff97e0ee79f",
+      "deviceCount": 1,
+      "createdAt": "2026-11-04T11:24:55.0446636Z",
+      "lastLoginAt": "2026-11-04T11:24:55.0446636Z"
+    },
+    "summaryBefore": {
+      "users": 1,
+      "totalBalance": 1000,
+      "blocked": 0,
       "spent": 0,
       "calls": 0
     },
-    "adjust": {
-      "deviceId": "ua40567fee7284f4a8d931665c568dfcb",
+    "grant": {
+      "deviceId": "ufba54d3f9393484096ae0ff97e0ee79f",
+      "label": "usercred-1793791494839@example.com",
       "delta": 500,
       "balance": 1500
     },
-    "anonRow": {
-      "deviceId": "devbal-1793790375338",
-      "label": "",
-      "balance": 0,
-      "isBlocked": false,
-      "loggedIn": false,
-      "accountDeviceId": "devbal-1793790375338",
-      "accountEmail": "",
-      "createdAt": "2026-11-04T11:06:15.7656606Z",
-      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
-      "spent": 0,
-      "calls": 0
-    },
-    "userRow": {
-      "deviceId": "ua40567fee7284f4a8d931665c568dfcb",
-      "label": "devbal-1793790375338@example.com",
-      "balance": 1500,
-      "isBlocked": false,
-      "loggedIn": false,
-      "accountDeviceId": "ua40567fee7284f4a8d931665c568dfcb",
-      "accountEmail": "",
-      "createdAt": "2026-11-04T11:06:15.7656606Z",
-      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
-      "spent": 0,
-      "calls": 0
+    "summaryAfterSet": {
+      "users": 1,
+      "totalBalance": 800,
+      "blocked": 0,
+      "spent": 700,
+      "calls": 1
     }
   },
   "allPassed": true

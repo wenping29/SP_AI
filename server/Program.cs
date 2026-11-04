@@ -1020,9 +1020,11 @@ admin.MapDelete("/users/{id:int}", async (int id, HttpContext http, AdminAccount
 }).RequireAdmin("admins.manage");
 
 // 普通用户（插件端注册）：与管理员分表，支持新增、编辑、重置密码、封禁与删除
+// 积分管理页按用户展示，设备运营角色（devices.view）也需要读用户列表
 admin.MapGet("/members", async (string? q, int? page, int? pageSize, MemberAdmin members,
     CancellationToken ct) =>
-    Results.Ok(await members.ListAsync(q, page ?? 1, pageSize ?? 20, ct))).RequireAdmin("users.view");
+    Results.Ok(await members.ListAsync(q, page ?? 1, pageSize ?? 20, ct)))
+    .RequireAdmin("users.view", "devices.view");
 
 admin.MapPost("/members", async (MemberCreateRequest req, MemberAdmin members, CancellationToken ct) =>
     Results.Ok(await members.CreateAsync(req.Email, req.DisplayName, req.Password, ct)))

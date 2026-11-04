@@ -56,8 +56,8 @@ export default function PolicySettings() {
         type="info"
         showIcon
         style={{ marginBottom: 20 }}
-        message="免费积分只在邮箱验证注册成功后发放一次"
-        description="新设备注册不再赠送积分，避免反复换设备刷额度。已有用户的余额请到「积分管理」里按用户单独调整。"
+        message="免费积分只给邮箱验证注册成功的新用户"
+        description="新设备匿名使用固定赠送 200 体验积分，登录或注册后并入用户账号；注册赠送只发一次，已有用户的余额请到「积分管理」里按用户调整。"
       />
 
       <Card
@@ -79,7 +79,7 @@ export default function PolicySettings() {
             name="freeCredits"
             label="新用户注册赠送积分"
             rules={[{ required: true, message: '请输入赠送积分' }]}
-            extra="邮箱验证通过并注册成功后发放一次，同时写入一条「注册赠送」流水；新设备注册不再赠送。"
+            extra="邮箱验证通过并注册成功后发放一次，写入「注册赠送」流水；新设备匿名体验积分固定 200，登录后合并。"
           >
             <InputNumber min={0} max={1000000} precision={0} style={{ width: '100%' }} />
           </Form.Item>

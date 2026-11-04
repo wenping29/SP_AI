@@ -1,0 +1,229 @@
+{
+  "steps": [],
+  "anon1": {
+    "status": 200,
+    "data": {
+      "token": "6fc11f3586dc4ac590887742e7cd8768",
+      "balance": 200,
+      "deviceId": "94d67970-1638-42f5-bef8-3697178dcbf9"
+    }
+  },
+  "emailCode": {
+    "status": 200,
+    "data": {
+      "expiresIn": 600,
+      "devCode": "646769"
+    }
+  },
+  "register": {
+    "status": 200,
+    "data": {
+      "token": "8Y1lu2mRq8FbPdX2angl4ca56eo2v4k97CYegLXhvKk",
+      "balance": 1200,
+      "mergedCredits": 200,
+      "giftCredits": 1000,
+      "user": {
+        "email": "sp-test-1793791487447@example.com",
+        "displayName": "测试用户"
+      },
+      "accountDeviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961"
+    }
+  },
+  "meLoggedIn": {
+    "status": 200,
+    "data": {
+      "loggedIn": true,
+      "email": "sp-test-1793791487447@example.com",
+      "displayName": "测试用户",
+      "balance": 1200,
+      "accountDeviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961"
+    }
+  },
+  "creditsUser": {
+    "status": 200,
+    "data": {
+      "balance": 1200,
+      "deviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961",
+      "transactions": [
+        {
+          "delta": 200,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        },
+        {
+          "delta": 1000,
+          "reason": "free_grant",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        }
+      ]
+    }
+  },
+  "anon2": {
+    "status": 200,
+    "data": {
+      "token": "fd7742440e7941b0ac28742c96a4f4ab",
+      "balance": 200,
+      "deviceId": "18f7b97f-3895-4dd9-bb3a-45b8df903ba5"
+    }
+  },
+  "login2": {
+    "status": 200,
+    "data": {
+      "token": "6HsLEgI9uN28r1jdSskjqQgZMkS96GTkYN8J-kmss0E",
+      "balance": 1400,
+      "mergedCredits": 200,
+      "giftCredits": 0,
+      "user": {
+        "email": "sp-test-1793791487447@example.com",
+        "displayName": "测试用户"
+      },
+      "accountDeviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961"
+    }
+  },
+  "creditsDevice1": {
+    "status": 200,
+    "data": {
+      "balance": 1400,
+      "deviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961",
+      "transactions": [
+        {
+          "delta": 200,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        },
+        {
+          "delta": 200,
+          "reason": "device_merge",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        },
+        {
+          "delta": 1000,
+          "reason": "free_grant",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        }
+      ]
+    }
+  },
+  "logout2": {
+    "status": 200,
+    "data": {
+      "token": "D03jpsDfho-fqtMwa1nBuhqvkoVVb1qS1IMXU4e_xMU",
+      "balance": 0,
+      "mergedCredits": 0,
+      "giftCredits": 0,
+      "user": {
+        "email": "",
+        "displayName": ""
+      },
+      "accountDeviceId": "18f7b97f-3895-4dd9-bb3a-45b8df903ba5"
+    }
+  },
+  "meAfterLogout": {
+    "status": 200,
+    "data": {
+      "loggedIn": false,
+      "email": null,
+      "displayName": null,
+      "balance": 0,
+      "accountDeviceId": "18f7b97f-3895-4dd9-bb3a-45b8df903ba5"
+    }
+  },
+  "creditsAfterLogout": {
+    "status": 200,
+    "data": {
+      "balance": 0,
+      "deviceId": "18f7b97f-3895-4dd9-bb3a-45b8df903ba5",
+      "transactions": [
+        {
+          "delta": 200,
+          "reason": "device_trial",
+          "modelId": "",
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "at": "2026-11-04 19:24:47"
+        }
+      ]
+    }
+  },
+  "meDevice1StillIn": {
+    "status": 200,
+    "data": {
+      "loggedIn": true,
+      "email": "sp-test-1793791487447@example.com",
+      "displayName": "测试用户",
+      "balance": 1400,
+      "accountDeviceId": "u55eeb41ab96d4f1aa0ef39ade9e39961"
+    }
+  },
+  "wrongPassword": {
+    "status": 401,
+    "data": {
+      "code": "bad_credentials",
+      "message": "邮箱或密码不正确"
+    }
+  },
+  "duplicateEmail": {
+    "status": 409,
+    "data": {
+      "code": "email_exists",
+      "message": "该邮箱已注册，请直接登录"
+    }
+  },
+  "badEmail": {
+    "status": 400,
+    "data": {
+      "code": "invalid_email",
+      "message": "请输入有效的邮箱地址"
+    }
+  },
+  "shortPassword": {
+    "status": 400,
+    "data": {
+      "code": "weak_password",
+      "message": "密码至少 8 位"
+    }
+  },
+  "missingCode": {
+    "status": 400,
+    "data": {
+      "code": "code_required",
+      "message": "请输入 6 位邮箱验证码"
+    }
+  },
+  "checks": {
+    "anonBalance": true,
+    "anon2Balance": true,
+    "codeSent": true,
+    "registerGift": true,
+    "accountIdSynthetic": true,
+    "meLoggedIn": true,
+    "creditsShared": true,
+    "login2Merged": true,
+    "device1SeesShared": true,
+    "logoutAnon": true,
+    "meAfterLogout": true,
+    "anonTokenWorks": true,
+    "device1StillIn": true,
+    "wrongPassword401": true,
+    "duplicate409": true,
+    "badEmail400": true,
+    "shortPassword400": true,
+    "missingCode400": true
+  },
+  "allPassed": true
+}

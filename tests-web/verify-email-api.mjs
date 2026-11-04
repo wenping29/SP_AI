@@ -1,9 +1,9 @@
-// 邮箱验证注册验证：设备不再赠送、验证码发送/限流/错误/次数、注册赠送、管理员创建与登录
+// 邮箱验证注册验证：设备 200 体验积分、验证码发送/限流/错误/次数、注册赠送、管理员创建与登录
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 
 const BASE = "http://127.0.0.1:5099";
-const ADMIN_KEY = "3591b2e1a3b697cfce19445b4a2a1bdebb7a1e7e2f4d4dd69fd1e19d647f3ea8";
+const ADMIN_KEY = "sp-test-admin-key-2026";
 const out = { checks: [] };
 
 function check(name, ok, detail) {
@@ -28,19 +28,20 @@ const stamp = Date.now();
 const password = "SpMail@2026";
 const deviceId = randomUUID();
 
-// 1) 新设备不再赠送积分
+// 1) 新设备给 200 匿名体验积分（不是注册赠送）
 const anon = await api("/api/device/register", {
   method: "POST",
   body: { deviceId, label: "邮箱测试设备" },
 });
-check("新设备注册余额为 0", anon.status === 200 && anon.data?.balance === 0, anon.data);
+check("新设备注册余额为 200", anon.status === 200 && anon.data?.balance === 200, anon.data);
 
 // /api/credits 从 Bearer 取，匿名设备走 Account.Token
 const creditsRes = await fetch(`${BASE}/api/credits`, {
   headers: { Authorization: `Bearer ${anon.data?.token}` },
 });
 const credits = await creditsRes.json();
-check("新设备没有注册赠送流水", creditsRes.status === 200 && credits.balance === 0 &&
+check("新设备记体验流水且没有注册赠送", creditsRes.status === 200 && credits.balance === 200 &&
+  (credits.transactions || []).some((t) => t.reason === "device_trial" && t.delta === 200) &&
   !(credits.transactions || []).some((t) => t.reason === "free_grant"), credits);
 
 async function sendCode(email) {
@@ -74,18 +75,23 @@ const bad = await register(email1, wrongCode);
 check("错误验证码被拒绝", bad.status === 400 && bad.data?.code === "code_invalid",
   { status: bad.status, code: bad.data?.code });
 
-// 4) 正确验证码注册，拿到 1000 赠送
+// 4) 正确验证码注册，拿到 1000 赠送并合并本机 200 体验积分
 const reg1 = await register(email1, code1.data.devCode);
 check("邮箱验证注册成功", reg1.status === 200 && reg1.data?.user?.email === email1, reg1.data);
-check("新用户获得 1000 积分", reg1.data?.giftCredits === 1000 && reg1.data?.balance === 1000,
-  { gift: reg1.data?.giftCredits, balance: reg1.data?.balance });
-check("设备 0 积分时不产生合并", reg1.data?.mergedCredits === 0, reg1.data?.mergedCredits);
+check("注册赠送 1000 并合并体验积分", reg1.data?.giftCredits === 1000 &&
+  reg1.data?.mergedCredits === 200 && reg1.data?.balance === 1200,
+  { gift: reg1.data?.giftCredits, merged: reg1.data?.mergedCredits, balance: reg1.data?.balance });
+const regCredits = await (await fetch(`${BASE}/api/credits`, {
+  headers: { Authorization: `Bearer ${reg1.data?.token}` },
+})).json();
+check("账号流水含体验积分合并", (regCredits.transactions || [])
+  .some((t) => t.reason === "device_merge" && t.delta === 200), regCredits.transactions);
 
 const login1 = await api("/api/auth/login", {
   method: "POST",
   body: { email: email1, password, deviceId, label: "邮箱测试设备" },
 });
-check("注册后可正常登录", login1.status === 200 && login1.data?.balance === 1000, login1.data);
+check("注册后可正常登录", login1.status === 200 && login1.data?.balance === 1200, login1.data);
 
 // 5) 重复验证码与已注册邮箱
 const reuse = await register(`mail-other-${stamp}@example.com`, code1.data.devCode);
