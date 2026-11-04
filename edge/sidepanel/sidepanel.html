@@ -16,11 +16,31 @@
 </head>
 <body>
   <div class="layout">
-    <div class="collapsed-hint" aria-hidden="true">
-      <img src="../icons/icon48.png" alt="" width="34" height="34">
-      <span>面板已折叠，点空白处展开</span>
-    </div>
     <div class="main">
+      <div class="collapsed-bar">
+        <button id="navToggle" class="menu-btn ico" data-icon="menu" data-tip="导航菜单" aria-haspopup="true" aria-expanded="false"></button>
+      </div>
+      <div id="navMenu" class="nav-menu" hidden>
+        <div class="nav-menu-top">
+          <button id="navExpand" class="tip-top" data-icon="unfold" data-tip="展开功能栏"></button>
+          <button id="navFull" class="tip-top" data-icon="expand" data-tip="全页模式打开"></button>
+        </div>
+        <div id="navGrid" class="nav-grid">
+          <button class="nav-item active" data-view="chat"><i data-icon="chat"></i><span>聊天</span></button>
+          <button class="nav-item" data-view="ask"><i data-icon="sparkle"></i><span>提问</span></button>
+          <button class="nav-item" data-view="translate"><i data-icon="translate"></i><span>翻译</span></button>
+          <button class="nav-item" data-view="tools"><i data-icon="grid"></i><span>工具</span></button>
+          <button class="nav-item" data-view="settings"><i data-icon="gear"></i><span>设置</span></button>
+        </div>
+        <div class="nav-menu-foot">
+          <button id="navNew" class="tip-top" data-icon="compose" data-tip="新聊天"></button>
+          <button id="navHistory" class="tip-top" data-icon="history" data-tip="聊天记录"></button>
+          <span class="spacer"></span>
+          <button id="navAvatar" class="nav-avatar" aria-label="积分与账户">
+            <img src="../icons/icon32.png" alt="" width="22" height="22">
+          </button>
+        </div>
+      </div>
       <div id="notice" class="notice" hidden></div>
 
       <div id="chatView" class="chat-view">

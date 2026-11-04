@@ -153,26 +153,131 @@ body {
 
 .rail-top button svg { width: 15px; height: 15px; margin: 0 auto; }
 
-/* 折叠：主内容收起，右侧功能栏留成窄条；点空白、展开按钮或任意图标都能回来 */
-.layout.collapsed { justify-content: flex-end; }
-.layout.collapsed .main { display: none; }
+/* 折叠：功能栏收掉，右上角只留一个汉堡，点开是导航卡片，仿 Sider */
+.layout.collapsed .rail { display: none; }
 
-/* 原生侧边栏不能真正改宽，空白处给一句提示，别让人以为面板坏了 */
-.collapsed-hint { display: none; }
+.collapsed-bar {
+  display: none;
+  flex: none;
+  justify-content: flex-end;
+  padding: 6px 8px 0;
+}
 
-.layout.collapsed .collapsed-hint {
-  flex: 1;
-  min-width: 0;
+.layout.collapsed .collapsed-bar { display: flex; }
+
+.collapsed-bar .menu-btn {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  border-radius: 7px;
+}
+
+.collapsed-bar .menu-btn svg { width: 20px; height: 20px; }
+
+.collapsed-bar .menu-btn:hover { background: var(--accent-soft); color: var(--accent); }
+
+.nav-menu {
+  position: fixed;
+  top: 42px;
+  right: 8px;
+  z-index: 70;
+  width: min(300px, calc(100vw - 16px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .22);
+}
+
+.nav-menu[hidden] { display: none; }
+
+.nav-menu-top { display: flex; gap: 2px; }
+
+.nav-menu-top button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.nav-menu-top button:hover { background: var(--accent-soft); color: var(--accent); }
+.nav-menu-top svg { width: 15px; height: 15px; }
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 12px;
+  gap: 6px;
+  padding: 10px 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
 }
 
-.collapsed-hint img { opacity: .2; }
+.nav-item i { display: flex; }
+.nav-item svg { width: 20px; height: 20px; color: var(--muted); }
+.nav-item:hover { background: var(--accent-soft); }
+.nav-item:hover svg { color: var(--accent); }
+
+.nav-item.active {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+}
+
+.nav-item.active svg { color: var(--accent); }
+
+.nav-menu-foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.nav-menu-foot button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.nav-menu-foot button:hover { background: var(--accent-soft); color: var(--accent); }
+.nav-menu-foot svg { width: 16px; height: 16px; }
+
+.nav-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent-border) !important;
+  border-radius: 50%;
+  background: var(--panel) !important;
+}
+
+.nav-avatar img { display: block; border-radius: 50%; }
+.nav-avatar:hover { border-color: var(--accent) !important; }
 
 /* 全页模式（新标签页）：内容列居中定宽，功能栏贴在这条宽列的右缘 */
 html[data-full="1"] .layout {

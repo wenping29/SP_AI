@@ -66,6 +66,14 @@ const els = {
   rail: document.getElementById("rail"),
   railFold: document.getElementById("railFold"),
   railFull: document.getElementById("railFull"),
+  navToggle: document.getElementById("navToggle"),
+  navMenu: document.getElementById("navMenu"),
+  navGrid: document.getElementById("navGrid"),
+  navExpand: document.getElementById("navExpand"),
+  navFull: document.getElementById("navFull"),
+  navNew: document.getElementById("navNew"),
+  navHistory: document.getElementById("navHistory"),
+  navAvatar: document.getElementById("navAvatar"),
   status: document.getElementById("status"),
   notice: document.getElementById("notice"),
   newChat: document.getElementById("newChat"),
@@ -218,6 +226,7 @@ const ICONS = {
   plan: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
   check: '<path d="M20 6L9 17l-5-5"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   fold: '<path d="M11 5l6 7-6 7"/><path d="M20 4v16"/>',
   unfold: '<path d="M13 5l-6 7 6 7"/><path d="M4 4v16"/>',
   expand: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/>',
@@ -706,7 +715,7 @@ function showView(name, { focusInput = false } = {}) {
   state.view = name;
   closeAddMenu();
   closeModelMenu();
-  for (const button of els.rail.querySelectorAll("button[data-view]")) {
+  for (const button of document.querySelectorAll('#rail button[data-view], #navGrid button[data-view]')) {
     button.classList.toggle("active", button.dataset.view === name);
   }
   els.chatView.hidden = name !== "chat";
@@ -724,6 +733,7 @@ function showView(name, { focusInput = false } = {}) {
 
 function setCollapsed(collapsed, { persist = true } = {}) {
   state.collapsed = collapsed;
+  closeNavMenu();
   els.layout.classList.toggle("collapsed", collapsed);
   const name = collapsed ? "unfold" : "fold";
   const tip = collapsed ? "展开面板" : "折叠面板";
@@ -737,6 +747,30 @@ function setCollapsed(collapsed, { persist = true } = {}) {
 
 function openFullPage() {
   return chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel/sidepanel.html?full=1") });
+}
+
+// ---------- 折叠态的汉堡导航卡片 ----------
+
+function openNavMenu() {
+  els.navMenu.hidden = false;
+  els.navToggle.setAttribute("aria-expanded", "true");
+}
+
+function closeNavMenu() {
+  if (els.navMenu.hidden) return;
+  els.navMenu.hidden = true;
+  els.navToggle.setAttribute("aria-expanded", "false");
+}
+
+function toggleNavMenu() {
+  if (els.navMenu.hidden) openNavMenu();
+  else closeNavMenu();
+}
+
+async function pickView(name) {
+  closeNavMenu();
+  showView(name);
+  if (name === "translate" || name === "chat") await syncSelection();
 }
 
 function fillSettings() {
@@ -1550,17 +1584,47 @@ els.railFull.addEventListener("click", () => {
   openFullPage().catch(() => setStatus("打开全页失败", "error"));
 });
 
-// 折叠后左边是一片空白，点一下就还原，不用非得找准按钮
-els.layout.addEventListener("click", (event) => {
-  if (state.collapsed && !event.target.closest(".rail")) setCollapsed(false);
+els.navToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleNavMenu();
 });
 
-els.rail.addEventListener("click", async (event) => {
+// 汉堡卡片：顶部两个图标负责回功能栏 / 全页，网格切视图，底部是新聊天、历史、账户
+els.navExpand.addEventListener("click", () => {
+  setCollapsed(false);
+  closeNavMenu();
+});
+
+els.navFull.addEventListener("click", () => {
+  closeNavMenu();
+  openFullPage().catch(() => setStatus("打开全页失败", "error"));
+});
+
+els.navNew.addEventListener("click", () => {
+  closeNavMenu();
+  newChat().catch(showError);
+});
+
+els.navHistory.addEventListener("click", () => {
+  closeNavMenu();
+  renderHistory();
+  els.historyDialog.showModal();
+});
+
+els.navAvatar.addEventListener("click", () => {
+  closeNavMenu();
+  openCreditsDialog().catch(showError);
+});
+
+els.navGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-view]");
+  if (button) pickView(button.dataset.view).catch(showError);
+});
+
+els.rail.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-view]");
   if (!button) return;
-  if (state.collapsed) setCollapsed(false);
-  showView(button.dataset.view);
-  if (button.dataset.view === "translate" || button.dataset.view === "chat") await syncSelection();
+  pickView(button.dataset.view).catch(showError);
 });
 
 els.modelButton.addEventListener("click", (event) => {
@@ -1644,6 +1708,7 @@ els.addMenu.addEventListener("keydown", (event) => {
 document.addEventListener("click", (event) => {
   if (!els.addMenu.contains(event.target) && !els.btnAdd.contains(event.target)) closeAddMenu();
   if (!els.modelPicker.contains(event.target)) closeModelMenu();
+  if (!els.navMenu.contains(event.target) && !els.navToggle.contains(event.target)) closeNavMenu();
 });
 
 window.addEventListener("resize", () => {
@@ -1820,6 +1885,7 @@ document.addEventListener("keydown", (event) => {
     closeAccountPop();
     closeAddMenu();
     closeModelMenu();
+    closeNavMenu();
   }
 });
 
@@ -1864,8 +1930,8 @@ els.saveSettings.addEventListener("click", async () => {
   state.pageCache = null;
   if (server !== oldServer) state.token = ""; // 换服务器后旧令牌无效，重新注册
   await saveState({ server, label: state.label, token: state.token });
-  await boot();
-  setStatus("已保存设置");
+  const ok = await boot();
+  if (ok) setStatus("已保存设置");
 });
 
 els.reregister.addEventListener("click", async () => {
@@ -1927,8 +1993,6 @@ async function consumePending() {
 
   await chrome.storage.local.remove("pending");
   state.pageCache = null;
-  // 从网页悬浮栏唤起的操作一定有明确意图，折叠状态下先展开再执行
-  if (state.collapsed) setCollapsed(false);
   showView(pending.view || "chat");
   if (pending.actionId) await runAction(pending.actionId, { selection: pending.selection });
 }
@@ -1954,14 +2018,18 @@ async function boot() {
     renderAttachments();
     renderPicks();
     await saveSessions();
+    showView(state.view);
     await consumePending();
+    return true;
   } catch (err) {
     showError(err);
-    setStatus(err.message || "后端未就绪", "error");
+    if (!(err instanceof TypeError)) setStatus(err.message || "后端未就绪", "error");
+    return false;
   } finally {
     renderAccountCard();
     syncBusy();
   }
 }
-
+// 首帧就同步导航高亮，不依赖 boot 的后端请求成功
+showView(state.view);
 boot();
