@@ -7,7 +7,8 @@ using SpServer.Domain;
 namespace SpServer.Services;
 
 public record MemberView(int Id, string Email, string DisplayName, bool IsBlocked, int Balance,
-    int DeviceCount, DateTime CreatedAt, DateTime? LastLoginAt);
+    int Spent, int Calls, string AccountDeviceId, int DeviceCount, DateTime CreatedAt,
+    DateTime? LastLoginAt);
 
 public record MemberPage(int Total, int Page, int PageSize, IReadOnlyList<MemberView> Items);
 
@@ -47,16 +48,29 @@ public class MemberAdmin(AppDbContext db)
             .GroupBy(s => s.AccountId)
             .Select(g => new { AccountId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.AccountId, x => x.Count, ct);
+        var usage = accountIds.Count == 0
+            ? new Dictionary<int, (int Spent, int Calls)>()
+            : (await db.Transactions.AsNoTracking()
+                .Where(t => accountIds.Contains(t.AccountId) && t.Delta < 0
+                    && t.Reason != "admin_grant" && t.Reason != "admin_set")
+                .GroupBy(t => t.AccountId)
+                .Select(g => new { AccountId = g.Key, Spent = -g.Sum(t => t.Delta), Calls = g.Count() })
+                .ToListAsync(ct))
+            .ToDictionary(x => x.AccountId, x => (x.Spent, x.Calls));
 
         var items = users.Select(u =>
         {
             var account = accounts.FirstOrDefault(a => a.UserId == u.Id);
+            var used = account is null ? (0, 0) : usage.GetValueOrDefault(account.Id);
             return new MemberView(
                 u.Id,
                 u.Email,
                 u.DisplayName,
                 u.IsDisabled || account?.IsBlocked == true,
                 account?.Balance ?? 0,
+                used.Item1,
+                used.Item2,
+                account?.DeviceId ?? "",
                 account is null ? 0 : deviceCounts.GetValueOrDefault(account.Id),
                 AsUtc(u.CreatedAt),
                 AsUtcOrNull(u.LastLoginAt));
@@ -114,7 +128,8 @@ public class MemberAdmin(AppDbContext db)
         db.Accounts.Add(account);
         await db.SaveChangesAsync(ct);
 
-        return new MemberView(user.Id, user.Email, user.DisplayName, false, 0, 0, AsUtc(now), null);
+        return new MemberView(user.Id, user.Email, user.DisplayName, false, 0, 0, 0,
+            account.DeviceId, 0, AsUtc(now), null);
     }
 
     public async Task<MemberView> UpdateAsync(int id, string? email, string? displayName, string? password,
@@ -196,9 +211,18 @@ public class MemberAdmin(AppDbContext db)
         var devices = account is null
             ? 0
             : await db.DeviceSessions.CountAsync(s => s.AccountId == account.Id, ct);
+        var usage = account is null
+            ? new { Spent = 0, Calls = 0 }
+            : await db.Transactions.AsNoTracking()
+                .Where(t => t.AccountId == account.Id && t.Delta < 0
+                    && t.Reason != "admin_grant" && t.Reason != "admin_set")
+                .GroupBy(t => t.AccountId)
+                .Select(g => new { Spent = -g.Sum(t => t.Delta), Calls = g.Count() })
+                .FirstOrDefaultAsync(ct) ?? new { Spent = 0, Calls = 0 };
 
         return new MemberView(user.Id, user.Email, user.DisplayName,
-            user.IsDisabled || account?.IsBlocked == true, account?.Balance ?? 0, devices,
+            user.IsDisabled || account?.IsBlocked == true, account?.Balance ?? 0,
+            usage.Spent, usage.Calls, account?.DeviceId ?? "", devices,
             AsUtc(user.CreatedAt), AsUtcOrNull(user.LastLoginAt));
     }
 

@@ -377,9 +377,11 @@ app.MapDelete("/api/conversations/{clientId}", async (string clientId, HttpConte
     return Results.Ok(new { clientId, deleted });
 });
 
-app.MapGet("/api/config", async (AppDbContext db, CreditService credits, ProviderKey keys,
+app.MapGet("/api/config", async (HttpContext http, AppDbContext db, CreditService credits, ProviderKey keys,
     CancellationToken ct) =>
 {
+    // 模型与费率随时可能在后台调整，插件端需要拿到即时结果
+    http.Response.Headers.CacheControl = "no-store";
     var policy = await credits.GetPolicyAsync(ct);
     // 没有任何启用 KeyEnv 的提供商，其模型不下发，避免用户选中后才报错
     var usable = await keys.UsableProvidersAsync(ct);
@@ -775,19 +777,28 @@ admin.MapPost("/grant", async (GrantRequest req, AppDbContext db, CreditService 
     return Results.Ok(new { deviceId = account.DeviceId, delta, balance });
 }).RequireAdmin("devices.manage");
 
-// 积分管理页汇总；手工增减/设值不算用户消费
+// 积分管理页汇总：积分归注册用户，匿名设备不计入；手工增减/设值不算用户消费
 admin.MapGet("/credits/summary", async (AppDbContext db, CancellationToken ct) =>
 {
-    var accounts = await db.Accounts.CountAsync(ct);
-    var totalBalance = await db.Accounts.SumAsync(a => (int?)a.Balance, ct) ?? 0;
-    var blocked = await db.Accounts.CountAsync(a => a.IsBlocked, ct);
+    var users = await db.Users.CountAsync(ct);
+    var accountIds = await db.Accounts.Where(a => a.UserId != null).Select(a => a.Id).ToListAsync(ct);
+    var totalBalance = await db.Accounts.Where(a => a.UserId != null)
+        .SumAsync(a => (int?)a.Balance, ct) ?? 0;
+    var disabledUsers = await db.Users.Where(u => u.IsDisabled).Select(u => u.Id).ToListAsync(ct);
+    var blockedAccounts = await db.Accounts
+        .Where(a => a.UserId != null && a.IsBlocked)
+        .Select(a => a.UserId!.Value)
+        .ToListAsync(ct);
+    var blocked = disabledUsers.Union(blockedAccounts).Count();
     var spent = -(await db.Transactions
-        .Where(t => t.Delta < 0 && t.Reason != "admin_grant" && t.Reason != "admin_set")
+        .Where(t => accountIds.Contains(t.AccountId) && t.Delta < 0
+            && t.Reason != "admin_grant" && t.Reason != "admin_set")
         .SumAsync(t => (int?)t.Delta, ct) ?? 0);
     var calls = await db.Transactions
-        .CountAsync(t => t.Delta < 0 && t.Reason != "admin_grant" && t.Reason != "admin_set", ct);
+        .CountAsync(t => accountIds.Contains(t.AccountId) && t.Delta < 0
+            && t.Reason != "admin_grant" && t.Reason != "admin_set", ct);
 
-    return Results.Ok(new { accounts, totalBalance, blocked, spent, calls });
+    return Results.Ok(new { users, totalBalance, blocked, spent, calls });
 }).RequireAdmin("devices.view");
 
 // 直接改分：delta 为增减，balance 为设为指定余额，二者只传一个
@@ -878,10 +889,12 @@ admin.MapGet("/stats", async (AppDbContext db, CancellationToken ct) =>
     });
 }).RequireAdmin("dashboard.view");
 
+// 设备管理只列真实设备（匿名账号即设备）；余额与调分归登录用户，在积分管理里
 admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContext db,
     CancellationToken ct) =>
 {
-    var query = db.Accounts.AsNoTracking();
+    var query = db.Accounts.AsNoTracking().Where(a => a.UserId == null);
+
     var keyword = (q ?? "").Trim();
     if (keyword.Length > 0)
     {
@@ -899,17 +912,25 @@ admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContex
         .Take(size)
         .Select(a => new
         {
-            a.Id, a.DeviceId, a.Label, a.Balance, a.IsBlocked, a.CreatedAt, a.LastUsedAt,
+            a.Id, a.DeviceId, a.Label, a.IsBlocked, a.CreatedAt, a.LastUsedAt,
         })
         .ToListAsync(ct);
 
-    var ids = accounts.Select(a => a.Id).ToList();
-    var usage = await db.Transactions.AsNoTracking()
-        .Where(t => ids.Contains(t.AccountId) && t.Delta < 0 && t.Reason != "admin_grant"
-            && t.Reason != "admin_set")
-        .GroupBy(t => t.AccountId)
-        .Select(g => new { AccountId = g.Key, Spent = -g.Sum(t => t.Delta), Calls = g.Count() })
-        .ToDictionaryAsync(u => u.AccountId, ct);
+    // 设备登录态指向用户计费账号，用来展示该设备当前绑定的邮箱
+    var deviceIds = accounts.Select(a => a.DeviceId).ToList();
+    var sessions = await db.DeviceSessions.AsNoTracking()
+        .Where(s => deviceIds.Contains(s.DeviceId))
+        .ToDictionaryAsync(s => s.DeviceId, ct);
+    var sessionAccountIds = sessions.Values.Select(s => s.AccountId).Distinct().ToList();
+    var sessionAccounts = await db.Accounts.AsNoTracking()
+        .Where(a => sessionAccountIds.Contains(a.Id))
+        .Select(a => new { a.Id, a.UserId })
+        .ToDictionaryAsync(a => a.Id, ct);
+    var userIds = sessionAccounts.Values.Where(a => a.UserId != null)
+        .Select(a => a.UserId!.Value).Distinct().ToList();
+    var emails = await db.Users.AsNoTracking()
+        .Where(u => userIds.Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u.Email, ct);
 
     return Results.Ok(new
     {
@@ -918,12 +939,16 @@ admin.MapGet("/devices", async (string? q, int? page, int? pageSize, AppDbContex
         pageSize = size,
         items = accounts.Select(a =>
         {
-            var spent = usage.TryGetValue(a.Id, out var u) ? u.Spent : 0;
-            var calls = usage.TryGetValue(a.Id, out var u2) ? u2.Calls : 0;
+            var account = sessions.TryGetValue(a.DeviceId, out var session)
+                ? sessionAccounts.GetValueOrDefault(session.AccountId)
+                : null;
+            var userId = account?.UserId;
             return new
             {
-                a.DeviceId, a.Label, a.Balance, a.IsBlocked,
-                CreatedAt = AsUtc(a.CreatedAt), LastUsedAt = AsUtc(a.LastUsedAt), spent, calls,
+                a.DeviceId, a.Label, a.IsBlocked,
+                loggedIn = userId is not null,
+                accountEmail = userId is null ? "" : emails.GetValueOrDefault(userId.Value, ""),
+                CreatedAt = AsUtc(a.CreatedAt), LastUsedAt = AsUtc(a.LastUsedAt),
             };
         }),
     });

@@ -57,7 +57,7 @@ export default function PolicySettings() {
         showIcon
         style={{ marginBottom: 20 }}
         message="免费积分只在邮箱验证注册成功后发放一次"
-        description="新设备注册不再赠送积分，避免反复换设备刷额度。已有账号的余额请到「用户管理」或「设备管理」里单独调整。"
+        description="新设备注册不再赠送积分，避免反复换设备刷额度。已有用户的余额请到「积分管理」里按用户单独调整。"
       />
 
       <Card

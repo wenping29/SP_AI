@@ -28,12 +28,12 @@ export interface AdminStats {
 export interface Device {
   deviceId: string;
   label: string;
-  balance: number;
   isBlocked: boolean;
   createdAt: string;
   lastUsedAt: string;
-  spent: number;
-  calls: number;
+  // 设备当前登录的用户账号；积分记在该账号上
+  loggedIn: boolean;
+  accountEmail: string;
 }
 
 export interface DevicePage {
@@ -52,7 +52,7 @@ export interface DeviceTransactions {
 }
 
 export interface CreditSummary {
-  accounts: number;
+  users: number;
   totalBalance: number;
   blocked: number;
   spent: number;
@@ -224,6 +224,10 @@ export interface Member {
   displayName: string;
   isBlocked: boolean;
   balance: number;
+  spent: number;
+  calls: number;
+  // 用户计费账号的 deviceId，调分与流水都按它落库
+  accountDeviceId: string;
   deviceCount: number;
   createdAt: string;
   lastLoginAt: string | null;

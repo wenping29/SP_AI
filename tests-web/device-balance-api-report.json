@@ -1,0 +1,67 @@
+{
+  "codeSent": true,
+  "register": {
+    "status": 200,
+    "balance": 1000,
+    "gift": 1000
+  },
+  "checks": {
+    "codeSent": true,
+    "gift1000": true,
+    "deviceShowsAccountBalance": true,
+    "deviceMarkedLoggedIn": true,
+    "syntheticRowHidden": true,
+    "grantAppliedToAccount": true,
+    "accountBalanceAfterGrant": true,
+    "transactionUsesAccount": true,
+    "accountsPageStaysRaw": true,
+    "logoutFallsBack": true
+  },
+  "sample": {
+    "row": {
+      "deviceId": "devbal-1793790375338",
+      "label": "",
+      "balance": 1000,
+      "isBlocked": false,
+      "loggedIn": true,
+      "accountDeviceId": "ua40567fee7284f4a8d931665c568dfcb",
+      "accountEmail": "devbal-1793790375338@example.com",
+      "createdAt": "2026-11-04T11:06:15.7656606Z",
+      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
+      "spent": 0,
+      "calls": 0
+    },
+    "adjust": {
+      "deviceId": "ua40567fee7284f4a8d931665c568dfcb",
+      "delta": 500,
+      "balance": 1500
+    },
+    "anonRow": {
+      "deviceId": "devbal-1793790375338",
+      "label": "",
+      "balance": 0,
+      "isBlocked": false,
+      "loggedIn": false,
+      "accountDeviceId": "devbal-1793790375338",
+      "accountEmail": "",
+      "createdAt": "2026-11-04T11:06:15.7656606Z",
+      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
+      "spent": 0,
+      "calls": 0
+    },
+    "userRow": {
+      "deviceId": "ua40567fee7284f4a8d931665c568dfcb",
+      "label": "devbal-1793790375338@example.com",
+      "balance": 1500,
+      "isBlocked": false,
+      "loggedIn": false,
+      "accountDeviceId": "ua40567fee7284f4a8d931665c568dfcb",
+      "accountEmail": "",
+      "createdAt": "2026-11-04T11:06:15.7656606Z",
+      "lastUsedAt": "2026-11-04T11:06:15.7656606Z",
+      "spent": 0,
+      "calls": 0
+    }
+  },
+  "allPassed": true
+}

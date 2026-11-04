@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
   Button,
-  Form,
   Input,
-  InputNumber,
-  Modal,
   Popconfirm,
   Space,
-  Spin,
   Table,
   Tag,
   Typography,
@@ -15,19 +11,8 @@ import {
 } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import {
-  adminApi,
-  type AdminTransaction,
-  type Device,
-  type DevicePage,
-  type DeviceTransactions,
-} from '@/api/admin';
-import { deltaClass, formatTime, reasonLabel, shortDevice, signed } from '@/utils/format';
-
-interface GrantForm {
-  delta: number;
-  reason?: string;
-}
+import { adminApi, type Device, type DevicePage } from '@/api/admin';
+import { formatTime } from '@/utils/format';
 
 export default function DeviceList() {
   const [data, setData] = useState<DevicePage>({ total: 0, page: 1, pageSize: 20, items: [] });
@@ -36,14 +21,6 @@ export default function DeviceList() {
   const [pageSize, setPageSize] = useState(20);
   const [keyword, setKeyword] = useState('');
   const [tick, setTick] = useState(0);
-
-  const [grantTarget, setGrantTarget] = useState<Device | null>(null);
-  const [grantSaving, setGrantSaving] = useState(false);
-  const [grantForm] = Form.useForm<GrantForm>();
-
-  const [detailTarget, setDetailTarget] = useState<Device | null>(null);
-  const [detail, setDetail] = useState<DeviceTransactions | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,40 +42,6 @@ export default function DeviceList() {
 
   const reload = () => setTick((value) => value + 1);
 
-  const openGrant = (device: Device) => {
-    setGrantTarget(device);
-    grantForm.setFieldsValue({ delta: 100, reason: 'admin_grant' });
-  };
-
-  const submitGrant = async () => {
-    if (!grantTarget) return;
-    const values = await grantForm.validateFields();
-    setGrantSaving(true);
-    try {
-      const result = await adminApi.grant({
-        deviceId: grantTarget.deviceId,
-        delta: values.delta,
-        reason: values.reason,
-      });
-      message.success(`已调整 ${signed(values.delta)} 分，当前余额 ${result.balance}`);
-      setGrantTarget(null);
-      reload();
-    } finally {
-      setGrantSaving(false);
-    }
-  };
-
-  const openDetail = async (device: Device) => {
-    setDetailTarget(device);
-    setDetail(null);
-    setDetailLoading(true);
-    try {
-      setDetail(await adminApi.deviceTransactions(device.deviceId));
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
   const toggleBlock = async (device: Device) => {
     const result = await adminApi.setBlocked(device.deviceId, !device.isBlocked);
     message.success(result.isBlocked ? '设备已封禁' : '设备已解封');
@@ -115,26 +58,23 @@ export default function DeviceList() {
           <Typography.Text className="mono" copyable={{ text: value }}>
             {value}
           </Typography.Text>
-          {row.label && <div className="sub-text">{row.label}</div>}
+          <div className="sub-text">{row.label}</div>
         </div>
       ),
     },
     {
-      title: '余额',
-      dataIndex: 'balance',
-      width: 100,
-      render: (value: number) => <Typography.Text strong>{value}</Typography.Text>,
-    },
-    {
-      title: '累计消耗',
-      dataIndex: 'spent',
-      width: 110,
-      render: (value: number) => value,
-    },
-    {
-      title: '调用次数',
-      dataIndex: 'calls',
-      width: 100,
+      title: '绑定用户',
+      dataIndex: 'accountEmail',
+      width: 240,
+      render: (value: string) =>
+        value ? (
+          <div>
+            <Typography.Text>{value}</Typography.Text>
+            <div className="sub-text">积分归该用户账号</div>
+          </div>
+        ) : (
+          <Typography.Text type="secondary">未登录</Typography.Text>
+        ),
     },
     {
       title: '状态',
@@ -158,56 +98,21 @@ export default function DeviceList() {
     {
       title: '操作',
       key: 'actions',
-      width: 190,
+      width: 100,
       fixed: 'right',
       render: (_, row) => (
-        <Space size={0}>
-          <Button type="link" size="small" onClick={() => openGrant(row)}>
-            调分
+        <Popconfirm
+          title={row.isBlocked ? '确认解封该设备？' : '确认封禁该设备？'}
+          description={row.isBlocked ? '解封后可继续使用插件。' : '封禁后该设备无法调用模型。'}
+          onConfirm={() => toggleBlock(row)}
+          okText="确认"
+          cancelText="取消"
+        >
+          <Button type="link" size="small" danger={!row.isBlocked}>
+            {row.isBlocked ? '解封' : '封禁'}
           </Button>
-          <Button type="link" size="small" onClick={() => openDetail(row)}>
-            流水
-          </Button>
-          <Popconfirm
-            title={row.isBlocked ? '确认解封该设备？' : '确认封禁该设备？'}
-            description={row.isBlocked ? '解封后可继续使用插件。' : '封禁后该设备无法调用模型。'}
-            onConfirm={() => toggleBlock(row)}
-            okText="确认"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger={!row.isBlocked}>
-              {row.isBlocked ? '解封' : '封禁'}
-            </Button>
-          </Popconfirm>
-        </Space>
+        </Popconfirm>
       ),
-    },
-  ];
-
-  const txColumns: TableColumnsType<AdminTransaction> = [
-    {
-      title: '时间',
-      dataIndex: 'createdAt',
-      width: 165,
-      render: (value: string) => formatTime(value),
-    },
-    {
-      title: '变动',
-      dataIndex: 'delta',
-      width: 90,
-      render: (value: number) => <span className={deltaClass(value)}>{signed(value)}</span>,
-    },
-    {
-      title: '类型',
-      dataIndex: 'reason',
-      width: 110,
-      render: (value: string) => <Tag>{reasonLabel(value)}</Tag>,
-    },
-    { title: '模型', dataIndex: 'modelId', render: (value: string) => value || '-' },
-    {
-      title: 'Token（入/出）',
-      width: 130,
-      render: (_, row) => `${row.inputTokens || 0} / ${row.outputTokens || 0}`,
     },
   ];
 
@@ -217,7 +122,7 @@ export default function DeviceList() {
         设备管理
       </Typography.Title>
       <Typography.Paragraph className="page-desc">
-        按设备 ID 或备注查询，调整积分、查看流水、封禁异常设备。
+        按设备 ID 或备注查询，查看设备当前绑定的用户账号并封禁异常设备。积分跟着用户走，调整积分请到积分管理。
       </Typography.Paragraph>
 
       <Space style={{ marginBottom: 16 }}>
@@ -241,7 +146,7 @@ export default function DeviceList() {
         loading={loading}
         columns={columns}
         dataSource={data.items}
-        scroll={{ x: 1250 }}
+        scroll={{ x: 1070 }}
         pagination={{
           current: page,
           pageSize,
@@ -254,60 +159,6 @@ export default function DeviceList() {
           },
         }}
       />
-
-      <Modal
-        title={`调整积分 · ${shortDevice(grantTarget?.deviceId ?? '')}`}
-        open={!!grantTarget}
-        onOk={submitGrant}
-        confirmLoading={grantSaving}
-        onCancel={() => setGrantTarget(null)}
-        okText="确认调整"
-        cancelText="取消"
-        forceRender
-      >
-        <Form form={grantForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item
-            name="delta"
-            label="调整数量"
-            extra="正数增加积分，负数扣减积分"
-            rules={[{ required: true, message: '请输入调整数量' }]}
-          >
-            <InputNumber style={{ width: '100%' }} precision={0} placeholder="例如 500 或 -100" />
-          </Form.Item>
-          <Form.Item name="reason" label="原因">
-            <Input maxLength={40} placeholder="例如 admin_grant、活动补发、退款补偿" />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title={`积分流水 · ${shortDevice(detailTarget?.deviceId ?? '')}`}
-        open={!!detailTarget}
-        onCancel={() => setDetailTarget(null)}
-        footer={null}
-        width={900}
-      >
-        {detailLoading ? (
-          <div style={{ padding: 40, textAlign: 'center' }}>
-            <Spin />
-          </div>
-        ) : (
-          <>
-            <Space style={{ marginBottom: 12 }}>
-              <Tag color="blue">当前余额 {detail?.balance ?? '-'}</Tag>
-              {detail?.isBlocked && <Tag color="red">已封禁</Tag>}
-              {detail?.label && <Tag>{detail.label}</Tag>}
-            </Space>
-            <Table
-              rowKey="id"
-              size="small"
-              columns={txColumns}
-              dataSource={detail?.items ?? []}
-              pagination={{ pageSize: 10, showSizeChanger: false }}
-            />
-          </>
-        )}
-      </Modal>
     </div>
   );
 }

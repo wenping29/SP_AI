@@ -23,12 +23,12 @@ import {
   adminApi,
   type AdminTransaction,
   type CreditSummary,
-  type Device,
-  type DevicePage,
   type DeviceTransactions,
+  type Member,
+  type MemberPage,
 } from '@/api/admin';
 import { useAuth } from '@/store/auth';
-import { deltaClass, formatTime, reasonLabel, shortDevice, signed } from '@/utils/format';
+import { deltaClass, formatTime, reasonLabel, signed } from '@/utils/format';
 
 type AdjustMode = 'add' | 'deduct' | 'set';
 
@@ -37,11 +37,11 @@ interface AdjustForm {
   reason?: string;
 }
 
-const emptySummary: CreditSummary = { accounts: 0, totalBalance: 0, blocked: 0, spent: 0, calls: 0 };
+const emptySummary: CreditSummary = { users: 0, totalBalance: 0, blocked: 0, spent: 0, calls: 0 };
 const quickAmounts = [100, 500, 1000, 5000];
 
 export default function CreditsList() {
-  const [data, setData] = useState<DevicePage>({ total: 0, page: 1, pageSize: 20, items: [] });
+  const [data, setData] = useState<MemberPage>({ total: 0, page: 1, pageSize: 20, items: [] });
   const [summary, setSummary] = useState<CreditSummary>(emptySummary);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -49,13 +49,13 @@ export default function CreditsList() {
   const [keyword, setKeyword] = useState('');
   const [tick, setTick] = useState(0);
 
-  const [adjustTarget, setAdjustTarget] = useState<Device | null>(null);
+  const [adjustTarget, setAdjustTarget] = useState<Member | null>(null);
   const [adjustMode, setAdjustMode] = useState<AdjustMode>('add');
   const [adjustSaving, setAdjustSaving] = useState(false);
   const [adjustForm] = Form.useForm<AdjustForm>();
   const amount = Form.useWatch('amount', adjustForm);
 
-  const [detailTarget, setDetailTarget] = useState<Device | null>(null);
+  const [detailTarget, setDetailTarget] = useState<Member | null>(null);
   const [detail, setDetail] = useState<DeviceTransactions | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -63,11 +63,11 @@ export default function CreditsList() {
   const canManage = can('devices.manage');
 
   const load = useCallback(async () => {
-    const [devicePage, creditSummary] = await Promise.all([
-      adminApi.devices({ q: keyword || undefined, page, pageSize }),
+    const [memberPage, creditSummary] = await Promise.all([
+      adminApi.members({ q: keyword || undefined, page, pageSize }),
       adminApi.creditSummary(),
     ]);
-    setData(devicePage);
+    setData(memberPage);
     setSummary(creditSummary);
   }, [keyword, page, pageSize]);
 
@@ -87,8 +87,8 @@ export default function CreditsList() {
 
   const reload = () => setTick((value) => value + 1);
 
-  const openAdjust = (device: Device) => {
-    setAdjustTarget(device);
+  const openAdjust = (member: Member) => {
+    setAdjustTarget(member);
     setAdjustMode('add');
     adjustForm.setFieldsValue({ amount: 100, reason: '' });
   };
@@ -100,11 +100,15 @@ export default function CreditsList() {
 
   const submitAdjust = async () => {
     if (!adjustTarget) return;
+    if (!adjustTarget.accountDeviceId) {
+      message.error('该用户还没有积分账号');
+      return;
+    }
     const values = await adjustForm.validateFields();
     setAdjustSaving(true);
     try {
       const result = await adminApi.adjustCredits({
-        deviceId: adjustTarget.deviceId,
+        deviceId: adjustTarget.accountDeviceId,
         ...(adjustMode === 'set'
           ? { balance: values.amount }
           : { delta: adjustMode === 'deduct' ? -values.amount : values.amount }),
@@ -122,28 +126,31 @@ export default function CreditsList() {
     }
   };
 
-  const openDetail = async (device: Device) => {
-    setDetailTarget(device);
+  const openDetail = async (member: Member) => {
+    setDetailTarget(member);
     setDetail(null);
+    if (!member.accountDeviceId) return;
     setDetailLoading(true);
     try {
-      setDetail(await adminApi.deviceTransactions(device.deviceId));
+      setDetail(await adminApi.deviceTransactions(member.accountDeviceId));
     } finally {
       setDetailLoading(false);
     }
   };
 
-  const columns: TableColumnsType<Device> = [
+  const columns: TableColumnsType<Member> = [
     {
       title: '用户',
-      dataIndex: 'deviceId',
-      width: 300,
-      render: (value: string, row) => (
+      key: 'member',
+      width: 280,
+      render: (_, row) => (
         <div>
-          <Typography.Text className="mono" copyable={{ text: value }}>
-            {value}
-          </Typography.Text>
-          {row.label && <div className="sub-text">{row.label}</div>}
+          <Typography.Text strong>{row.displayName}</Typography.Text>
+          <div className="sub-text mono">
+            <Typography.Text className="mono" copyable={{ text: row.email }}>
+              {row.email}
+            </Typography.Text>
+          </div>
         </div>
       ),
     },
@@ -169,6 +176,12 @@ export default function CreditsList() {
       width: 100,
     },
     {
+      title: '登录设备',
+      dataIndex: 'deviceCount',
+      width: 100,
+      render: (value: number) => `${value} 台`,
+    },
+    {
       title: '状态',
       dataIndex: 'isBlocked',
       width: 90,
@@ -176,10 +189,10 @@ export default function CreditsList() {
         blocked ? <Tag color="red">已封禁</Tag> : <Tag color="green">正常</Tag>,
     },
     {
-      title: '最近使用',
-      dataIndex: 'lastUsedAt',
+      title: '最近登录',
+      dataIndex: 'lastLoginAt',
       width: 170,
-      render: (value: string) => formatTime(value),
+      render: (value: string | null) => formatTime(value),
     },
     {
       title: '操作',
@@ -193,7 +206,12 @@ export default function CreditsList() {
               修改积分
             </Button>
           )}
-          <Button type="link" size="small" onClick={() => openDetail(row)}>
+          <Button
+            type="link"
+            size="small"
+            disabled={!row.accountDeviceId}
+            onClick={() => openDetail(row)}
+          >
             流水
           </Button>
         </Space>
@@ -243,13 +261,17 @@ export default function CreditsList() {
         积分管理
       </Typography.Title>
       <Typography.Paragraph className="page-desc">
-        积分即用户余额。支持增加、扣减和直接设为指定余额，所有变动都会写入流水；手工调整不计入用户消费统计。
+        积分跟着用户账号走，不关联设备，多设备登录同一账号共享余额。支持增加、扣减和直接设为指定余额，所有变动都会写入流水；手工调整不计入用户消费统计。
       </Typography.Paragraph>
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={12} md={6}>
           <Card size="small">
-            <Statistic title="用户数" value={summary.accounts} suffix={summary.blocked ? `（封禁 ${summary.blocked}）` : ''} />
+            <Statistic
+              title="用户数"
+              value={summary.users}
+              suffix={summary.blocked ? `（封禁 ${summary.blocked}）` : ''}
+            />
           </Card>
         </Col>
         <Col xs={12} md={6}>
@@ -271,7 +293,7 @@ export default function CreditsList() {
 
       <Space style={{ marginBottom: 16 }}>
         <Input.Search
-          placeholder="搜索用户 ID / 备注"
+          placeholder="搜索邮箱 / 昵称"
           allowClear
           style={{ width: 300 }}
           onSearch={(value) => {
@@ -285,18 +307,18 @@ export default function CreditsList() {
       </Space>
 
       <Table
-        rowKey="deviceId"
+        rowKey="id"
         size="middle"
         loading={loading}
         columns={columns}
         dataSource={data.items}
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1220 }}
         pagination={{
           current: page,
           pageSize,
           total: data.total,
           showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 个用户`,
+          showTotal: (total) => `共 ${total} 位用户`,
           onChange: (nextPage, nextSize) => {
             setPage(nextSize !== pageSize ? 1 : nextPage);
             setPageSize(nextSize);
@@ -305,7 +327,7 @@ export default function CreditsList() {
       />
 
       <Modal
-        title={`修改积分 · ${shortDevice(adjustTarget?.deviceId ?? '')}`}
+        title={`修改积分 · ${adjustTarget?.displayName || adjustTarget?.email || ''}`}
         open={!!adjustTarget}
         onOk={submitAdjust}
         confirmLoading={adjustSaving}
@@ -314,10 +336,16 @@ export default function CreditsList() {
         cancelText="取消"
         forceRender
       >
-        <Space style={{ marginBottom: 12 }}>
+        <Space style={{ marginBottom: 12 }} wrap>
           <Tag color="blue">当前余额 {adjustTarget?.balance ?? '-'}</Tag>
-          {adjustTarget?.label && <Tag>{adjustTarget.label}</Tag>}
+          {adjustTarget?.email && <Tag>{adjustTarget.email}</Tag>}
+          {adjustTarget && adjustTarget.deviceCount > 0 && (
+            <Tag>{adjustTarget.deviceCount} 台设备已登录</Tag>
+          )}
         </Space>
+        <Typography.Paragraph type="secondary" style={{ marginBottom: 12 }}>
+          调整记在该用户账号上，所有登录同一账号的设备同步生效。
+        </Typography.Paragraph>
         <Form form={adjustForm} layout="vertical">
           <Form.Item label="调整方式">
             <Radio.Group
@@ -388,7 +416,7 @@ export default function CreditsList() {
       </Modal>
 
       <Modal
-        title={`积分流水 · ${shortDevice(detailTarget?.deviceId ?? '')}`}
+        title={`积分流水 · ${detailTarget?.displayName || detailTarget?.email || ''}`}
         open={!!detailTarget}
         onCancel={() => setDetailTarget(null)}
         footer={null}
@@ -398,12 +426,14 @@ export default function CreditsList() {
           <div style={{ padding: 40, textAlign: 'center' }}>
             <Spin />
           </div>
+        ) : !detailTarget?.accountDeviceId ? (
+          <Typography.Paragraph type="secondary">该用户还没有积分账号。</Typography.Paragraph>
         ) : (
           <>
-            <Space style={{ marginBottom: 12 }}>
+            <Space style={{ marginBottom: 12 }} wrap>
               <Tag color="blue">当前余额 {detail?.balance ?? '-'}</Tag>
               {detail?.isBlocked && <Tag color="red">已封禁</Tag>}
-              {detail?.label && <Tag>{detail.label}</Tag>}
+              {detailTarget?.email && <Tag>{detailTarget.email}</Tag>}
             </Space>
             <Table
               rowKey="id"

@@ -1,0 +1,51 @@
+{
+  "steps": [
+    {
+      "name": "启动时从服务器取到模型",
+      "ok": true,
+      "detail": "glm-4-flash, glm-5.3-flash, deepseek-chat, ernie-speed, glm-4v-flash, qwen-plus, deepseek-reasoner, deepseek-v4-pro"
+    },
+    {
+      "name": "停用模型后菜单实时移除",
+      "ok": true,
+      "detail": "glm-4-flash, glm-5.3-flash, deepseek-chat, ernie-speed, glm-4v-flash, qwen-plus, deepseek-reasoner"
+    },
+    {
+      "name": "重新启用后菜单实时恢复",
+      "ok": true,
+      "detail": "glm-4-flash, glm-5.3-flash, deepseek-chat, ernie-speed, glm-4v-flash, qwen-plus, deepseek-reasoner, deepseek-v4-pro"
+    }
+  ],
+  "models": {
+    "initial": [
+      "glm-4-flash",
+      "glm-5.3-flash",
+      "deepseek-chat",
+      "ernie-speed",
+      "glm-4v-flash",
+      "qwen-plus",
+      "deepseek-reasoner",
+      "deepseek-v4-pro"
+    ],
+    "afterDisable": [
+      "glm-4-flash",
+      "glm-5.3-flash",
+      "deepseek-chat",
+      "ernie-speed",
+      "glm-4v-flash",
+      "qwen-plus",
+      "deepseek-reasoner"
+    ],
+    "afterEnable": [
+      "glm-4-flash",
+      "glm-5.3-flash",
+      "deepseek-chat",
+      "ernie-speed",
+      "glm-4v-flash",
+      "qwen-plus",
+      "deepseek-reasoner",
+      "deepseek-v4-pro"
+    ]
+  },
+  "allPassed": true
+}

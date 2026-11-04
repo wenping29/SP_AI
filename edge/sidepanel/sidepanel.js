@@ -588,8 +588,52 @@ function groupModelsByCategory(models) {
   return names.map((name) => ({ name, models: groups.get(name) }));
 }
 
-function openModelMenu() {
-  if (!state.config?.models?.length) return;
+// 打开菜单前先向服务器要一次最新模型列表，后台增删模型无需重开面板
+let configRefresh = null;
+let configFetchedAt = 0;
+
+async function fetchConfig() {
+  const response = await fetch(`${state.server}/api/config`, { cache: "no-store" });
+  const config = await readJson(response);
+  state.config = config;
+  if (!Array.isArray(config.models)) config.models = [];
+  configFetchedAt = Date.now();
+
+  if (!config.models.some((m) => m.modelId === state.model)) {
+    state.model = config.models[0]?.modelId || "";
+    if (state.model) await saveState({ model: state.model });
+  }
+  renderModels();
+  renderTools();
+  renderAskList();
+  renderNotice();
+  renderVoiceButton();
+  return config;
+}
+
+function refreshConfig() {
+  if (!configRefresh) {
+    configRefresh = fetchConfig().finally(() => {
+      configRefresh = null;
+    });
+  }
+  return configRefresh;
+}
+
+async function openModelMenu() {
+  try {
+    await refreshConfig();
+  } catch {
+    // 服务器暂时不可达时沿用上次的模型列表
+  }
+
+  if (!state.config?.models?.length) {
+    els.modelButton.disabled = true;
+    els.modelName.textContent = "后台未启用任何模型";
+    setStatus("后台未启用任何模型", "error");
+    return;
+  }
+
   els.modelMenu.hidden = false;
   els.modelButton.setAttribute("aria-expanded", "true");
   const active = els.modelMenu.querySelector('[aria-selected="true"]') || els.modelMenu.querySelector(".model-option");
@@ -603,8 +647,8 @@ function closeModelMenu(refocus = false) {
   if (refocus) els.modelButton.focus();
 }
 
-function toggleModelMenu() {
-  if (els.modelMenu.hidden) openModelMenu();
+async function toggleModelMenu() {
+  if (els.modelMenu.hidden) await openModelMenu();
   else closeModelMenu();
 }
 
@@ -877,21 +921,16 @@ async function registerDevice() {
 }
 
 async function loadConfig() {
-  const response = await fetch(`${state.server}/api/config`);
-  const config = await readJson(response);
-  state.config = config;
-
-  if (!config.models.some((m) => m.modelId === state.model)) {
-    state.model = config.models[0]?.modelId || "";
-    if (state.model) await saveState({ model: state.model });
-  }
-  renderModels();
-  renderTools();
-  renderAskList();
-  renderNotice();
-  renderVoiceButton();
+  const config = await refreshConfig();
   setStatus(config.chatEnabled ? "已连接" : "服务已暂停", config.chatEnabled ? "" : "error");
 }
+
+// 面板重新显示时顺带刷新一次，避免长时间挂着看到旧模型
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (Date.now() - configFetchedAt < 30_000) return;
+  refreshConfig().catch(() => {});
+});
 
 function renderModels() {
   const models = state.config?.models || [];
