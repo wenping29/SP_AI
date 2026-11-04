@@ -44,6 +44,7 @@ builder.Services.AddScoped<AdminAuth>();
 builder.Services.AddScoped<AdminAccounts>();
 builder.Services.AddScoped<UserAuth>();
 builder.Services.AddScoped<MemberAdmin>();
+builder.Services.AddScoped<ConversationStore>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
@@ -169,6 +170,25 @@ using (var scope = app.Services.CreateScope())
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_DeviceSessions_DeviceId" ON "DeviceSessions" ("DeviceId");
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_DeviceSessions_Token" ON "DeviceSessions" ("Token");
         CREATE INDEX IF NOT EXISTS "IX_DeviceSessions_AccountId" ON "DeviceSessions" ("AccountId");
+        """);
+
+    // 登录用户的聊天记录：客户端整段上传，仅按账号同步
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "Conversations" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_Conversations" PRIMARY KEY AUTOINCREMENT,
+            "UserId" INTEGER NOT NULL,
+            "ClientId" TEXT NOT NULL,
+            "Title" TEXT NOT NULL,
+            "MessagesJson" TEXT NOT NULL,
+            "MessageCount" INTEGER NOT NULL,
+            "ClientUpdatedAt" INTEGER NOT NULL,
+            "CreatedAt" TEXT NOT NULL,
+            "UpdatedAt" TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_Conversations_UserId_ClientId"
+            ON "Conversations" ("UserId", "ClientId");
+        CREATE INDEX IF NOT EXISTS "IX_Conversations_UserId_UpdatedAt"
+            ON "Conversations" ("UserId", "UpdatedAt");
         """);
 
     try
@@ -301,6 +321,27 @@ app.MapPost("/api/auth/logout", async (HttpContext http, UserAuth auth, Cancella
 
 app.MapGet("/api/auth/me", async (HttpContext http, UserAuth auth, CancellationToken ct) =>
     Results.Ok(await auth.MeAsync(Bearer(http.Request), ct)));
+
+// 聊天记录同步：仅登录账号可用，匿名设备继续只存本地
+app.MapGet("/api/conversations", async (HttpContext http, UserAuth auth, ConversationStore store,
+    CancellationToken ct) =>
+    Results.Ok(await store.ListAsync(await RequireMemberIdAsync(http, auth, ct), ct)));
+
+app.MapGet("/api/conversations/{clientId}", async (string clientId, HttpContext http, UserAuth auth,
+    ConversationStore store, CancellationToken ct) =>
+    Results.Ok(await store.GetAsync(await RequireMemberIdAsync(http, auth, ct), clientId, ct)));
+
+app.MapPut("/api/conversations/{clientId}", async (string clientId, ConversationUpsertRequest req,
+    HttpContext http, UserAuth auth, ConversationStore store, CancellationToken ct) =>
+    Results.Ok(await store.UpsertAsync(await RequireMemberIdAsync(http, auth, ct), clientId,
+        req.Title, req.Messages, req.UpdatedAt, ct)));
+
+app.MapDelete("/api/conversations/{clientId}", async (string clientId, HttpContext http, UserAuth auth,
+    ConversationStore store, CancellationToken ct) =>
+{
+    var deleted = await store.DeleteAsync(await RequireMemberIdAsync(http, auth, ct), clientId, ct);
+    return Results.Ok(new { clientId, deleted });
+});
 
 app.MapGet("/api/config", async (AppDbContext db, CreditService credits, ProviderKey keys,
     CancellationToken ct) =>
@@ -1012,6 +1053,13 @@ static string ClampText(string? value, int max)
 static string? Bearer(HttpRequest request) =>
     request.Headers.Authorization.ToString().Replace("Bearer ", "").Trim() is { Length: > 0 } v ? v : null;
 
+static async Task<int> RequireMemberIdAsync(HttpContext http, UserAuth auth, CancellationToken ct)
+{
+    var account = await auth.ResolveAccountAsync(Bearer(http.Request), ct)
+        ?? throw new ApiException(401, "bad_token", "登录已失效，请重新登录");
+    return account.UserId ?? throw new ApiException(403, "login_required", "登录后才能同步聊天记录");
+}
+
 static async Task WriteEvent(HttpResponse response, object payload, CancellationToken ct)
 {
     var json = JsonSerializer.Serialize(payload);
@@ -1105,3 +1153,4 @@ public record AdminRoleRequest(string? Name, string? Description, string[]? Perm
 public record MemberCreateRequest(string? Email, string? DisplayName, string? Password);
 public record MemberUpdateRequest(string? Email, string? DisplayName, string? Password);
 public record MemberBlockRequest(bool? Blocked);
+public record ConversationUpsertRequest(string? Title, JsonElement Messages, long? UpdatedAt);

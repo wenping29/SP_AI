@@ -1,0 +1,154 @@
+{
+  "steps": [],
+  "checks": [
+    {
+      "name": "注册成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "注册后本机记录已上传云端",
+      "ok": true,
+      "detail": [
+        {
+          "clientId": "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8",
+          "title": "本机旧对话",
+          "messageCount": 2,
+          "clientUpdatedAt": 1793789217053,
+          "createdAt": "2026-11-04T10:47:58.3307821Z",
+          "updatedAt": "2026-11-04T10:47:58.3307821Z"
+        }
+      ]
+    },
+    {
+      "name": "记录账号归属",
+      "ok": true,
+      "detail": "conv-ui-a-1793789277020@example.com"
+    },
+    {
+      "name": "登录提示同步成功",
+      "ok": true,
+      "detail": "已登录，已合并本机 1000 积分，聊天记录已同步"
+    },
+    {
+      "name": "换设备后恢复会话",
+      "ok": true,
+      "detail": [
+        {
+          "id": "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8",
+          "title": "本机旧对话",
+          "messages": 2
+        }
+      ]
+    },
+    {
+      "name": "恢复后自动选中该会话",
+      "ok": true,
+      "detail": "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8"
+    },
+    {
+      "name": "历史面板打开",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "历史面板显示登录同步提示",
+      "ok": true,
+      "detail": "已登录 conv-ui-a-1793789277020@example.com，聊天记录会同步到云端，换设备登录同一账号即可恢复。"
+    },
+    {
+      "name": "历史列表显示恢复的会话",
+      "ok": true,
+      "detail": [
+        "本机旧对话2026/11/4 18:46:57 · 2 条"
+      ]
+    },
+    {
+      "name": "打开历史面板拉到云端新版本",
+      "ok": true,
+      "detail": [
+        {
+          "title": "云端更新版",
+          "messages": 3
+        }
+      ]
+    },
+    {
+      "name": "面板删除同步到云端",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "删除留下墓碑",
+      "ok": true,
+      "detail": {
+        "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8": 1793789280175
+      }
+    },
+    {
+      "name": "切换账号后不保留上一账号记录",
+      "ok": true,
+      "detail": {
+        "count": 0,
+        "titles": [],
+        "historyOwner": "conv-ui-b-1793789277020@example.com"
+      }
+    },
+    {
+      "name": "账号归属切到新账号",
+      "ok": true,
+      "detail": "conv-ui-b-1793789277020@example.com"
+    }
+  ],
+  "backupKeys": [
+    "activeSession",
+    "deviceId",
+    "label",
+    "launcher",
+    "model",
+    "panelCollapsed",
+    "server",
+    "sessions",
+    "token"
+  ],
+  "restored": {
+    "sessions": [
+      {
+        "id": "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8",
+        "title": "本机旧对话",
+        "messages": 2
+      }
+    ],
+    "activeSession": "4e4aa626-3ca6-43d0-af16-8b2f7fcc5ea8",
+    "historyOwner": "conv-ui-a-1793789277020@example.com",
+    "status": "已登录，已合并本机 1000 积分，聊天记录已同步"
+  },
+  "historyUi": {
+    "open": true,
+    "tip": "已登录 conv-ui-a-1793789277020@example.com，聊天记录会同步到云端，换设备登录同一账号即可恢复。",
+    "items": [
+      "本机旧对话2026/11/4 18:46:57 · 2 条"
+    ]
+  },
+  "afterPull": [
+    {
+      "title": "云端更新版",
+      "messages": 3
+    }
+  ],
+  "afterSwitch": {
+    "count": 0,
+    "titles": [],
+    "historyOwner": "conv-ui-b-1793789277020@example.com"
+  },
+  "restoredBackup": {
+    "server": null,
+    "authLabel": "登录 / 注册",
+    "status": "已连接"
+  },
+  "summary": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  }
+}

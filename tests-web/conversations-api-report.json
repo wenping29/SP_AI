@@ -1,0 +1,206 @@
+{
+  "steps": [],
+  "checks": [
+    {
+      "name": "设备 A 注册账号",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "name": "匿名设备禁止同步",
+      "ok": true,
+      "detail": {
+        "status": 403,
+        "code": "login_required"
+      }
+    },
+    {
+      "name": "新账号列表为空",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "上传会话",
+      "ok": true,
+      "detail": {
+        "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+        "title": "第一段对话",
+        "messages": [
+          {
+            "role": "user",
+            "content": "你好",
+            "at": 1793789213779
+          },
+          {
+            "role": "assistant",
+            "content": "你好，有什么可以帮你？",
+            "at": 1793789214779
+          }
+        ],
+        "clientUpdatedAt": 1793789215779,
+        "updatedAt": "2026-11-04T10:46:55.7805638Z"
+      }
+    },
+    {
+      "name": "列表含摘要与条数",
+      "ok": true,
+      "detail": {
+        "count": 1,
+        "summary": {
+          "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+          "title": "第一段对话",
+          "messageCount": 2,
+          "clientUpdatedAt": 1793789215779,
+          "createdAt": "2026-11-04T10:46:55.7805638Z",
+          "updatedAt": "2026-11-04T10:46:55.7805638Z"
+        }
+      }
+    },
+    {
+      "name": "摘要返回 clientUpdatedAt",
+      "ok": true,
+      "detail": 1793789215779
+    },
+    {
+      "name": "详情消息完整",
+      "ok": true,
+      "detail": [
+        {
+          "role": "user",
+          "content": "你好",
+          "at": 1793789213779
+        },
+        {
+          "role": "assistant",
+          "content": "你好，有什么可以帮你？",
+          "at": 1793789214779
+        }
+      ]
+    },
+    {
+      "name": "另一台设备登录后可恢复列表",
+      "ok": true,
+      "detail": [
+        {
+          "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+          "title": "第一段对话",
+          "messageCount": 2,
+          "clientUpdatedAt": 1793789215779,
+          "createdAt": "2026-11-04T10:46:55.7805638Z",
+          "updatedAt": "2026-11-04T10:46:55.7805638Z"
+        }
+      ]
+    },
+    {
+      "name": "另一台设备可恢复正文",
+      "ok": true,
+      "detail": 2
+    },
+    {
+      "name": "另一台设备可更新会话",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "count": 3
+      }
+    },
+    {
+      "name": "更新后设备 A 看到新版本",
+      "ok": true,
+      "detail": {
+        "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+        "title": "第一段对话（续）",
+        "messageCount": 3,
+        "clientUpdatedAt": 1793789275779,
+        "createdAt": "2026-11-04T10:46:55.7805638Z",
+        "updatedAt": "2026-11-04T10:46:55.8354542Z"
+      }
+    },
+    {
+      "name": "另一账号列表看不到",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "另一账号取详情返回 404",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "code": "conversation_not_found"
+      }
+    },
+    {
+      "name": "另一账号删除不影响原记录",
+      "ok": true,
+      "detail": {
+        "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+        "deleted": false
+      }
+    },
+    {
+      "name": "非法会话 ID 返回 400",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "invalid_client_id"
+      }
+    },
+    {
+      "name": "超过消息条数返回 400",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "too_many_messages"
+      }
+    },
+    {
+      "name": "超大内容返回 413",
+      "ok": true,
+      "detail": {
+        "status": 413,
+        "code": "payload_too_large"
+      }
+    },
+    {
+      "name": "删除会话",
+      "ok": true,
+      "detail": {
+        "clientId": "98ec19a0-84fa-437b-a4c3-17f875285e13",
+        "deleted": true
+      }
+    },
+    {
+      "name": "删除后列表为空",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "删除后详情 404",
+      "ok": true,
+      "detail": 404
+    },
+    {
+      "name": "缺少 updatedAt 时用服务端时间并补标题",
+      "ok": true,
+      "detail": {
+        "clientId": "67f7aa40-4e87-4957-83bd-9205ce364b03",
+        "title": "未命名聊天",
+        "messages": [
+          {
+            "role": "user",
+            "content": "hi"
+          }
+        ],
+        "clientUpdatedAt": 1793789215908,
+        "updatedAt": "2026-11-04T10:46:55.9089393Z"
+      }
+    }
+  ],
+  "summary": {
+    "total": 21,
+    "passed": 21,
+    "failed": 0
+  }
+}

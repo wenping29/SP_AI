@@ -1,5 +1,5 @@
 const DEFAULT_SERVER = "http://127.0.0.1:5080";
-const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession", "user"];
+const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession", "user", "historyOwner", "deletedConversations"];
 const REASON_LABELS = {
   free_grant: "注册赠送",
   device_merge: "本机积分合并",
@@ -122,6 +122,7 @@ const els = {
   reregister: document.getElementById("reregister"),
   openCredits: document.getElementById("openCredits"),
   historyDialog: document.getElementById("historyDialog"),
+  historySync: document.getElementById("historySync"),
   historyList: document.getElementById("historyList"),
   clearHistory: document.getElementById("clearHistory"),
   closeHistory: document.getElementById("closeHistory"),
@@ -179,6 +180,8 @@ const state = {
   user: null,
   accountDeviceId: "",
   authMode: "login",
+  historyOwner: "",
+  deleted: {},
   lastRequest: null,
   collapsed: false,
 };
@@ -302,6 +305,7 @@ function activeGoal() {
 function setGoal(text) {
   const session = activeSession();
   session.goal = text.trim();
+  session.updatedAt = Date.now();
   renderPicks();
   saveSessions().catch(() => {});
 }
@@ -623,6 +627,8 @@ async function loadState() {
   state.sessions = Array.isArray(saved.sessions) ? saved.sessions : [];
   state.activeId = saved.activeSession || "";
   state.user = saved.user && saved.user.email ? saved.user : null;
+  state.historyOwner = saved.historyOwner || "";
+  state.deleted = pruneTombstones(saved.deletedConversations || {});
 }
 
 function saveState(patch) {
@@ -635,7 +641,9 @@ function saveSessions() {
     messages: session.messages.slice(-60).map((m) => ({ ...m })),
   }));
   state.sessions = trimmed;
-  return saveState({ sessions: trimmed, activeSession: state.activeId });
+  const saving = saveState({ sessions: trimmed, activeSession: state.activeId });
+  scheduleConversationPush();
+  return saving;
 }
 
 async function readJson(response) {
@@ -652,7 +660,204 @@ async function readJson(response) {
   return data;
 }
 
+// ---------- 聊天记录云同步：登录后按账号合并，未登录仍只存本机 ----------
+
+const SYNC_MAX_MESSAGES = 60;
+const SYNC_PROMPT_CHARS = 4000;
+const TOMBSTONE_TTL = 30 * 24 * 60 * 60 * 1000;
+const syncedVersions = new Map(); // 会话 ID -> 已同步到云端的 updatedAt
+let syncRunning = null;
+let historyPushTimer = 0;
+
+function conversationFetch(path, options = {}) {
+  return fetch(`${state.server}/api/conversations${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.token}`,
+      ...(options.headers || {}),
+    },
+  }).then(readJson);
+}
+
+function syncedPayload(session) {
+  const build = (list) =>
+    list.map((message) => {
+      const copy = { role: message.role, content: message.content || "" };
+      if (message.prompt) copy.prompt = message.prompt.slice(0, SYNC_PROMPT_CHARS);
+      if (message.note) copy.note = message.note;
+      if (message.images) copy.images = message.images;
+      if (message.reasoning) copy.reasoning = message.reasoning.slice(0, 8000);
+      if (message.usage) copy.usage = message.usage;
+      if (message.at) copy.at = message.at;
+      return copy;
+    });
+
+  let slice = session.messages.slice(-SYNC_MAX_MESSAGES);
+  let messages = build(slice);
+  // 超出服务端体积上限时丢最旧的几条，避免整段记录一直同步失败
+  while (slice.length > 1 && JSON.stringify(messages).length > 900_000) {
+    slice = slice.slice(1);
+    messages = build(slice);
+  }
+  return { title: session.title || "未命名聊天", updatedAt: session.updatedAt || Date.now(), messages };
+}
+
+function pushConversation(session) {
+  return conversationFetch(`/${encodeURIComponent(session.id)}`, {
+    method: "PUT",
+    body: JSON.stringify(syncedPayload(session)),
+  });
+}
+
+function deleteConversation(id) {
+  return conversationFetch(`/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+function markConversationDeleted(id) {
+  if (!id) return;
+  state.deleted[id] = Date.now();
+  state.deleted = pruneTombstones(state.deleted);
+  saveState({ deletedConversations: state.deleted }).catch(() => {});
+  syncedVersions.delete(id);
+  if (state.user) deleteConversation(id).catch(() => {});
+}
+
+function pruneTombstones(map) {
+  const now = Date.now();
+  const kept = {};
+  for (const [id, at] of Object.entries(map || {})) {
+    if (now - at < TOMBSTONE_TTL) kept[id] = at;
+  }
+  return kept;
+}
+
+async function flushTombstones() {
+  const ids = Object.keys(state.deleted);
+  if (!ids.length) return;
+  for (const id of ids) {
+    try {
+      await deleteConversation(id);
+      delete state.deleted[id];
+    } catch {
+      // 网络失败时保留墓碑，下次再试
+    }
+  }
+  await saveState({ deletedConversations: state.deleted });
+}
+
+function scheduleConversationPush() {
+  if (!state.user || !state.token) return;
+  clearTimeout(historyPushTimer);
+  historyPushTimer = setTimeout(() => {
+    pushLocalConversations().catch(() => {});
+  }, 700);
+}
+
+async function pushLocalConversations() {
+  if (!state.user || !state.token || syncRunning) return;
+
+  for (const session of state.sessions) {
+    if (!session.messages.length) continue;
+    if (syncedVersions.get(session.id) === session.updatedAt) continue;
+    try {
+      await pushConversation(session);
+      syncedVersions.set(session.id, session.updatedAt);
+    } catch {
+      // 网络恢复后下一次保存会重试
+    }
+  }
+}
+
+async function syncConversations({ upload = true } = {}) {
+  if (!state.user || !state.token) return false;
+  if (syncRunning) return syncRunning;
+
+  syncRunning = (async () => {
+    const owner = (state.user.email || "").toLowerCase();
+    await flushTombstones();
+
+    let remote;
+    try {
+      remote = await conversationFetch("");
+    } catch {
+      return false;
+    }
+
+    if (state.historyOwner && state.historyOwner !== owner) {
+      // 换了账号：上一账号留在本机的记录不并入新账号
+      state.sessions = [];
+      state.activeId = "";
+    }
+    syncedVersions.clear();
+
+    remote = remote.filter((item) => !state.deleted[item.clientId]);
+    if (remote.length) {
+      // 刚打开面板时自动建的空聊天没有内容，恢复历史时不必保留
+      state.sessions = state.sessions.filter((session) => session.messages.length);
+    }
+    const remoteById = new Map(remote.map((item) => [item.clientId, item]));
+    const localById = new Map(state.sessions.map((session) => [session.id, session]));
+
+    for (const item of remote) {
+      syncedVersions.set(item.clientId, item.clientUpdatedAt || 0);
+      const local = localById.get(item.clientId);
+      if (local && (local.updatedAt || 0) >= (item.clientUpdatedAt || 0)) continue;
+
+      try {
+        const full = await conversationFetch(`/${encodeURIComponent(item.clientId)}`);
+        const restored = {
+          id: item.clientId,
+          title: full.title || "未命名聊天",
+          updatedAt: full.clientUpdatedAt || Date.now(),
+          messages: Array.isArray(full.messages) ? full.messages : [],
+        };
+        if (local) Object.assign(local, restored);
+        else state.sessions.push(restored);
+      } catch {
+        // 单条失败不影响其他会话
+      }
+    }
+
+    if (upload) {
+      for (const session of state.sessions) {
+        if (!session.messages.length) continue;
+        const remoteItem = remoteById.get(session.id);
+        if (remoteItem && (session.updatedAt || 0) <= (remoteItem.clientUpdatedAt || 0)) continue;
+        try {
+          await pushConversation(session);
+          syncedVersions.set(session.id, session.updatedAt);
+        } catch {
+          // 下次保存重试
+        }
+      }
+    }
+
+    state.historyOwner = owner;
+    state.sessions.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    if (state.sessions.length > MAX_SESSIONS) state.sessions = state.sessions.slice(0, MAX_SESSIONS);
+    if (!state.sessions.some((session) => session.id === state.activeId)) {
+      state.activeId = state.sessions[0]?.id || "";
+    }
+    await saveState({
+      historyOwner: owner,
+      sessions: state.sessions,
+      activeSession: state.activeId,
+    });
+    renderThread();
+    renderHistory();
+    return true;
+  })().finally(() => {
+    syncRunning = null;
+  });
+
+  return syncRunning;
+}
+
 async function registerDevice() {
+  clearTimeout(historyPushTimer);
+  historyPushTimer = 0;
+  syncedVersions.clear();
   const response = await fetch(`${state.server}/api/device/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1367,7 +1572,21 @@ async function newChat() {
   setStatus("已新建聊天");
 }
 
+function renderHistorySyncTip() {
+  if (!els.historySync) return;
+  if (!state.user) {
+    els.historySync.textContent = "未登录：聊天记录只保存在本机，登录同一账号后可在其他设备恢复。";
+    return;
+  }
+  const owner = (state.user.email || "").toLowerCase();
+  const stale = state.historyOwner && state.historyOwner !== owner;
+  els.historySync.textContent = stale
+    ? "正在切换到该账号的聊天记录…"
+    : `已登录 ${state.user.email}，聊天记录会同步到云端，换设备登录同一账号即可恢复。`;
+}
+
 function renderHistory() {
+  renderHistorySyncTip();
   els.historyList.textContent = "";
   const sessions = state.sessions.filter((item) => item.messages.length);
   if (!sessions.length) {
@@ -1402,6 +1621,7 @@ function renderHistory() {
     remove.textContent = "删除";
     remove.addEventListener("click", async () => {
       state.sessions = state.sessions.filter((item) => item.id !== session.id);
+      markConversationDeleted(session.id);
       if (state.activeId === session.id) {
         state.activeId = state.sessions[0]?.id || "";
         renderThread();
@@ -1412,6 +1632,17 @@ function renderHistory() {
     li.append(main, remove);
     els.historyList.append(li);
   }
+}
+
+function openHistoryDialog({ sync = true } = {}) {
+  renderHistory();
+  if (!els.historyDialog.open) els.historyDialog.showModal();
+  if (!sync || !state.user) return;
+  syncConversations({ upload: false })
+    .then((ok) => {
+      if (ok) renderHistory();
+    })
+    .catch(() => {});
 }
 
 function trimForApi(message) {
@@ -1736,8 +1967,7 @@ els.navNew.addEventListener("click", () => {
 
 els.navHistory.addEventListener("click", () => {
   closeNavMenu();
-  renderHistory();
-  els.historyDialog.showModal();
+  openHistoryDialog();
 });
 
 els.navAvatar.addEventListener("click", () => {
@@ -1934,16 +2164,17 @@ els.stop.addEventListener("click", () => state.controller?.abort());
 
 els.newChat.addEventListener("click", () => newChat().catch(showError));
 
-els.openHistory.addEventListener("click", () => {
-  renderHistory();
-  els.historyDialog.showModal();
-});
+els.openHistory.addEventListener("click", () => openHistoryDialog());
 
 els.clearHistory.addEventListener("click", async () => {
+  if (state.sessions.length) {
+    state.sessions.forEach((item) => markConversationDeleted(item.id));
+  }
   state.sessions = state.sessions.filter((item) => item.id === state.activeId);
   const current = activeSession();
   current.messages = [];
   current.title = "新聊天";
+  current.updatedAt = Date.now();
   renderThread();
   renderHistory();
   await saveSessions();
@@ -1994,10 +2225,8 @@ els.accountPop.addEventListener("click", (event) => {
   if (!item) return;
   closeAccountPop();
   if (item.dataset.pop === "credits") openCreditsDialog().catch(showError);
-  else if (item.dataset.pop === "history") {
-    renderHistory();
-    els.historyDialog.showModal();
-  } else if (item.dataset.pop === "settings") showView("settings");
+  else if (item.dataset.pop === "history") openHistoryDialog();
+  else if (item.dataset.pop === "settings") showView("settings");
   else if (item.dataset.pop === "auth") {
     if (state.user) logoutAccount().catch(showError);
     else openAuthDialog("login");
@@ -2090,8 +2319,9 @@ async function submitAuth() {
     renderBalance();
     renderAccountCard();
     refreshCredits().catch(() => {});
+    const synced = await syncConversations().catch(() => false);
     const merged = data.mergedCredits > 0 ? `，已合并本机 ${data.mergedCredits} 积分` : "";
-    setStatus(`${register ? "注册成功" : "已登录"}${merged}`);
+    setStatus(`${register ? "注册成功" : "已登录"}${merged}${synced ? "，聊天记录已同步" : ""}`);
   } catch (err) {
     els.authSubmit.disabled = false;
     if (err instanceof TypeError) showAuthError(`连不上服务器：${state.server}`);
@@ -2101,6 +2331,9 @@ async function submitAuth() {
 
 async function logoutAccount() {
   closeAccountPop();
+  clearTimeout(historyPushTimer);
+  historyPushTimer = 0;
+  syncedVersions.clear();
   try {
     const response = await fetch(`${state.server}/api/auth/logout`, {
       method: "POST",
@@ -2184,12 +2417,22 @@ els.saveSettings.addEventListener("click", async () => {
   state.label = els.labelInput.value.trim();
   state.pageCache = null;
   if (server !== oldServer) {
-    // 换服务器后旧令牌无效，账号态一起清掉，重新走匿名注册
+    // 换服务器后旧令牌无效，账号态一起清掉，重新走匿名注册；删除标记只对旧服务器有效
     state.token = "";
     state.user = null;
     state.accountDeviceId = "";
+    state.deleted = {};
+    clearTimeout(historyPushTimer);
+    historyPushTimer = 0;
+    syncedVersions.clear();
   }
-  await saveState({ server, label: state.label, token: state.token, user: state.user });
+  await saveState({
+    server,
+    label: state.label,
+    token: state.token,
+    user: state.user,
+    deletedConversations: state.deleted,
+  });
   const ok = await boot();
   if (ok) setStatus("已保存设置");
 });
@@ -2274,6 +2517,7 @@ async function boot() {
       });
     }
     await loadMe().catch(() => {});
+    if (state.user) await syncConversations().catch(() => false);
     await loadConfig();
     activeSession();
     renderThread();

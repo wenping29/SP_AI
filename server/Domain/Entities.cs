@@ -39,6 +39,22 @@ public class DeviceSession
     public DateTime LastUsedAt { get; set; }
 }
 
+// 登录用户的聊天记录：客户端整段上传快照，按账号同步到其他设备
+public class Conversation
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    // 客户端生成的会话 ID，同一用户内唯一
+    public string ClientId { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string MessagesJson { get; set; } = "[]";
+    public int MessageCount { get; set; }
+    // 客户端本地 updatedAt（毫秒），用于两端冲突比较
+    public long ClientUpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
 public class CreditTransaction
 {
     public int Id { get; set; }
