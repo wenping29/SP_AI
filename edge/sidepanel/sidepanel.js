@@ -784,28 +784,76 @@ function fillSettings() {
 
 // ---------- 页面正文、划词与截图 ----------
 
+const isWebTab = (tab) => Boolean(tab) && /^https?:/i.test(tab.url || "");
+
+// 没有内容脚本的标签上 sendMessage 可能一直挂起，必须限时
+const withTimeout = (promise, ms) =>
+  Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
+
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  return tab && /^https?:/i.test(tab.url || "") ? tab : null;
+  return isWebTab(tab) ? tab : null;
 }
 
 async function extractPage() {
   const tab = await activeTab();
-  if (!tab) throw new UiError("请先切到要读取的网页标签页（扩展页面无法读取）");
+  if (!tab) {
+    const { data, blocked } = await probeWebTab();
+    if (data) {
+      state.pageCache = { ...data, at: Date.now() };
+      return state.pageCache;
+    }
+    if (blocked) throw new UiError("读不到网页正文：当前标签可能不是普通网页，或扩展没有该网站的访问权限（edge://extensions → 站点访问权限）");
+    const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (active && !active.url) {
+      throw new UiError("读不到当前网页：请在 edge://extensions → SP AI助手 → 站点访问权限里允许该网站");
+    }
+    throw new UiError("请先切到要读取的网页标签页（扩展页面无法读取）");
+  }
   if (state.pageCache && state.pageCache.url === tab.url && Date.now() - state.pageCache.at < 60_000) {
     return state.pageCache;
   }
 
   let payload = null;
   try {
-    payload = await chrome.tabs.sendMessage(tab.id, { type: "extract" });
+    payload = await withTimeout(chrome.tabs.sendMessage(tab.id, { type: "extract" }), 2000);
   } catch {
-    payload = await injectExtract(tab.id);
+    payload = await withTimeout(injectExtract(tab.id), 3000);
   }
   if (!payload?.text) throw new UiError("这个页面没能提取到正文，可能是浏览器内置页面或内容为空");
 
   state.pageCache = { ...payload, at: Date.now() };
   return state.pageCache;
+}
+
+// 全页模式下当前标签就是扩展页面：按最近访问挑网页标签试读
+async function probeWebTab() {
+  let self = null;
+  try {
+    self = await chrome.tabs.getCurrent();
+  } catch {
+    // 侧边栏不是标签页，没有 self
+  }
+  if (!self) return { data: null, blocked: false };
+  // 全页模式可能落在另一个窗口，按全局最近访问排序
+  const candidates = (await chrome.tabs.query({}))
+    .filter((t) => t.id !== self.id && !t.discarded && !/^(chrome-extension|extension):/i.test(t.url || ""))
+    .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+  const candidate = candidates[0];
+  if (!candidate) return { data: null, blocked: false };
+  try {
+    const data = await withTimeout(chrome.tabs.sendMessage(candidate.id, { type: "extract" }), 2000);
+    if (data?.text) return { data, blocked: false };
+  } catch {
+    // 内容脚本没就绪，改用注入
+  }
+  try {
+    const data = await withTimeout(injectExtract(candidate.id), 3000);
+    if (data?.text) return { data, blocked: false };
+  } catch {
+    return { data: null, blocked: true };
+  }
+  return { data: null, blocked: false };
 }
 
 async function injectExtract(tabId) {
