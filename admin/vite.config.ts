@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     // 默认挂在后端 /admin/ 下；独立 nginx 托管在根路径时用 vite.config.standalone.ts
-    base: '/admin/',
+    base: './',
     resolve: {
       alias: { '@': path.resolve(__dirname, 'src') },
     },

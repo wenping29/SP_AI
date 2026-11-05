@@ -36,6 +36,17 @@ ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" "mkdir -p '$REMOTE_FRONTEND'"
 scp -i "$SSH_KEY" -P "$PORT" -r "$LOCAL_FRONTEND"* "$SERVER:$REMOTE_FRONTEND/"
 echo "前端静态文件上传完成"
 
+echo "2. 正在重启 .NET 项目..."
+
+# 找进程 -> 杀掉 -> 切换到 www 用户启动
+ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" bash -s << EOF
+    echo "正在查找并停止旧进程..."
+    # 查找包含 SpServer 的 dotnet 进程并杀掉
+    pkill -u www -f "SpServer" 
+    sleep 2
+  
+    echo "完成关闭旧进程"
+EOF
 echo "========== 开始上传 .NET 项目 =========="
 # 远程创建目录
 ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" "mkdir -p '$REMOTE_DOTNET'"
@@ -53,8 +64,14 @@ echo "2. 正在重启 .NET 项目..."
 ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" bash -s << EOF
     echo "正在查找并停止旧进程..."
     # 查找包含 SpServer 的 dotnet 进程并杀掉
-    pkill -u www -f "SpServer" 
-    sleep 2
+    #pkill -u www -f "SpServer" 
+    #sleep 2
+
+    # 将整个项目目录及其内部文件的所有者改为 www
+    chown -R www:www /www/wwwroot/sp/server
+
+    # 如果之前生成过 app.log，先删掉（避免权限冲突）
+    rm -f /www/wwwroot/sp/server/app.log
     
     echo "正在启动新进程..."
     # 切换到 www 用户，进入目录，后台启动（注意：把路径和dll名改成你实际的）

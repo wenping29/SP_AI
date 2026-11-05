@@ -26,7 +26,7 @@ echo "== 构建后台静态页 =="
 (cd "$ROOT/admin" && npx tsc -b && npx vite build --outDir "$ADMIN_OUT" --emptyOutDir)
 
 echo "== 发布 linux-x64 =="
-dotnet publish "$ROOT/server/SpServer.csproj" -c Release -r linux-x64 --self-contained false -o "$STAGE"
+dotnet publish "$ROOT/server/SpServer.csproj" -c Release -r linux-x64 --self-contained true -o "$STAGE"
 
 echo "== 附加部署文件 =="
 mkdir -p "$STAGE/deploy"
