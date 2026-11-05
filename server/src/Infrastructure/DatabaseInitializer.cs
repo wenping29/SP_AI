@@ -144,14 +144,15 @@ public static class DatabaseInitializer
             CREATE INDEX IF NOT EXISTS "IX_EmailCodes_CreatedAt" ON "EmailCodes" ("CreatedAt");
             """, ct);
 
+        // 老用户补 EmailVerified 列并按已验证处理；新库由 EnsureCreated 直接带上。
+        // 先判断列是否存在再补，避免对已存在列重复 ALTER 触发 SQLite 报错刷屏
         try
         {
-            await db.Database.ExecuteSqlRawAsync(
-                """ALTER TABLE "Users" ADD COLUMN "EmailVerified" INTEGER NOT NULL DEFAULT 1;""", ct);
+            await AddColumnIfMissingAsync(db, "Users", "EmailVerified", "INTEGER NOT NULL DEFAULT 1", ct);
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Users.EmailVerified 列已存在，跳过补列");
+            logger.LogDebug(ex, "Users.EmailVerified 补列失败（可能已存在）");
         }
 
         // 登录用户的聊天记录：客户端整段上传，仅按账号同步
@@ -213,14 +214,14 @@ public static class DatabaseInitializer
             await db.SaveChangesAsync(ct);
         }
 
+        // 老库的 Accounts 表没有 UserId 列，EnsureCreated 不会补列，这里先判断再补
         try
         {
-            await db.Database.ExecuteSqlRawAsync(
-                """ALTER TABLE "Accounts" ADD COLUMN "UserId" INTEGER NULL;""", ct);
+            await AddColumnIfMissingAsync(db, "Accounts", "UserId", "INTEGER NULL", ct);
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Accounts.UserId 列已存在，跳过补列");
+            logger.LogDebug(ex, "Accounts.UserId 补列失败（可能已存在）");
         }
 
         try
@@ -233,29 +234,25 @@ public static class DatabaseInitializer
             logger.LogWarning(ex, "Accounts.UserId 索引创建失败");
         }
 
-        // 老库的 Models 表没有废弃标记，EnsureCreated 不会补列，这里单独加一次
+        // 老库的 Models 表没有废弃标记，EnsureCreated 不会补列，这里先判断再补
         try
         {
-            await db.Database.ExecuteSqlRawAsync(
-                """ALTER TABLE "Models" ADD COLUMN "IsDeprecated" INTEGER NOT NULL DEFAULT 0;""", ct);
+            await AddColumnIfMissingAsync(db, "Models", "IsDeprecated", "INTEGER NOT NULL DEFAULT 0", ct);
         }
         catch (Exception ex)
         {
-            // 新库由 EnsureCreated 直接带上了该列，重复添加会报错，属正常情况
-            logger.LogDebug(ex, "Models.IsDeprecated 列已存在，跳过补列");
+            logger.LogDebug(ex, "Models.IsDeprecated 补列失败（可能已存在）");
         }
 
         // 模型分类同理补列；只有这次真的加上了列才回填，避免覆盖后台已改过的分类
         var categoryAdded = false;
         try
         {
-            await db.Database.ExecuteSqlRawAsync(
-                """ALTER TABLE "Models" ADD COLUMN "Category" TEXT NOT NULL DEFAULT '';""", ct);
-            categoryAdded = true;
+            categoryAdded = await AddColumnIfMissingAsync(db, "Models", "Category", "TEXT NOT NULL DEFAULT ''", ct);
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Models.Category 列已存在，跳过补列");
+            logger.LogDebug(ex, "Models.Category 补列失败（可能已存在）");
         }
 
         if (categoryAdded)
@@ -307,5 +304,18 @@ public static class DatabaseInitializer
         }
 
         await scope.ServiceProvider.GetRequiredService<ProviderKey>().EnsureSeededAsync(ct);
+    }
+
+    // 仅在列不存在时才执行 ALTER TABLE ADD COLUMN，避免对已存在列重复补列时 SQLite 报错刷屏
+    private static async Task<bool> AddColumnIfMissingAsync(
+        AppDbContext db, string table, string column, string columnDef, CancellationToken ct)
+    {
+        var checkSql = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = '{column}'";
+        var exists = await db.Database.SqlQueryRaw<int>(checkSql).SingleAsync(ct) > 0;
+        if (exists) return false;
+
+        await db.Database.ExecuteSqlRawAsync(
+            $"""ALTER TABLE "{table}" ADD COLUMN "{column}" {columnDef};""", ct);
+        return true;
     }
 }
