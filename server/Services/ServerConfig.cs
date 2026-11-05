@@ -134,6 +134,16 @@ public class ServerConfig(AppDbContext db, IConfiguration config, IDataProtectio
             var from = row.SmtpFrom.Length > 0 ? row.SmtpFrom : row.SmtpUser;
             if (!from.Contains('@'))
                 throw new ApiException(400, "smtp_from_required", "发件人需填写邮箱地址（或填写带 @ 的用户名）");
+
+            // 465/隐式 TLS、587/25/STARTTLS 必须成对，保存时就拦下，别等发信时报底层 TLS 错误
+            try
+            {
+                EmailSender.ValidateTlsMode(row.SmtpPort, row.SmtpImplicitTls);
+            }
+            catch (IOException ex)
+            {
+                throw new ApiException(400, "smtp_tls_mismatch", ex.Message);
+            }
         }
 
         row.UpdatedAt = DateTime.UtcNow;

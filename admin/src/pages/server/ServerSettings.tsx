@@ -204,7 +204,7 @@ export default function ServerSettings() {
               label="隐式 TLS（465 端口）"
               name="smtpImplicitTls"
               valuePropName="checked"
-              extra="465 端口开启；587/25 端口关闭后走 STARTTLS"
+              extra="465 用隐式 TLS；587/25 关闭后走 STARTTLS。端口与开关不匹配会导致 TLS 握手失败"
             >
               <Switch />
             </Form.Item>
@@ -227,7 +227,31 @@ export default function ServerSettings() {
             >
               <Input placeholder="smtp.qq.com" autoComplete="off" />
             </Form.Item>
-            <Form.Item label="端口" name="smtpPort" rules={[{ required: true }]}>
+            <Form.Item
+              label="端口"
+              name="smtpPort"
+              dependencies={['smtpImplicitTls']}
+              rules={[
+                { required: true, message: '请填写端口' },
+                ({ getFieldValue }) => ({
+                  validator(_rule, value: number | undefined) {
+                    if (value === undefined || value === null) return Promise.resolve();
+                    const implicitTls = getFieldValue('smtpImplicitTls') as boolean;
+                    if (implicitTls && (value === 25 || value === 587)) {
+                      return Promise.reject(
+                        new Error('25/587 是 STARTTLS 明文端口，请关闭「隐式 TLS」或改用 465'),
+                      );
+                    }
+                    if (!implicitTls && value === 465) {
+                      return Promise.reject(
+                        new Error('465 是隐式 TLS 端口，请开启「隐式 TLS」或改用 587/25'),
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
+            >
               <InputNumber min={1} max={65535} style={{ width: 120 }} />
             </Form.Item>
             <Form.Item label="验证码有效期（分钟）" name="codeMinutes" rules={[{ required: true }]}>

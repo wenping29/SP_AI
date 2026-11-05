@@ -1,5 +1,6 @@
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 
 namespace SpServer.Services;
@@ -77,15 +78,22 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
     private async Task SendAsync(EmailOptions options, string from, string to, string message,
         CancellationToken ct)
     {
+        ValidateTlsMode(options.Port, options.UseImplicitTls);
         await using var session = await SmtpSession.OpenAsync(options.Host.Trim(), options.Port,
             options.UseImplicitTls, ct);
 
         var greeting = await session.ReadAsync(ct);
         Ensure(greeting, "220", "连接邮件服务器");
 
-        await session.CommandAsync("EHLO sp.local", ct);
+        var ehlo = await session.CommandLinesAsync("EHLO sp.local", ct);
         if (!options.UseImplicitTls)
         {
+            if (!ehlo.Any(line => line.Contains("STARTTLS", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new IOException(
+                    $"邮件服务器在端口 {options.Port} 上未提供 STARTTLS，请改用 465 端口并开启「隐式 TLS」");
+            }
+
             await session.ExpectAsync("STARTTLS", "220", ct);
             await session.StartTlsAsync(options.Host.Trim(), ct);
             await session.CommandAsync("EHLO sp.local", ct);
@@ -115,6 +123,24 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
         catch
         {
             // 邮件已投递，QUIT 失败不影响结果
+        }
+    }
+
+    // 端口与加密方式必须成对：465 = 隐式 TLS，587/25 = 明文 + STARTTLS。
+    // 不匹配时 .NET 的 SslStream 会抛 "Cannot determine the frame size or a corrupted frame was received"，
+    // 这类底层报错对用户毫无帮助，所以在发起连接前先给出可操作的中文提示。
+    public static void ValidateTlsMode(int port, bool implicitTls)
+    {
+        if (implicitTls && port is 25 or 587)
+        {
+            throw new IOException(
+                $"端口 {port} 是明文 SMTP（STARTTLS），不能启用「隐式 TLS」：请改用 465 端口，或关闭「隐式 TLS」");
+        }
+
+        if (!implicitTls && port == 465)
+        {
+            throw new IOException(
+                "端口 465 要求「隐式 TLS」：请开启该开关，或改用 587/25 端口走 STARTTLS");
         }
     }
 
@@ -188,7 +214,7 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
             }
         }
 
-        public async Task<string> ReadAsync(CancellationToken ct)
+        public async Task<string[]> ReadLinesAsync(CancellationToken ct)
         {
             var lines = new List<string>();
             while (true)
@@ -197,13 +223,21 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
                 lines.Add(line);
                 if (line.Length < 4 || line[3] != '-') break;
             }
-            return lines[^1];
+            return lines.ToArray();
         }
+
+        public async Task<string> ReadAsync(CancellationToken ct) => (await ReadLinesAsync(ct))[^1];
 
         public async Task<string> CommandAsync(string command, CancellationToken ct)
         {
             await _writer.WriteLineAsync(command.AsMemory(), ct);
             return await ReadAsync(ct);
+        }
+
+        public async Task<string[]> CommandLinesAsync(string command, CancellationToken ct)
+        {
+            await _writer.WriteLineAsync(command.AsMemory(), ct);
+            return await ReadLinesAsync(ct);
         }
 
         public Task WriteAsync(string text, CancellationToken ct) => _writer.WriteAsync(text.AsMemory(), ct);
@@ -228,8 +262,19 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
         private static async Task<Stream> WrapTlsAsync(Stream stream, string host, CancellationToken ct)
         {
             var ssl = new SslStream(stream, false);
-            await ssl.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, ct);
-            return ssl;
+            try
+            {
+                await ssl.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, ct);
+                return ssl;
+            }
+            catch (Exception ex) when (ex is IOException or AuthenticationException)
+            {
+                // 最常见的原因是拿 TLS 去连明文端口（服务器先发 220 欢迎语），
+                // 或拿明文去连 465；也可能是代理/防火墙把流量改写了。
+                throw new IOException(
+                    $"TLS 握手失败（{ex.Message}）：请确认端口与加密方式匹配——465 开启「隐式 TLS」，587/25 关闭后走 STARTTLS；也请检查是否被代理或防火墙拦截",
+                    ex);
+            }
         }
 
         public async ValueTask DisposeAsync()

@@ -21,6 +21,8 @@ admin/dist/
 admin/dist-nginx/
 server/wwwroot/admin/
 *.tsbuildinfo
+.workbuddy/
+
 
 ## .NET 隐藏文件夹
 .vs/
