@@ -148,7 +148,7 @@ public static class DatabaseInitializer
         // 先判断列是否存在再补，避免对已存在列重复 ALTER 触发 SQLite 报错刷屏
         try
         {
-            await AddColumnIfMissingAsync(db, "Users", "EmailVerified", "INTEGER NOT NULL DEFAULT 1", ct);
+            await AddColumnIfMissingAsync(db, "Users", "EmailVerified", "INTEGER NOT NULL DEFAULT 1", logger, ct);
         }
         catch (Exception ex)
         {
@@ -217,7 +217,7 @@ public static class DatabaseInitializer
         // 老库的 Accounts 表没有 UserId 列，EnsureCreated 不会补列，这里先判断再补
         try
         {
-            await AddColumnIfMissingAsync(db, "Accounts", "UserId", "INTEGER NULL", ct);
+            await AddColumnIfMissingAsync(db, "Accounts", "UserId", "INTEGER NULL", logger, ct);
         }
         catch (Exception ex)
         {
@@ -237,7 +237,7 @@ public static class DatabaseInitializer
         // 老库的 Models 表没有废弃标记，EnsureCreated 不会补列，这里先判断再补
         try
         {
-            await AddColumnIfMissingAsync(db, "Models", "IsDeprecated", "INTEGER NOT NULL DEFAULT 0", ct);
+            await AddColumnIfMissingAsync(db, "Models", "IsDeprecated", "INTEGER NOT NULL DEFAULT 0", logger, ct);
         }
         catch (Exception ex)
         {
@@ -248,7 +248,7 @@ public static class DatabaseInitializer
         var categoryAdded = false;
         try
         {
-            categoryAdded = await AddColumnIfMissingAsync(db, "Models", "Category", "TEXT NOT NULL DEFAULT ''", ct);
+            categoryAdded = await AddColumnIfMissingAsync(db, "Models", "Category", "TEXT NOT NULL DEFAULT ''", logger, ct);
         }
         catch (Exception ex)
         {
@@ -308,14 +308,17 @@ public static class DatabaseInitializer
 
     // 仅在列不存在时才执行 ALTER TABLE ADD COLUMN，避免对已存在列重复补列时 SQLite 报错刷屏
     private static async Task<bool> AddColumnIfMissingAsync(
-        AppDbContext db, string table, string column, string columnDef, CancellationToken ct)
+        AppDbContext db, string table, string column, string columnDef, ILogger logger, CancellationToken ct)
     {
         var checkSql = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = '{column}'";
         var exists = await db.Database.SqlQueryRaw<int>(checkSql).SingleAsync(ct) > 0;
+        logger.LogInformation("AddColumnIfMissing {Table}.{Column} exists={Exists}", table, column, exists);
         if (exists) return false;
+        logger.LogInformation("Adding column {Column} to {Table}", column, table);
 
-        await db.Database.ExecuteSqlRawAsync(
-            $"""ALTER TABLE "{table}" ADD COLUMN "{column}" {columnDef};""", ct);
+        // table/column/columnDef 均来自代码内部常量，非用户输入；用普通字符串避免 EF 的插值注入告警
+        var alterSql = $"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {columnDef};";
+        await db.Database.ExecuteSqlRawAsync(alterSql, ct);
         return true;
     }
 }

@@ -92,7 +92,7 @@ if (swaggerEnabled)
 }
 
 // 数据库建表、补列、播种与初始管理员统一交给 DatabaseInitializer 处理
-//await DatabaseInitializer.InitializeAsync(app.Services, app.Logger);
+await DatabaseInitializer.InitializeAsync(app.Services, app.Logger);
 
 app.Use(async (context, next) =>
 {
