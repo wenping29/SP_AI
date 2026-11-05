@@ -29,6 +29,13 @@
           <button class="nav-item active" data-view="chat"><i data-icon="chat"></i><span>聊天</span></button>
           <button class="nav-item" data-view="ask"><i data-icon="sparkle"></i><span>提问</span></button>
           <button class="nav-item" data-view="translate"><i data-icon="translate"></i><span>翻译</span></button>
+          <button class="nav-item" data-view="code"><i data-icon="code"></i><span>Code</span></button>
+          <button class="nav-item" data-view="hand"><i data-icon="hand"></i><span>Hand</span></button>
+          <button class="nav-item" data-view="notes"><i data-icon="notes"></i><span>笔记</span></button>
+          <button class="nav-item" data-view="create"><i data-icon="create"></i><span>创作</span></button>
+          <button class="nav-item" data-view="write"><i data-icon="write"></i><span>写作</span></button>
+          <button class="nav-item" data-view="ocr"><i data-icon="ocr"></i><span>OCR</span></button>
+          <button class="nav-item" data-view="pdf"><i data-icon="pdf"></i><span>PDF</span></button>
           <button class="nav-item" data-view="tools"><i data-icon="grid"></i><span>工具</span></button>
           <button class="nav-item" data-view="settings"><i data-icon="gear"></i><span>设置</span></button>
         </div>
@@ -63,7 +70,7 @@
               </button>
               <div id="modelMenu" class="model-menu" role="listbox" aria-label="选择模型" hidden></div>
             </div>
-            <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="截图：抓取可见区域发给模型"></button>
+            <button id="btnShot" class="tool ico tip-top" data-icon="camera" data-tip="框选截图：在网页里拖出区域，只截这一块发给模型"></button>
             <button id="btnReadPage" class="tool ico tip-top" data-icon="book" data-tip="阅读此页：发送时带上本页正文" aria-pressed="false"></button>
             <input id="filePicker" type="file" accept="image/*,.txt,.md,.csv,.json,.log" multiple hidden>
             <button id="newChat" class="mini ico tip-top" data-icon="compose" data-tip="新聊天"></button>
@@ -112,6 +119,62 @@
       <section id="toolsView" class="pane" hidden>
         <div id="tools" class="tools-grid"></div>
         <p class="tip">「总结全文」「分段大纲」读取当前标签页正文；「译成中文」「解释划线」「润色改写」需要先在网页中选中文字。</p>
+      </section>
+
+      <section id="codeView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="code"></i>
+          <strong>Code</strong>
+          <span>写代码、解释代码、排查报错，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="handView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="hand"></i>
+          <strong>Hand</strong>
+          <span>把手动任务交给助手按步骤执行，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="notesView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="notes"></i>
+          <strong>笔记</strong>
+          <span>把网页正文和对话整理成笔记，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="createView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="create"></i>
+          <strong>创作</strong>
+          <span>文案、脚本等创意内容生成，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="writeView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="write"></i>
+          <strong>写作</strong>
+          <span>长文起草、续写与润色，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="ocrView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="ocr"></i>
+          <strong>OCR</strong>
+          <span>识别图片和截图里的文字，功能待接入。</span>
+        </div>
+      </section>
+
+      <section id="pdfView" class="pane" hidden>
+        <div class="pane-empty">
+          <i data-icon="pdf"></i>
+          <strong>PDF</strong>
+          <span>读取 PDF 正文、总结与问答，功能待接入。</span>
+        </div>
       </section>
 
       <section id="settingsView" class="pane settings" hidden>
@@ -163,6 +226,13 @@
       <button data-view="chat" class="active tip-left" data-icon="chat" data-tip="聊天"></button>
       <button data-view="ask" class="tip-left" data-icon="sparkle" data-tip="提问"></button>
       <button data-view="translate" class="tip-left" data-icon="translate" data-tip="翻译"></button>
+      <button data-view="code" class="tip-left" data-icon="code" data-tip="Code 代码"></button>
+      <button data-view="hand" class="tip-left" data-icon="hand" data-tip="Hand 手动任务"></button>
+      <button data-view="notes" class="tip-left" data-icon="notes" data-tip="笔记"></button>
+      <button data-view="create" class="tip-left" data-icon="create" data-tip="创作"></button>
+      <button data-view="write" class="tip-left" data-icon="write" data-tip="写作"></button>
+      <button data-view="ocr" class="tip-left" data-icon="ocr" data-tip="OCR 识字"></button>
+      <button data-view="pdf" class="tip-left" data-icon="pdf" data-tip="PDF 文档"></button>
       <button data-view="tools" class="tip-left" data-icon="grid" data-tip="工具"></button>
       <button data-view="settings" class="tip-left" data-icon="gear" data-tip="设置"></button>
       <div class="avatar-dock" id="avatarDock">

@@ -12,6 +12,7 @@
   const MAX_SELECTION = 6000;
 
   const host = document.createElement("div");
+  host.id = "sp-selection-bar";
   host.style.cssText = "all:unset;position:fixed;z-index:2147483647;left:0;top:0;";
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = `
@@ -71,6 +72,7 @@
   ];
 
   const railHost = document.createElement("div");
+  railHost.id = "sp-launcher-rail";
   railHost.style.cssText = "all:unset;position:fixed;z-index:2147483646;right:10px;top:50%;transform:translateY(-50%);";
   const railShadow = railHost.attachShadow({ mode: "open" });
   railShadow.innerHTML = `
