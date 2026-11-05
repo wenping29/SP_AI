@@ -19,8 +19,8 @@ deploy/dist/
 admin/node_modules/
 admin/dist/
 admin/dist-nginx/
-server/src/wwwroot/admin/
-server/src/out/
+server/wwwroot/admin/
+server/out/
 *.tsbuildinfo
 .workbuddy/
 
