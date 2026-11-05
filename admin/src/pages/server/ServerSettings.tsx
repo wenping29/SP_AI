@@ -195,6 +195,15 @@ export default function ServerSettings() {
             message="注册需要邮箱验证码"
             description="填写 SMTP 后，新用户才能收到验证码完成注册；改动即时生效，可用下方「发送测试邮件」验证连通性。"
           />
+          {config?.email.warning && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="邮件配置不完整"
+              description={config.email.warning}
+            />
+          )}
 
           <Space size={24} wrap align="start" style={{ display: 'flex' }}>
             <Form.Item label="启用邮件服务" name="smtpEnabled" valuePropName="checked">

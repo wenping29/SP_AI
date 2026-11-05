@@ -139,6 +139,7 @@ export interface EmailSettings {
   exposeDevCode: boolean;
   configured: boolean;
   source: 'env' | 'database';
+  warning?: string | null;
 }
 
 export interface ServerRuntime {

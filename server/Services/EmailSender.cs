@@ -52,6 +52,7 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
 
         var body = $"你的注册验证码是 {code}，{options.CodeMinutes} 分钟内有效。\r\n如非本人操作，请忽略这封邮件。";
         await DeliverAsync(options, email, "SP 助手注册验证码", body, ct);
+        logger.LogInformation("注册验证码邮件已提交 SMTP：{Email}", email);
     }
 
     public async Task SendTestAsync(string to, EmailOptions options, CancellationToken ct)
@@ -72,13 +73,31 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
         var message = BuildMessage(from, options.FromName, to, subject, body);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         cts.CancelAfter(Timeout);
-        await SendAsync(options, from, to, message, cts.Token);
+        try
+        {
+            await SendAsync(options, from, to, message, cts.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // 超时不能冒泡成 OperationCanceledException：上层 catch 会放行取消异常，
+            // 最终变成没有任何提示的 HTTP 500，且验证码记录也不会回滚。
+            throw new IOException(
+                $"连接或发送邮件超时（{Timeout.TotalSeconds:0} 秒）：请确认服务器到 {options.Host}:{options.Port} 的出站连通性，云主机通常封锁 25 端口，建议使用 465 + 隐式 TLS");
+        }
     }
 
     private async Task SendAsync(EmailOptions options, string from, string to, string message,
         CancellationToken ct)
     {
         ValidateTlsMode(options.Port, options.UseImplicitTls);
+        if (options.User.Trim().Length > 0 && string.IsNullOrEmpty(options.Password))
+        {
+            // 后台表单的密码是「只进不出」的，从别的机器/环境导入配置时很容易只填了账号没填授权码；
+            // 此时服务器必回 535，提前用中文说清楚，别让用户在收件箱里空等。
+            throw new IOException(
+                "已填写 SMTP 账号但未保存密码/授权码：请在后台「服务器配置 → 密码 / 授权码」重新填写并保存（留空表示不修改）");
+        }
+
         await using var session = await SmtpSession.OpenAsync(options.Host.Trim(), options.Port,
             options.UseImplicitTls, ct);
 
@@ -155,11 +174,18 @@ public class EmailSender(ServerConfig settings, ILogger<EmailSender> logger)
     private static string BuildMessage(string from, string fromName, string to, string subject, string body)
     {
         var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
+        var domain = from.Contains('@') ? from[(from.LastIndexOf('@') + 1)..] : "sp.local";
         var sb = new StringBuilder();
         sb.Append("From: ").Append(EncodeHeader(Clean(fromName))).Append(" <").Append(from).Append(">\r\n");
         sb.Append("To: <").Append(to).Append(">\r\n");
         sb.Append("Subject: ").Append(EncodeHeader(subject)).Append("\r\n");
         sb.Append("Date: ").Append(DateTimeOffset.UtcNow.ToString("r")).Append("\r\n");
+        // 缺少 Message-ID 的邮件很容易被 Coremail/QQ 等判为垃圾而静默丢弃，
+        // 这类「接口 200 但收件箱没有」的问题最难排查，这里补齐常见合规头。
+        sb.Append("Message-ID: <").Append(Guid.NewGuid().ToString("N")).Append('@').Append(domain).Append(">\r\n");
+        sb.Append("Reply-To: <").Append(from).Append(">\r\n");
+        sb.Append("X-Mailer: SP Server SMTP\r\n");
+        sb.Append("Auto-Submitted: auto-generated\r\n");
         sb.Append("MIME-Version: 1.0\r\n");
         sb.Append("Content-Type: text/plain; charset=utf-8\r\n");
         sb.Append("Content-Transfer-Encoding: base64\r\n\r\n");

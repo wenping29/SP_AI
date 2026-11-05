@@ -18,7 +18,8 @@ public record EmailSettingsView(
     int CodeMinutes,
     bool ExposeDevCode,
     bool Configured,
-    string Source);
+    string Source,
+    string? Warning);
 
 // 服务器运行配置：SMTP 与允许来源。环境变量优先，其次是后台保存到数据库的值
 public class ServerConfig(AppDbContext db, IConfiguration config, IDataProtectionProvider protection,
@@ -70,7 +71,18 @@ public class ServerConfig(AppDbContext db, IConfiguration config, IDataProtectio
             options.CodeMinutes,
             options.ExposeDevCode,
             EmailSender.IsConfigured(options),
-            EmailEnvOverridden() ? "env" : "database");
+            EmailEnvOverridden() ? "env" : "database",
+            BuildEmailWarning(options));
+    }
+
+    // 「已配置」只校验启用/主机/发件人，填了账号却没存授权码时仍会显示绿色标签，
+    // 但 SMTP 必回 535。把这种情况单独提示出来，省得对着收件箱空等。
+    private static string? BuildEmailWarning(EmailOptions options)
+    {
+        if (!options.Enabled) return null;
+        return options.User.Trim().Length > 0 && string.IsNullOrEmpty(options.Password)
+            ? "已填写 SMTP 账号但未保存密码/授权码，邮件服务器会拒绝登录；请在「密码 / 授权码」里重新填写并保存"
+            : null;
     }
 
     public async Task<(string[] Origins, string Source)> GetAllowedOriginsAsync(CancellationToken ct)

@@ -2519,7 +2519,7 @@ async function sendEmailCode() {
       els.authCode.value = data.devCode;
       setStatus(`验证码已生成（开发模式：${data.devCode}），${minutes} 分钟内有效`);
     } else {
-      setStatus(`验证码已发送，请查收邮件（含垃圾箱），${minutes} 分钟内有效`);
+      setStatus(`验证码已发送至 ${email}，请查收邮件（含垃圾箱），${minutes} 分钟内有效`);
     }
     startCodeCountdown(60);
   } catch (err) {
