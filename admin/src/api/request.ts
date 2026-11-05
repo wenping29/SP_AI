@@ -2,7 +2,7 @@ import axios from 'axios';
 import { message } from 'antd';
 import { ADMIN_KEY_STORAGE, ADMIN_TOKEN_STORAGE } from '@/store/auth';
 
-const baseURL = (import.meta.env.VITE_API_BASE as string) ?? '/api';
+const baseURL = import.meta.env.VITE_API_BASE || '/api';
 
 const request = axios.create({ baseURL, timeout: 15000 });
 

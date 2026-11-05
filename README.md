@@ -73,13 +73,22 @@ dotnet run
 
 ### 2. 启动管理后台
 
-开发模式（Vite 5174，`/api` 代理到 5080）：
+开发模式（Vite 5174，`/api` 代理到本地后端）：
 
 ```bash
 cd admin
 npm install
 npm run dev
 ```
+
+后端接口地址统一在 `admin/.env` 里配置，无需改代码：
+
+| 变量 | 作用 | 默认值 |
+| --- | --- | --- |
+| `VITE_API_BASE` | 请求的 baseURL，构建时编译进产物 | `/api`（同源，走反代） |
+| `VITE_DEV_PROXY_TARGET` | 仅 `npm run dev`：Vite 把 `/api` 代理到哪个后端 | `http://127.0.0.1:7788` |
+
+后端在另一台机器且没有反向代理时，把 `VITE_API_BASE` 改成 `http://IP:7788/api`。个人本地覆盖写在 `admin/.env.local`（已在 gitignore 中，优先级高于 `.env`）。
 
 构建到后端托管目录，之后访问 `http://127.0.0.1:5080/admin/`：
 
