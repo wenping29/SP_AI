@@ -11,16 +11,16 @@ STAMP="$(date +%Y%m%d-%H%M)"
 if command -v npm >/dev/null 2>&1; then
   echo "== 构建后台静态页 =="
   (cd "$ROOT/admin" && npm run build:server)
-elif [ ! -f "$ROOT/server/wwwroot/admin/index.html" ]; then
-  echo "缺少 npm 且 server/wwwroot/admin/index.html 不存在，无法打包" >&2
+elif [ ! -f "$ROOT/server/src/wwwroot/admin/index.html" ]; then
+  echo "缺少 npm 且 server/src/wwwroot/admin/index.html 不存在，无法打包" >&2
   exit 1
 else
-  echo "未找到 npm，沿用已有的 server/wwwroot/admin" >&2
+  echo "未找到 npm，沿用已有的 server/src/wwwroot/admin" >&2
 fi
 
 echo "== 发布 linux-x64 =="
 rm -rf "$STAGE"
-dotnet publish "$ROOT/server/SpServer.csproj" -c Release -r linux-x64 --self-contained false -o "$STAGE"
+dotnet publish "$ROOT/server/src/SpServer.csproj" -c Release -r linux-x64 --self-contained false -o "$STAGE"
 
 echo "== 附加部署文件 =="
 mkdir -p "$STAGE/deploy"

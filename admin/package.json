@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:server": "tsc -b && vite build --outDir ../server/wwwroot/admin --emptyOutDir",
-    "build:nginx": "tsc -b && vite build --config vite.config.standalone.ts --outDir dist-nginx --emptyOutDir",
+    "build:server": "tsc -b && vite build --outDir ./dist --emptyOutDir",
+    "build:nginx": "tsc -b && vite build --config vite.config.standalone.ts --outDir ./dist --emptyOutDir",
     "preview": "vite preview"
   },
   "dependencies": {

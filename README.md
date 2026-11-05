@@ -87,7 +87,7 @@ npm run dev
 npm run build:server
 ```
 
-> `server/wwwroot/admin` 已在 gitignore 中，每次更新后台代码后都需要重新构建。
+> `server/src/wwwroot/admin` 已在 gitignore 中，每次更新后台代码后都需要重新构建。
 
 ### 3. 加载 Edge 扩展
 
@@ -119,7 +119,7 @@ npm run build:server
 
 **应急密钥（Admin__Key）**
 
-当前配置的应急密钥（已写入 `server/appsettings.json`）：
+当前配置的应急密钥（已写入 `server/src/appsettings.json`）：
 
 | 用途 | 值 |
 | --- | --- |
@@ -181,7 +181,7 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 
 ## 配置说明
 
-后端配置位于 `server/appsettings.json`，也支持环境变量（`Section__Key` 形式，如 `Admin__Key`）。
+后端配置位于 `server/src/appsettings.json`，也支持环境变量（`Section__Key` 形式，如 `Admin__Key`）。
 
 | 配置项 | 说明 | 默认 |
 | --- | --- | --- |
@@ -226,7 +226,7 @@ curl -X POST http://127.0.0.1:5080/api/admin/users \
 - 验证码只存 SHA-256 哈希，不落明文
 - 新设备匿名账号初始 200 体验积分，登录/注册后并入用户账号；注册赠送只发一次，避免换设备刷注册额度
 
-邮件通过 SMTP 发送。**日常在后台「服务器配置」页维护**（保存即生效，密码加密存库、不回显），首次启动会按 `server/appsettings.json` 的 `Email` 段播种，环境变量 `Email__*` 仍然优先：
+邮件通过 SMTP 发送。**日常在后台「服务器配置」页维护**（保存即生效，密码加密存库、不回显），首次启动会按 `server/src/appsettings.json` 的 `Email` 段播种，环境变量 `Email__*` 仍然优先：
 
 | 配置项 | 说明 | 默认 |
 | --- | --- | --- |
@@ -295,7 +295,7 @@ dotnet run
 - 启动时执行 `EnsureCreated()`，并幂等补齐老库缺失的表与列（如 `IsDeprecated`、`Category`）
 - 老库新增列时只会回填一次种子模型的默认值，不会覆盖后台已修改的数据
 - 修改后端表结构后需要重启后端才会应用迁移
-- Data Protection 密钥默认在 `server/keys`，用于解密数据库中的提供商密钥；丢失后需要重新录入所有 Key，务必只保留在服务器上
+- Data Protection 密钥默认在 `server/src/keys`，用于解密数据库中的提供商密钥；丢失后需要重新录入所有 Key，务必只保留在服务器上
 
 ## 部署建议
 
@@ -306,13 +306,13 @@ dotnet run
 - 对外部署前重新生成 `Admin__Key` 并替换仓库里的默认值；不需要应急入口时直接清空，只保留账号登录
 - 按最小权限为运营人员分配角色，不要共用超级管理员账号
 - 反向代理（Nginx / Caddy）转发到 `5080` 或 `7788`，注意 SSE 需要关闭缓冲
-- 备份 `sp.db` 与 `server/keys`，两者需配套，只备份数据库无法解密密钥
+- 备份 `sp.db` 与 `server/src/keys`，两者需配套，只备份数据库无法解密密钥
 
 ## 常见问题
 
 **后台打开是 404 或旧页面**
 
-执行 `cd admin && npm run build:server`，并确认 `server/wwwroot/admin/index.html` 存在。
+执行 `cd admin && npm run build:server`，并确认 `server/src/wwwroot/admin/index.html` 存在。
 
 **登录页没有可用账号**
 
