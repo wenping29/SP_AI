@@ -18,7 +18,7 @@ REMOTE_FRONTEND="/www/wwwroot/sp/admin"
 # 2. .NET 后端项目配置
 LOCAL_DOTNET="./dist/sp-server/"
 REMOTE_DOTNET="/www/wwwroot/sp/server"
-NET_PROJECT_NAME="sp-server"  # 宝塔中.NET项目的名称
+NET_PROJECT_NAME="SpServer"  # 宝塔中.NET项目的名称
 # ===============================================
 
 # 检查本地目录是否存在
@@ -47,14 +47,18 @@ echo "========== 全部上传任务结束 =========="
 
 
 # ==================== 刷新/重启服务 ====================
-echo "========== 开始刷新服务 =========="
+echo "2. 正在重启 .NET 项目..."
 
-echo "1. 重载 Nginx (前端生效)..."
-# reload 不会中断现有连接，比重启更安全
-ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" "nginx -s reload" || echo "Nginx reload 失败，请手动检查"
-
-echo "2. 重启 .NET 项目 (后端生效)..."
-# 调用宝塔内部脚本重启 .NET 项目
-ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" "btpython /www/server/panel/script/restart_project.py net '$NET_PROJECT_NAME'" || echo "宝塔重启命令失败，请确认项目名称是否正确"
-
-echo "========== 全部任务结束 =========="
+# 找进程 -> 杀掉 -> 切换到 www 用户启动
+ssh -i "$SSH_KEY" -p "$PORT" "$SERVER" bash -s << EOF
+    echo "正在查找并停止旧进程..."
+    # 查找包含 SpServer 的 dotnet 进程并杀掉
+    pkill -u www -f "SpServer" 
+    sleep 2
+    
+    echo "正在启动新进程..."
+    # 切换到 www 用户，进入目录，后台启动（注意：把路径和dll名改成你实际的）
+    su -s /bin/bash www -c "cd /www/wwwroot/sp/server && nohup dotnet SpServer.dll > app.log 2>&1 &"
+    
+    echo "重启完成！"
+EOF
