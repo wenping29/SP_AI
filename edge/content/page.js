@@ -97,6 +97,15 @@
     </style>
     <div class="rail"></div>`;
   const rail = railShadow.querySelector(".rail");
+  let chatButton = null;
+
+  function setChatTip(open) {
+    if (!chatButton) return;
+    const tip = open ? "关闭聊天" : "打开聊天";
+    chatButton.dataset.tip = tip;
+    chatButton.setAttribute("aria-label", tip);
+  }
+
   for (const item of LAUNCHER) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -105,9 +114,26 @@
     if (item.primary) btn.classList.add("primary");
     btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
       stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>`;
-    btn.addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "sp-launch", actionId: item.action || null, view: item.view || "chat" });
-    });
+    const isChat = item.key === "chat";
+    if (isChat) {
+      chatButton = btn;
+      // 面板开着时同一个按钮要能关掉，所以点之前先问后台要真实状态。
+      // 开在别的视图上时点它是“切回聊天”，提示语保持不变。
+      btn.addEventListener("mouseenter", () => {
+        chrome.runtime.sendMessage({ type: "sp-panel-state" })
+          .then((reply) => setChatTip(!!reply?.open && reply.view === "chat"))
+          .catch(() => {});
+      });
+      btn.addEventListener("click", () => {
+        chrome.runtime.sendMessage({ type: "sp-toggle-chat" })
+          .then((reply) => setChatTip(!!reply?.open))
+          .catch(() => {});
+      });
+    } else {
+      btn.addEventListener("click", () => {
+        chrome.runtime.sendMessage({ type: "sp-launch", actionId: item.action || null, view: item.view || "chat" });
+      });
+    }
     rail.append(btn);
   }
   if (window.top === window) document.documentElement.append(railHost);

@@ -63,6 +63,15 @@ const MAX_TEXT_FILE_CHARS = 6000;
 const FULL_PAGE = new URLSearchParams(location.search).has("full");
 if (FULL_PAGE) document.documentElement.dataset.full = "1";
 
+// 页面悬浮球要先问清楚“本窗口的面板是不是开着”，才决定打开还是关闭。
+// 侧边栏没有状态查询接口，就靠这份窗口号回应后台的探针。
+let panelWindowId = 0;
+if (!FULL_PAGE) {
+  chrome.windows.getCurrent().then((win) => {
+    panelWindowId = win?.id || 0;
+  }).catch(() => {});
+}
+
 const els = {
   layout: document.querySelector(".layout"),
   rail: document.getElementById("rail"),
@@ -3497,10 +3506,16 @@ if (!FULL_PAGE) {
 
 window.addEventListener("focus", () => syncSelection().catch(() => {}));
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "sp-panel-probe") {
+    if (!panelWindowId || panelWindowId !== message.windowId) return false;
+    sendResponse({ open: true, view: state.view });
+    return true;
+  }
   if (message?.type === "pending-ready") {
     consumePending().catch(showError);
   }
+  return false;
 });
 
 // boot() 与 pending-ready 会同时到达，去重靠 pending.at 这个一次性标记：
