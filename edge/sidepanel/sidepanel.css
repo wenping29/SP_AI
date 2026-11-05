@@ -765,7 +765,7 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
   cursor: crosshair;
   box-shadow: 0 0 0 1px var(--line);
 }
-.annotate-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.annotate-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .annotate-foot .tip { margin: 0; }
 .annotate-foot button { padding: 6px 12px; border-radius: 6px; font: inherit; font-size: 12px; cursor: pointer; }
 

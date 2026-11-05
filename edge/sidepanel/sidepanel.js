@@ -1559,11 +1559,16 @@ function annotateImage(dataUrl) {
       const url = undos.pop();
       updateButtons();
       try {
-        const img = new Image();
-        img.src = url;
-        await img.decode();
+        const img = await new Promise((resolve, reject) => {
+          const item = new Image();
+          item.onload = () => resolve(item);
+          item.onerror = () => reject(new UiError("撤销失败，请重试"));
+          item.src = url;
+        });
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
+      } catch {
+        undos.push(url);
       } finally {
         undoing = false;
         updateButtons();

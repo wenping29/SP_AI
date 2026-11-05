@@ -131,8 +131,11 @@ try {
     open: els.annotateDialog.open,
     tools: [...els.annotateDialog.querySelectorAll('[data-tool]')].map((b) => b.textContent),
     colors: els.annotateDialog.querySelectorAll('[data-color]').length,
-    before: els.annotateCanvas.toDataURL('image/png'),
-    box: (() => { const r = els.annotateCanvas.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; })(),
+    box: (() => {
+      globalThis.__spAnnotationBefore = els.annotateCanvas.toDataURL('image/png');
+      const r = els.annotateCanvas.getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height };
+    })(),
   }))()`);
   out.checks.annotateShown = out.annotate?.open === true
     && JSON.stringify(out.annotate?.tools) === JSON.stringify(["矩形", "圆圈", "画笔", "马赛克"])
@@ -151,7 +154,7 @@ try {
     await paint("mouseReleased", b, 0);
     await sleep(300);
     out.annotateAfter = await panel.evaluate(`({
-      changed: els.annotateCanvas.toDataURL('image/png') !== ${JSON.stringify(out.annotate?.before || "")},
+      changed: els.annotateCanvas.toDataURL('image/png') !== globalThis.__spAnnotationBefore,
       undoEnabled: !els.annotateUndo.disabled,
     })`);
     out.checks.annotateDrawWorks = out.annotateAfter?.changed === true && out.annotateAfter?.undoEnabled === true;
@@ -176,7 +179,7 @@ try {
   out.checks.cropSizeOk = Boolean(size) && Math.abs(size.w - 300 * dpr) <= 4 && Math.abs(size.h - 180 * dpr) <= 4;
   out.checks.overlayRemoved = !(await fixture.evaluate(`!!document.getElementById('sp-area-crop-host')`));
 
-  // 3. 再点一次，按 Esc 取消：附件不应增加
+  // 4. 再点一次，按 Esc 取消：附件不应增加
   await panel.evaluate(`els.btnShot.click()`);
   await sleep(900);
   const cancelledOverlay = Boolean(await fixture.evaluate(`!!document.getElementById('sp-area-crop-host')`));

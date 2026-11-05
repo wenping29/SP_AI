@@ -127,6 +127,9 @@ await drag('mousePressed', 60, 80, 1);
 await drag('mouseMoved', 360, 260, 1);
 await drag('mouseReleased', 360, 260, 0);
 await sleep(1800);
+// 裁剪完成后先完成标绘确认，才会计入附件
+await docked.evaluate('els.annotateConfirm.click()');
+await sleep(800);
 report.shotInDock = await docked.evaluate(await fromFile('expr-ui-shot.js'));
 
 // 6. 非视觉模型 + 图片 -> 拦截，且附件不丢
