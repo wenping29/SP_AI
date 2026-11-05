@@ -9,7 +9,10 @@
     // 首帧前落地主题，避免深色模式下打开面板先闪一下白底
     try {
       chrome.storage.local.get('theme').then((saved) => {
-        document.documentElement.dataset.theme = saved.theme || 'light';
+        const theme = saved.theme === 'follow'
+          ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : (saved.theme || 'light');
+        document.documentElement.dataset.theme = theme;
       });
     } catch (e) {}
   </script>

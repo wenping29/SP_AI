@@ -1,5 +1,4 @@
-const DEFAULT_SERVER = "http://127.0.0.1:5080";
-const STORE_KEYS = ["server", "token", "deviceId", "label", "model", "sessions", "activeSession", "user", "historyOwner", "deletedConversations"];
+const STORE_KEYS = ["token", "deviceId", "label", "model", "sessions", "activeSession", "user", "historyOwner", "deletedConversations"];
 const REASON_LABELS = {
   device_trial: "新设备体验",
   free_grant: "注册赠送",
@@ -121,10 +120,10 @@ const els = {
   ocrView: document.getElementById("ocrView"),
   pdfView: document.getElementById("pdfView"),
   settingsView: document.getElementById("settingsView"),
-  serverInput: document.getElementById("serverInput"),
   labelInput: document.getElementById("labelInput"),
   deviceInput: document.getElementById("deviceInput"),
   tokenInput: document.getElementById("tokenInput"),
+  themeSelect: document.getElementById("themeSelect"),
   launcherToggle: document.getElementById("launcherToggle"),
   saveSettings: document.getElementById("saveSettings"),
   reregister: document.getElementById("reregister"),
@@ -169,7 +168,7 @@ const els = {
 };
 
 const state = {
-  server: DEFAULT_SERVER,
+  server: SERVER_URL,
   token: "",
   deviceId: "",
   label: "",
@@ -2708,6 +2707,31 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.storage.local.get("launcher").then((saved) => {
   els.launcherToggle.checked = saved.launcher !== false;
 });
+
+// 主题：存在 storage 里，切换立即生效；"follow" 跟随浏览器的深浅色设置
+const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(theme) {
+  const resolved = theme === "follow"
+    ? (darkScheme.matches ? "dark" : "light")
+    : (theme === "dark" || theme === "midnight" ? theme : "light");
+  document.documentElement.dataset.theme = resolved;
+}
+function setTheme(theme) {
+  applyTheme(theme);
+  if (els.themeSelect.value !== theme) els.themeSelect.value = theme;
+}
+els.themeSelect.addEventListener("change", () => {
+  const theme = els.themeSelect.value;
+  chrome.storage.local.set({ theme });
+  applyTheme(theme);
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && "theme" in changes) setTheme(changes.theme.newValue);
+});
+darkScheme.addEventListener("change", () => {
+  if (els.themeSelect.value === "follow") applyTheme("follow");
+});
+chrome.storage.local.get("theme").then((saved) => setTheme(saved.theme || "light"));
 
 // 全页标签页里没有“折叠”这回事，只有面板恢复上次的折叠状态
 if (!FULL_PAGE) {
