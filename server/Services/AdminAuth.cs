@@ -43,18 +43,6 @@ public sealed record AdminIdentity(int? UserId, string Username, string DisplayN
 public record AdminIdentityView(int? Id, string Username, string DisplayName, string RoleName,
     string[] Permissions, string Source);
 
-public sealed record AdminPermission(params string[] AnyOf);
-
-public static class AdminPermissionExtensions
-{
-    public static TBuilder RequireAdmin<TBuilder>(this TBuilder builder, params string[] anyOf)
-        where TBuilder : IEndpointConventionBuilder
-    {
-        builder.WithMetadata(new AdminPermission(anyOf));
-        return builder;
-    }
-}
-
 // 管理员登录与会话；Admin__Key 作为应急总钥匙保留
 public class AdminAuth(AppDbContext db, IConfiguration config, ILogger<AdminAuth> logger)
 {

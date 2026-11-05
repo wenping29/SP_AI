@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using SpServer.Contracts;
 using SpServer.Data;
 using SpServer.Domain;
 
