@@ -4,7 +4,7 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{DAD03CFC-D5FA-AC94-41C7-9ABAB326F09E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpServer", "server\src\SpServer.csproj", "{407C657E-81FC-D1CB-0535-70F48DBF5F43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpServer", "server\SpServer.csproj", "{407C657E-81FC-D1CB-0535-70F48DBF5F43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
