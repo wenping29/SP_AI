@@ -1,25 +1,31 @@
 #!/usr/bin/env bash
-# 生成 Linux 部署包：先构建后台静态页，再发布 linux-x64 框架依赖包，最后打 tar.gz
+# 生成部署产物：后台静态页输出到 dist/admin，服务端发布到 dist/sp-server，扩展输出到 dist
 # 用法：bash deploy/pack.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/deploy/dist"
+ADMIN_OUT="$DIST/admin"
 STAGE="$DIST/sp-server"
 STAMP="$(date +%Y%m%d-%H%M)"
 
-if command -v npm >/dev/null 2>&1; then
-  echo "== 构建后台静态页 =="
-  (cd "$ROOT/admin" && npm run build:server)
-elif [ ! -f "$ROOT/server/src/wwwroot/admin/index.html" ]; then
-  echo "缺少 npm 且 server/src/wwwroot/admin/index.html 不存在，无法打包" >&2
+if ! command -v npm >/dev/null 2>&1; then
+  echo "缺少 npm，无法构建后台静态页" >&2
   exit 1
-else
-  echo "未找到 npm，沿用已有的 server/src/wwwroot/admin" >&2
+fi
+if ! command -v python3 >/dev/null 2>&1 && ! command -v python >/dev/null 2>&1; then
+  echo "缺少 python3/python，无法打包浏览器扩展" >&2
+  exit 1
 fi
 
+echo "== 清理 dist =="
+rm -rf "$DIST"
+mkdir -p "$DIST"
+
+echo "== 构建后台静态页 =="
+(cd "$ROOT/admin" && npx tsc -b && npx vite build --outDir "$ADMIN_OUT" --emptyOutDir)
+
 echo "== 发布 linux-x64 =="
-rm -rf "$STAGE"
 dotnet publish "$ROOT/server/src/SpServer.csproj" -c Release -r linux-x64 --self-contained false -o "$STAGE"
 
 echo "== 附加部署文件 =="
@@ -27,6 +33,14 @@ mkdir -p "$STAGE/deploy"
 cp "$ROOT/deploy/sp.service" "$ROOT/deploy/nginx-sp.conf" "$ROOT/deploy/nginx-admin.conf" "$ROOT/deploy/sp.env.example" "$STAGE/deploy/"
 cp "$ROOT/deploy/DEPLOY.md" "$STAGE/DEPLOY.md"
 chmod +x "$STAGE/SpServer"
+
+echo "== 打包浏览器扩展 =="
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON=python3
+else
+  PYTHON=python
+fi
+"$PYTHON" "$ROOT/tools/pack-extension.py" --out-dir "$DIST"
 
 TARBALL="$DIST/sp-server-linux-x64-$STAMP.tar.gz"
 tar -czf "$TARBALL" -C "$DIST" sp-server
