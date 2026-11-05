@@ -12,6 +12,7 @@ import ServerSettings from '@/pages/server/ServerSettings';
 import UserList from '@/pages/users/UserList';
 import AdminList from '@/pages/admins/AdminList';
 import RoleList from '@/pages/roles/RoleList';
+import PaymentManagement from '@/pages/payments/PaymentManagement';
 import Forbidden from '@/pages/Forbidden';
 import { useAuth } from '@/store/auth';
 
@@ -77,6 +78,14 @@ export const router = createBrowserRouter(
           element: (
             <RequirePermission permission="policy.view">
               <PolicySettings />
+            </RequirePermission>
+          ),
+        },
+        {
+          path: 'payments',
+          element: (
+            <RequirePermission permission="policy.view">
+              <PaymentManagement />
             </RequirePermission>
           ),
         },

@@ -15,6 +15,7 @@ import {
   TeamOutlined,
   ThunderboltFilled,
   UserSwitchOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { adminApi } from '@/api/admin';
@@ -35,6 +36,7 @@ const menuEntries: MenuEntry[] = [
   { key: '/credits', icon: <MoneyCollectOutlined />, label: '积分管理', permission: 'devices.view' },
   { key: '/models', icon: <ApiOutlined />, label: '模型管理', permission: 'models.view' },
   { key: '/policy', icon: <ControlOutlined />, label: '运营策略', permission: 'policy.view' },
+  { key: '/payments', icon: <WalletOutlined />, label: '充值管理', permission: 'policy.view' },
   { key: '/providers', icon: <KeyOutlined />, label: 'KeyEnv 管理', permission: 'keyenvs.view' },
   { key: '/server', icon: <CloudServerOutlined />, label: '服务器配置', permission: 'server.view' },
   { key: '/users', icon: <TeamOutlined />, label: '用户管理', permission: 'users.view' },

@@ -7,6 +7,7 @@ const REASON_LABELS = {
   refund: "失败退款",
   voice: "语音输入",
   admin_grant: "后台调整",
+  recharge: "充值到账",
 };
 const QUICK_ASKS = [
   { text: "用三句话讲清楚这个页面在说什么", page: true },
@@ -140,6 +141,18 @@ const els = {
   closeCredits: document.getElementById("closeCredits"),
   rechargeDevice: document.getElementById("rechargeDevice"),
   copyRechargeDevice: document.getElementById("copyRechargeDevice"),
+  rechargeDialog: document.getElementById("rechargeDialog"),
+  rechargePackages: document.getElementById("rechargePackages"),
+  rechargeChannels: document.getElementById("rechargeChannels"),
+  rechargeError: document.getElementById("rechargeError"),
+  rechargePayArea: document.getElementById("rechargePayArea"),
+  rechargeQr: document.getElementById("rechargeQr"),
+  rechargePayHint: document.getElementById("rechargePayHint"),
+  rechargeMockPay: document.getElementById("rechargeMockPay"),
+  rechargeOpenPay: document.getElementById("rechargeOpenPay"),
+  rechargeStatus: document.getElementById("rechargeStatus"),
+  rechargeClose: document.getElementById("rechargeClose"),
+  rechargeSubmit: document.getElementById("rechargeSubmit"),
   avatarDock: document.getElementById("avatarDock"),
   avatar: document.getElementById("avatar"),
   accountPop: document.getElementById("accountPop"),
@@ -1905,6 +1918,116 @@ function activeSession() {
   return session;
 }
 
+// 模型回复常带 **加粗**、列表和代码块；先转义再拼 HTML，避免回复内容变成可执行标签。
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[ch]));
+}
+
+function inlineMarkdown(text) {
+  return String(text)
+    .split(/(`[^`\n]+`)/g)
+    .map((part) => {
+      if (/^`[^`\n]+`$/.test(part)) return `<code>${escapeHtml(part.slice(1, -1))}</code>`;
+      let html = escapeHtml(part);
+      html = html.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/__([^_\n]+)__/g, "<strong>$1</strong>");
+      html = html.replace(
+        /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+      );
+      return html;
+    })
+    .join("");
+}
+
+function markdownToHtml(source) {
+  const lines = String(source || "").replace(/\r\n?/g, "\n").split("\n");
+  const html = [];
+  let list = null;
+  let code = null;
+
+  const flushList = () => {
+    if (!list) return;
+    const tag = list.type;
+    html.push(`<${tag}>${list.items.map((item) => `<li>${inlineMarkdown(item)}</li>`).join("")}</${tag}>`);
+    list = null;
+  };
+  const flushCode = () => {
+    if (!code) return;
+    html.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+    code = null;
+  };
+  const openList = (type) => {
+    if (!list || list.type !== type) {
+      flushList();
+      list = { type, items: [] };
+    }
+  };
+
+  for (const raw of lines) {
+    if (code) {
+      if (/^\s*```/.test(raw)) flushCode();
+      else code.push(raw);
+      continue;
+    }
+    if (/^\s*```/.test(raw)) {
+      flushList();
+      code = [];
+      continue;
+    }
+    if (!raw.trim()) {
+      flushList();
+      continue;
+    }
+    const heading = raw.match(/^\s*(#{1,6})\s+(.*)$/);
+    if (heading) {
+      flushList();
+      const level = Math.min(5, heading[1].length + 2);
+      html.push(`<h${level}>${inlineMarkdown(heading[2].trim())}</h${level}>`);
+      continue;
+    }
+    if (/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(raw)) {
+      flushList();
+      html.push("<hr>");
+      continue;
+    }
+    const quote = raw.match(/^\s*>\s?(.*)$/);
+    if (quote) {
+      flushList();
+      html.push(`<blockquote>${inlineMarkdown(quote[1])}</blockquote>`);
+      continue;
+    }
+    const bullet = raw.match(/^\s*[-*•]\s+(.*)$/);
+    if (bullet) {
+      openList("ul");
+      list.items.push(bullet[1]);
+      continue;
+    }
+    const ordered = raw.match(/^\s*\d+[.、)]\s+(.*)$/);
+    if (ordered) {
+      openList("ol");
+      list.items.push(ordered[1]);
+      continue;
+    }
+    flushList();
+    html.push(`<p>${inlineMarkdown(raw.trim())}</p>`);
+  }
+  flushList();
+  flushCode();
+  return html.join("");
+}
+
+function renderMarkdown(el, text) {
+  el.classList.add("markdown");
+  el.innerHTML = markdownToHtml(text);
+}
+
 function appendMessage(kind, text) {
   document.querySelector(".thread .hint, .thread .empty-hero")?.remove();
   const box = document.createElement("div");
@@ -1947,7 +2070,8 @@ function messageBox(msg, index) {
   }
   const body = document.createElement("div");
   body.className = "msg-body";
-  body.textContent = msg.content;
+  if (msg.role === "assistant") renderMarkdown(body, msg.content);
+  else body.textContent = msg.content;
   box.append(body);
   if (msg.images) appendMeta(box, `附带 ${msg.images} 张图片（历史图片不再重复发送）`);
   if (msg.note) appendMeta(box, msg.note);
@@ -2212,6 +2336,14 @@ async function ask({ label, content, images = [], note = "" }) {
   box.textContent = "";
   box.append(body);
 
+  let lastPaint = 0;
+  const paintAnswer = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastPaint < 120) return;
+    lastPaint = now;
+    renderMarkdown(body, answer);
+  };
+
   let answer = "";
   let reasoning = "";
   let thinking = null;
@@ -2225,7 +2357,7 @@ async function ask({ label, content, images = [], note = "" }) {
     const done = await streamChat(apiMessages,
       (piece) => {
         answer += piece;
-        body.textContent = answer;
+        paintAnswer();
         if (phase !== "answer") {
           phase = "answer";
           setStatus("生成中…");
@@ -2247,6 +2379,7 @@ async function ask({ label, content, images = [], note = "" }) {
       });
 
     box.classList.remove("streaming");
+    if (answer) paintAnswer(true);
     if (!answer) {
       box.classList.add("error");
       body.textContent = "模型没有返回内容";
@@ -2271,6 +2404,7 @@ async function ask({ label, content, images = [], note = "" }) {
       const stopped = phase === "thinking" ? "已终止思考" : "已手动停止";
       setStatus(stopped);
       if (answer) {
+        paintAnswer(true);
         appendMeta(box, stopped);
         session.messages.push({ role: "assistant", content: answer, reasoning: clip(reasoning, 1600), note: stopped, at: Date.now() });
         box.append(messageActions({ role: "assistant", content: answer }, session.messages.length - 1));
@@ -2288,6 +2422,7 @@ async function ask({ label, content, images = [], note = "" }) {
         : err.message || "生成失败";
       setStatus(detail, "error");
       if (answer) {
+        paintAnswer(true);
         appendMeta(box, `已中断：${detail}`);
         session.messages.push({ role: "assistant", content: answer, note: `已中断：${detail}`, at: Date.now() });
       } else {
@@ -2718,7 +2853,7 @@ els.accountPop.addEventListener("click", (event) => {
 
 els.popRecharge.addEventListener("click", () => {
   closeAccountPop();
-  openCreditsDialog().catch(showError);
+  openRechargeDialog().catch(showError);
 });
 
 document.addEventListener("click", (event) => {
@@ -2736,6 +2871,348 @@ document.addEventListener("keydown", (event) => {
 
 els.refreshCredits.addEventListener("click", loadCreditsList);
 els.closeCredits.addEventListener("click", () => els.creditsDialog.close());
+
+// ---------- 充值积分：套餐 → 下单 → 扫码/模拟支付 → 轮询到账 ----------
+
+const rechargeState = { options: null, packageId: 0, channel: "", order: null, timer: 0, qrUrl: "" };
+
+function stopRechargePolling() {
+  clearInterval(rechargeState.timer);
+  rechargeState.timer = 0;
+}
+
+function releaseRechargeQr() {
+  if (!rechargeState.qrUrl) return;
+  URL.revokeObjectURL(rechargeState.qrUrl);
+  rechargeState.qrUrl = "";
+}
+
+function setRechargeError(text) {
+  els.rechargeError.textContent = text || "";
+  els.rechargeError.hidden = !text;
+}
+
+function resetRechargeDialog() {
+  stopRechargePolling();
+  releaseRechargeQr();
+  rechargeState.options = null;
+  rechargeState.packageId = 0;
+  rechargeState.channel = "";
+  rechargeState.order = null;
+  els.rechargePackages.textContent = "";
+  els.rechargeChannels.textContent = "";
+  setRechargeError("");
+  els.rechargePayArea.hidden = true;
+  els.rechargeQr.hidden = true;
+  els.rechargeQr.removeAttribute("src");
+  els.rechargePayHint.textContent = "";
+  els.rechargeMockPay.hidden = true;
+  els.rechargeMockPay.disabled = false;
+  els.rechargeOpenPay.hidden = true;
+  els.rechargeStatus.hidden = true;
+  els.rechargeStatus.textContent = "";
+  els.rechargeSubmit.hidden = false;
+  els.rechargeSubmit.disabled = false;
+  els.rechargeSubmit.textContent = "去支付";
+}
+
+async function openRechargeDialog() {
+  if (!state.token || !state.user) {
+    setStatus("请先登录账号再充值", "error");
+    openAuthDialog("login");
+    return;
+  }
+
+  resetRechargeDialog();
+  els.rechargePackages.textContent = "正在加载套餐…";
+  els.rechargeDialog.showModal();
+
+  try {
+    const response = await fetch(`${state.server}/api/pay/packages`);
+    rechargeState.options = await readJson(response);
+    renderRechargeOptions();
+  } catch (err) {
+    els.rechargePackages.textContent = "";
+    setRechargeError(err.message || "套餐加载失败");
+    els.rechargeSubmit.disabled = true;
+  }
+}
+
+function renderRechargeOptions() {
+  const options = rechargeState.options;
+  els.rechargePackages.textContent = "";
+  els.rechargeChannels.textContent = "";
+  setRechargeError("");
+
+  if (!options || !options.enabled) {
+    const tip = document.createElement("p");
+    tip.className = "tip";
+    tip.textContent = "充值暂未开放，请联系管理员。";
+    els.rechargePackages.append(tip);
+    els.rechargeSubmit.disabled = true;
+    return;
+  }
+
+  if (!options.packages?.length) {
+    const tip = document.createElement("p");
+    tip.className = "tip";
+    tip.textContent = "暂无可用套餐。";
+    els.rechargePackages.append(tip);
+    els.rechargeSubmit.disabled = true;
+    return;
+  }
+
+  for (const pkg of options.packages) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "recharge-package";
+    button.dataset.packageId = String(pkg.id);
+
+    const name = document.createElement("strong");
+    name.textContent = pkg.name;
+    const price = document.createElement("span");
+    price.className = "price";
+    price.textContent = `¥${(pkg.priceCents / 100).toFixed(2)}`;
+    const credits = document.createElement("span");
+    credits.className = "credits";
+    credits.textContent = `${pkg.credits.toLocaleString("zh-CN")} 积分`;
+    button.append(name, price, credits);
+
+    if (pkg.note) {
+      const note = document.createElement("span");
+      note.className = "credits";
+      note.textContent = pkg.note;
+      button.append(note);
+    }
+
+    els.rechargePackages.append(button);
+  }
+
+  const channels = [];
+  if (options.alipayEnabled) channels.push({ value: "alipay", label: "支付宝" });
+  if (options.wechatEnabled) channels.push({ value: "wechat", label: "微信支付" });
+
+  for (const channel of channels) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.channel = channel.value;
+    button.textContent = channel.label;
+    els.rechargeChannels.append(button);
+  }
+
+  if (!channels.length) {
+    const tip = document.createElement("p");
+    tip.className = "tip";
+    tip.textContent = "暂未开放支付方式。";
+    els.rechargeChannels.append(tip);
+    els.rechargeSubmit.disabled = true;
+    return;
+  }
+
+  selectRechargePackage(options.packages[0].id);
+  selectRechargeChannel(channels[0].value);
+}
+
+function resetRechargeOrderView() {
+  stopRechargePolling();
+  releaseRechargeQr();
+  rechargeState.order = null;
+  els.rechargePayArea.hidden = true;
+  els.rechargeQr.hidden = true;
+  els.rechargeQr.removeAttribute("src");
+  els.rechargeMockPay.hidden = true;
+  els.rechargeOpenPay.hidden = true;
+  els.rechargeStatus.hidden = true;
+  els.rechargeSubmit.hidden = false;
+  els.rechargeSubmit.disabled = false;
+  els.rechargeSubmit.textContent = "去支付";
+  setRechargeError("");
+}
+
+function selectRechargePackage(packageId) {
+  rechargeState.packageId = packageId;
+  for (const button of els.rechargePackages.querySelectorAll("[data-package-id]")) {
+    button.classList.toggle("active", Number(button.dataset.packageId) === packageId);
+  }
+  resetRechargeOrderView();
+}
+
+function selectRechargeChannel(channel) {
+  rechargeState.channel = channel;
+  for (const button of els.rechargeChannels.querySelectorAll("[data-channel]")) {
+    button.classList.toggle("active", button.dataset.channel === channel);
+  }
+  resetRechargeOrderView();
+}
+
+async function submitRecharge() {
+  const options = rechargeState.options;
+  if (!options?.enabled) return;
+  if (!rechargeState.packageId || !rechargeState.channel) {
+    setRechargeError("请选择套餐和支付方式");
+    return;
+  }
+
+  els.rechargeSubmit.disabled = true;
+  els.rechargeSubmit.textContent = "正在下单…";
+  setRechargeError("");
+
+  try {
+    const response = await fetch(`${state.server}/api/pay/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${state.token}`,
+      },
+      body: JSON.stringify({ packageId: rechargeState.packageId, channel: rechargeState.channel }),
+    });
+    const order = await readJson(response);
+    rechargeState.order = order;
+    els.rechargeSubmit.disabled = false;
+    els.rechargeSubmit.textContent = "重新下单";
+    await showRechargeOrder(order);
+  } catch (err) {
+    setRechargeError(err.message || "下单失败");
+    els.rechargeSubmit.disabled = false;
+    els.rechargeSubmit.textContent = "去支付";
+  }
+}
+
+async function showRechargeOrder(order) {
+  setRechargeError("");
+  els.rechargeStatus.hidden = true;
+  els.rechargePayArea.hidden = false;
+  els.rechargeMockPay.hidden = true;
+  els.rechargeOpenPay.hidden = true;
+  releaseRechargeQr();
+  els.rechargeQr.hidden = true;
+
+  if (order.status === "paid") {
+    finishRechargeOrder(order);
+    return;
+  }
+
+  if (order.status !== "pending") {
+    els.rechargePayHint.textContent = "订单已关闭，请重新下单。";
+    return;
+  }
+
+  if (order.provider === "mock") {
+    els.rechargePayHint.textContent = "当前为模拟支付订单，点击下方按钮直接确认到账。";
+    els.rechargeMockPay.hidden = false;
+  } else {
+    const channelName = order.channel === "alipay" ? "支付宝" : "微信";
+    els.rechargePayHint.textContent =
+      `请使用${channelName}扫码支付 ¥${(order.priceCents / 100).toFixed(2)}，支付完成后自动到账。`;
+    if (order.payUrl) els.rechargeOpenPay.hidden = false;
+    try {
+      await loadRechargeQr(order.orderNo);
+    } catch {
+      els.rechargePayHint.textContent += "（二维码加载失败，可打开支付页面完成支付）";
+    }
+  }
+
+  startRechargePolling(order.orderNo);
+}
+
+async function loadRechargeQr(orderNo) {
+  const response = await fetch(
+    `${state.server}/api/pay/orders/${encodeURIComponent(orderNo)}/qr`,
+    { headers: { Authorization: `Bearer ${state.token}` } },
+  );
+  if (!response.ok) throw new Error("二维码加载失败");
+  const blob = await response.blob();
+  releaseRechargeQr();
+  rechargeState.qrUrl = URL.createObjectURL(blob);
+  els.rechargeQr.src = rechargeState.qrUrl;
+  els.rechargeQr.hidden = false;
+}
+
+function startRechargePolling(orderNo) {
+  stopRechargePolling();
+  rechargeState.timer = setInterval(() => {
+    if (!rechargeState.order || rechargeState.order.orderNo !== orderNo) return;
+    fetch(`${state.server}/api/pay/orders/${encodeURIComponent(orderNo)}`, {
+      headers: { Authorization: `Bearer ${state.token}` },
+    })
+      .then(readJson)
+      .then((order) => {
+        if (order.status === "paid") {
+          finishRechargeOrder(order);
+        } else if (order.status === "closed") {
+          stopRechargePolling();
+          rechargeState.order = order;
+          releaseRechargeQr();
+          els.rechargeQr.hidden = true;
+          els.rechargeMockPay.hidden = true;
+          els.rechargeOpenPay.hidden = true;
+          els.rechargePayHint.textContent = "订单已关闭，请重新下单。";
+        }
+      })
+      .catch(() => undefined); // 网络波动不影响下一轮轮询
+  }, 2500);
+}
+
+function finishRechargeOrder(order) {
+  stopRechargePolling();
+  rechargeState.order = order;
+  state.balance = order.balance;
+  renderBalance();
+  releaseRechargeQr();
+  els.rechargeQr.hidden = true;
+  els.rechargeMockPay.hidden = true;
+  els.rechargeOpenPay.hidden = true;
+  els.rechargePayArea.hidden = true;
+  els.rechargeStatus.hidden = false;
+  els.rechargeStatus.textContent =
+    `充值成功，${order.credits.toLocaleString("zh-CN")} 积分已到账，当前余额 ${order.balance.toLocaleString("zh-CN")} 积分。`;
+  els.rechargeSubmit.textContent = "完成";
+  els.rechargeSubmit.disabled = true;
+  setStatus("充值成功");
+  if (els.creditsDialog.open) loadCreditsList().catch(showError);
+}
+
+els.rechargeSubmit.addEventListener("click", () => submitRecharge().catch(showError));
+els.rechargeClose.addEventListener("click", () => els.rechargeDialog.close());
+els.rechargeDialog.addEventListener("close", resetRechargeDialog);
+els.rechargeDialog.addEventListener("click", (event) => {
+  const packageButton = event.target.closest("[data-package-id]");
+  if (packageButton) {
+    selectRechargePackage(Number(packageButton.dataset.packageId));
+    return;
+  }
+  const channelButton = event.target.closest("[data-channel]");
+  if (channelButton) selectRechargeChannel(channelButton.dataset.channel);
+});
+
+els.rechargeMockPay.addEventListener("click", async () => {
+  const order = rechargeState.order;
+  if (!order) return;
+  els.rechargeMockPay.disabled = true;
+  try {
+    const response = await fetch(
+      `${state.server}/api/pay/orders/${encodeURIComponent(order.orderNo)}/mock-confirm`,
+      { method: "POST", headers: { Authorization: `Bearer ${state.token}` } },
+    );
+    finishRechargeOrder(await readJson(response));
+  } catch (err) {
+    setRechargeError(err.message || "模拟支付失败");
+    els.rechargeMockPay.disabled = false;
+  }
+});
+
+els.rechargeOpenPay.addEventListener("click", () => {
+  const url = rechargeState.order?.payUrl;
+  if (!url) return;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      chrome.tabs.create({ url });
+    }
+  } catch {
+    // 非 http(s) 链接不打开
+  }
+});
 
 // ---------- 用户账号：登录 / 注册 / 退出 ----------
 

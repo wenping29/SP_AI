@@ -19,6 +19,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<EmailCode> EmailCodes => Set<EmailCode>();
     public DbSet<ServerSetting> ServerSettings => Set<ServerSetting>();
+    public DbSet<CreditPackage> CreditPackages => Set<CreditPackage>();
+    public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
+    public DbSet<PaymentSetting> PaymentSettings => Set<PaymentSetting>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -43,6 +46,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         model.Entity<EmailCode>().HasIndex(c => c.CreatedAt);
         // 单行配置表，固定 Id=1
         model.Entity<ServerSetting>().HasKey(s => s.Id);
+        model.Entity<PaymentSetting>().HasKey(s => s.Id);
+        model.Entity<PaymentOrder>().HasIndex(o => o.OrderNo).IsUnique();
+        model.Entity<PaymentOrder>().HasIndex(o => o.UserId);
+        model.Entity<PaymentOrder>().HasIndex(o => o.Status);
+        model.Entity<PaymentOrder>().HasIndex(o => o.CreatedAt);
+        model.Entity<CreditPackage>().HasIndex(p => p.SortOrder);
     }
 
     public async Task SeedAsync(CancellationToken ct = default)

@@ -7,6 +7,7 @@ const reasonLabels: Record<string, string> = {
   admin_grant: '后台调整',
   admin_set: '后台设为',
   device_merge: '本机积分合并',
+  recharge: '充值到账',
 };
 
 export function formatTime(value?: string | null) {

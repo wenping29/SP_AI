@@ -47,6 +47,20 @@ public record ServerSettingsRequest(
     bool? ExposeDevCode,
     string[]? AllowedOrigins);
 public record TestEmailRequest(string? To);
+public record PackageRequest(string? Name, int? PriceCents, int? Credits, string? Note, int? SortOrder,
+    bool? IsEnabled);
+public record PaymentOrderCreateRequest(int? PackageId, string? Channel);
+public record PaymentSettingsRequest(
+    bool? Enabled,
+    string? Provider,
+    bool? MockEnabled,
+    string? EpayApiUrl,
+    string? EpayPid,
+    string? EpayKey,
+    bool? ClearEpayKey,
+    bool? AlipayEnabled,
+    bool? WechatEnabled,
+    string? NotifyBaseUrl);
 
 // 语音转写：录音文件以 multipart/form-data 的 file 字段上传，Swagger 需要包一层表单模型才能生成文档
 public class TranscribeRequest

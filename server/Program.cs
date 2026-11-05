@@ -48,7 +48,9 @@ builder.Services.AddScoped<EmailVerification>();
 builder.Services.AddScoped<ProviderKey>();
 builder.Services.AddScoped<ModelGateway>();
 builder.Services.AddScoped<SpeechGateway>();
+builder.Services.AddScoped<PaymentService>();
 builder.Services.AddHttpClient("upstream", client => client.Timeout = TimeSpan.FromMinutes(5));
+builder.Services.AddHttpClient("payments", client => client.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddControllers();
 builder.Services.AddSingleton<ServerRuntime>();
 

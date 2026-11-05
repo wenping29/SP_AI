@@ -171,6 +171,68 @@ public class CreditPolicy
     public DateTime UpdatedAt { get; set; }
 }
 
+// 充值套餐：后台可改价格与积分；下单时金额与积分写入订单快照，调价不影响历史订单
+public class CreditPackage
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    // 价格以分为单位，避免浮点误差
+    public int PriceCents { get; set; }
+    public int Credits { get; set; }
+    public string Note { get; set; } = "";
+    public int SortOrder { get; set; }
+    public bool IsEnabled { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+// 充值订单：pending → paid / closed；paid 只能由支付回调或模拟支付确认触发一次
+public class PaymentOrder
+{
+    public int Id { get; set; }
+    public string OrderNo { get; set; } = "";
+    public int UserId { get; set; }
+    // 入账账号，与 UserId 对应；积分归用户，不跟设备
+    public int AccountId { get; set; }
+    public int PackageId { get; set; }
+    public string PackageName { get; set; } = "";
+    public int PriceCents { get; set; }
+    public int Credits { get; set; }
+    // alipay / wechat
+    public string Channel { get; set; } = "";
+    // mock / epay
+    public string Provider { get; set; } = "";
+    public string Status { get; set; } = "pending";
+    // 渠道返回的收银台地址与二维码内容；mock 均为空
+    public string PayUrl { get; set; } = "";
+    public string QrContent { get; set; } = "";
+    public string ExternalOrderNo { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public DateTime? PaidAt { get; set; }
+}
+
+// 支付配置：单行表；易支付密钥只存密文与尾号
+public class PaymentSetting
+{
+    public int Id { get; set; } = 1;
+    public bool Enabled { get; set; }
+    // mock：本地联调；epay：第三方聚合（支付宝/微信扫码）
+    public string Provider { get; set; } = "mock";
+    // 仅 Provider=mock 时生效，生产默认关闭
+    public bool MockEnabled { get; set; }
+    // 易支付接口地址，例如 https://pay.example.com/mapi.php
+    public string EpayApiUrl { get; set; } = "";
+    public string EpayPid { get; set; } = "";
+    public string EpayKeyCipher { get; set; } = "";
+    public string EpayKeyTail { get; set; } = "";
+    public bool AlipayEnabled { get; set; } = true;
+    public bool WechatEnabled { get; set; } = true;
+    // 支付回调对外地址，例如 https://sp.example.com；留空时按当前请求地址生成
+    public string NotifyBaseUrl { get; set; } = "";
+    public DateTime UpdatedAt { get; set; }
+}
+
 // 服务器运行配置：邮件服务与浏览器跨域来源，后台改完即时生效，不需要改文件重启
 public class ServerSetting
 {

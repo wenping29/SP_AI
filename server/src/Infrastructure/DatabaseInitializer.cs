@@ -214,6 +214,98 @@ public static class DatabaseInitializer
             await db.SaveChangesAsync(ct);
         }
 
+        // 充值套餐、订单与支付配置：老库同样靠这段补表；支付默认关闭，配好渠道后在后台开启
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "CreditPackages" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_CreditPackages" PRIMARY KEY AUTOINCREMENT,
+                "Name" TEXT NOT NULL,
+                "PriceCents" INTEGER NOT NULL,
+                "Credits" INTEGER NOT NULL,
+                "Note" TEXT NOT NULL,
+                "SortOrder" INTEGER NOT NULL,
+                "IsEnabled" INTEGER NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                "UpdatedAt" TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "IX_CreditPackages_SortOrder" ON "CreditPackages" ("SortOrder");
+
+            CREATE TABLE IF NOT EXISTS "PaymentOrders" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_PaymentOrders" PRIMARY KEY AUTOINCREMENT,
+                "OrderNo" TEXT NOT NULL,
+                "UserId" INTEGER NOT NULL,
+                "AccountId" INTEGER NOT NULL,
+                "PackageId" INTEGER NOT NULL,
+                "PackageName" TEXT NOT NULL,
+                "PriceCents" INTEGER NOT NULL,
+                "Credits" INTEGER NOT NULL,
+                "Channel" TEXT NOT NULL,
+                "Provider" TEXT NOT NULL,
+                "Status" TEXT NOT NULL,
+                "PayUrl" TEXT NOT NULL,
+                "QrContent" TEXT NOT NULL,
+                "ExternalOrderNo" TEXT NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                "ExpiresAt" TEXT NOT NULL,
+                "PaidAt" TEXT NULL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_PaymentOrders_OrderNo" ON "PaymentOrders" ("OrderNo");
+            CREATE INDEX IF NOT EXISTS "IX_PaymentOrders_UserId" ON "PaymentOrders" ("UserId");
+            CREATE INDEX IF NOT EXISTS "IX_PaymentOrders_Status" ON "PaymentOrders" ("Status");
+            CREATE INDEX IF NOT EXISTS "IX_PaymentOrders_CreatedAt" ON "PaymentOrders" ("CreatedAt");
+
+            CREATE TABLE IF NOT EXISTS "PaymentSettings" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_PaymentSettings" PRIMARY KEY,
+                "Enabled" INTEGER NOT NULL,
+                "Provider" TEXT NOT NULL,
+                "MockEnabled" INTEGER NOT NULL,
+                "EpayApiUrl" TEXT NOT NULL,
+                "EpayPid" TEXT NOT NULL,
+                "EpayKeyCipher" TEXT NOT NULL,
+                "EpayKeyTail" TEXT NOT NULL,
+                "AlipayEnabled" INTEGER NOT NULL,
+                "WechatEnabled" INTEGER NOT NULL,
+                "NotifyBaseUrl" TEXT NOT NULL,
+                "UpdatedAt" TEXT NOT NULL
+            );
+            """, ct);
+
+        if (!await db.CreditPackages.AnyAsync(ct))
+        {
+            var now = DateTime.UtcNow;
+            db.CreditPackages.AddRange(
+                new CreditPackage
+                {
+                    Name = "体验包", PriceCents = 1000, Credits = 1000, Note = "适合偶尔使用",
+                    SortOrder = 1, IsEnabled = true, CreatedAt = now, UpdatedAt = now,
+                },
+                new CreditPackage
+                {
+                    Name = "标准包", PriceCents = 3000, Credits = 3200, Note = "多送 200 积分",
+                    SortOrder = 2, IsEnabled = true, CreatedAt = now, UpdatedAt = now,
+                },
+                new CreditPackage
+                {
+                    Name = "超值包", PriceCents = 6800, Credits = 8000, Note = "多送 1200 积分",
+                    SortOrder = 3, IsEnabled = true, CreatedAt = now, UpdatedAt = now,
+                });
+        }
+
+        if (!await db.PaymentSettings.AnyAsync(ct))
+        {
+            db.PaymentSettings.Add(new PaymentSetting
+            {
+                Id = 1,
+                Enabled = false,
+                Provider = "mock",
+                MockEnabled = false,
+                AlipayEnabled = true,
+                WechatEnabled = true,
+                UpdatedAt = DateTime.UtcNow,
+            });
+        }
+
+        if (db.ChangeTracker.HasChanges()) await db.SaveChangesAsync(ct);
+
         // 老库的 Accounts 表没有 UserId 列，EnsureCreated 不会补列，这里先判断再补
         try
         {

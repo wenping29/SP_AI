@@ -302,6 +302,78 @@ export interface MemberUpdate {
   password?: string;
 }
 
+export interface CreditPackage {
+  id: number;
+  name: string;
+  priceCents: number;
+  credits: number;
+  note: string;
+  sortOrder: number;
+  isEnabled: boolean;
+  orderCount: number;
+  updatedAt: string;
+}
+
+export interface CreditPackageInput {
+  name: string;
+  priceCents: number;
+  credits: number;
+  note?: string;
+  sortOrder?: number;
+  isEnabled?: boolean;
+}
+
+export interface PaymentOrder {
+  orderNo: string;
+  userId: number;
+  email: string;
+  displayName: string;
+  packageName: string;
+  priceCents: number;
+  credits: number;
+  channel: string;
+  provider: string;
+  status: 'pending' | 'paid' | 'closed';
+  externalOrderNo: string;
+  createdAt: string;
+  expiresAt: string;
+  paidAt: string | null;
+}
+
+export interface PaymentOrderPage {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: PaymentOrder[];
+}
+
+export interface PaymentSettings {
+  enabled: boolean;
+  provider: 'mock' | 'epay';
+  mockEnabled: boolean;
+  epayApiUrl: string;
+  epayPid: string;
+  epayKeySet: boolean;
+  epayKeyTail: string;
+  alipayEnabled: boolean;
+  wechatEnabled: boolean;
+  notifyBaseUrl: string;
+  updatedAt: string;
+}
+
+export interface PaymentSettingsUpdate {
+  enabled?: boolean;
+  provider?: string;
+  mockEnabled?: boolean;
+  epayApiUrl?: string;
+  epayPid?: string;
+  epayKey?: string;
+  clearEpayKey?: boolean;
+  alipayEnabled?: boolean;
+  wechatEnabled?: boolean;
+  notifyBaseUrl?: string;
+}
+
 export const adminApi = {
   login: (username: string, password: string) =>
     post<{ token: string; expiresAt: string; user: AdminIdentity }>('/admin/auth/login', {
@@ -412,4 +484,28 @@ export const adminApi = {
     post<Member>(`/admin/members/${id}/block`, { blocked }),
 
   deleteMember: (id: number) => del<{ id: number; deleted: boolean }>(`/admin/members/${id}`),
+
+  creditPackages: () => get<CreditPackage[]>('/admin/payment/packages'),
+
+  createCreditPackage: (data: CreditPackageInput) =>
+    post<{ id: number }>('/admin/payment/packages', data),
+
+  updateCreditPackage: (id: number, data: Partial<CreditPackageInput>) =>
+    put<{ id: number }>(`/admin/payment/packages/${id}`, data),
+
+  deleteCreditPackage: (id: number) =>
+    del<{ deleted: boolean }>(`/admin/payment/packages/${id}`),
+
+  paymentOrders: (params: { q?: string; status?: string; page: number; pageSize: number }) =>
+    get<PaymentOrderPage>('/admin/payment/orders', params),
+
+  closePaymentOrder: (orderNo: string) =>
+    post<{ orderNo: string; status: string }>(
+      `/admin/payment/orders/${encodeURIComponent(orderNo)}/close`,
+    ),
+
+  paymentSettings: () => get<PaymentSettings>('/admin/payment/settings'),
+
+  updatePaymentSettings: (data: PaymentSettingsUpdate) =>
+    put<PaymentSettings>('/admin/payment/settings', data),
 };

@@ -280,7 +280,7 @@
     <h2>积分明细</h2>
     <div class="balance-line">当前余额 <strong id="creditsBalance">—</strong></div>
     <div class="recharge">
-      <p class="tip">积分由后台统一发放，免费额度用完后可把下面的设备 ID 发给管理员充值。</p>
+      <p class="tip">点击头像浮层的「充值积分」可直接购买；也可以把下面的设备 ID 发给管理员充值。</p>
       <div class="row">
         <input id="rechargeDevice" type="text" readonly spellcheck="false">
         <button id="copyRechargeDevice" class="ghost">复制设备 ID</button>
@@ -291,6 +291,28 @@
       <button id="refreshCredits" class="ghost">刷新</button>
       <span class="spacer"></span>
       <button id="closeCredits" class="primary">关闭</button>
+    </div>
+  </dialog>
+
+  <dialog id="rechargeDialog" class="recharge-dialog">
+    <h2>充值积分</h2>
+    <p class="tip">选择套餐和支付方式，支付完成后积分自动到账。</p>
+    <div id="rechargePackages" class="recharge-packages"></div>
+    <div id="rechargeChannels" class="recharge-channels" role="radiogroup" aria-label="支付方式"></div>
+    <p id="rechargeError" class="auth-error" hidden></p>
+    <div id="rechargePayArea" class="recharge-pay" hidden>
+      <img id="rechargeQr" class="recharge-qr" alt="支付二维码" hidden>
+      <p id="rechargePayHint" class="tip"></p>
+      <div class="row">
+        <button id="rechargeMockPay" class="primary" hidden>模拟支付成功</button>
+        <button id="rechargeOpenPay" class="ghost" hidden>打开支付页面</button>
+      </div>
+    </div>
+    <p id="rechargeStatus" class="tip" hidden></p>
+    <div class="row">
+      <button id="rechargeClose" class="ghost">关闭</button>
+      <span class="spacer"></span>
+      <button id="rechargeSubmit" class="primary">去支付</button>
     </div>
   </dialog>
 

@@ -411,10 +411,10 @@ select {
 .thread {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 16px 14px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .hint { color: var(--muted); font-size: 12px; text-align: center; margin: 12px 0; }
@@ -457,18 +457,94 @@ select {
   background: var(--accent-soft);
 }
 
+/* 消息卡片：用户靠右形成气泡，助手铺满；用圆角方向区分角色 */
 .msg {
-  padding: 9px 11px;
-  border-radius: 10px;
+  padding: 11px 14px;
+  border-radius: 14px;
   background: var(--panel);
   border: 1px solid var(--line);
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 13px;
+  line-height: 1.7;
+  box-shadow: 0 1px 2px rgba(17, 20, 24, .04);
 }
 
-.msg.user { background: var(--accent-soft); border-color: var(--accent-border); }
-.msg.assistant .meta, .msg.user .meta { margin-top: 6px; color: var(--muted); font-size: 11px; }
+.msg.user {
+  align-self: flex-end;
+  max-width: 94%;
+  background: var(--accent-soft);
+  border-color: transparent;
+  border-bottom-right-radius: 5px;
+}
+
+.msg.assistant { border-bottom-left-radius: 5px; }
+
+.msg .meta {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.msg > .meta + .meta { margin-top: 2px; padding-top: 0; border-top: 0; }
+
 .msg.error { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
+
+/* 助手回复的轻量 Markdown：段落、列表、代码和标题的阅读节奏 */
+.msg-body.markdown { white-space: normal; }
+.msg-body.markdown > :first-child { margin-top: 0; }
+.msg-body.markdown > :last-child { margin-bottom: 0; }
+.msg-body.markdown p { margin: 0 0 9px; }
+.msg-body.markdown h3,
+.msg-body.markdown h4,
+.msg-body.markdown h5 {
+  margin: 14px 0 7px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.msg-body.markdown h3 { font-size: 15px; }
+.msg-body.markdown h4 { font-size: 14px; }
+.msg-body.markdown h5 { font-size: 13px; }
+.msg-body.markdown strong { font-weight: 650; color: var(--text); }
+.msg-body.markdown ul,
+.msg-body.markdown ol { margin: 4px 0 10px; padding-left: 20px; }
+.msg-body.markdown li { margin: 4px 0; padding-left: 1px; }
+.msg-body.markdown li::marker { color: var(--accent); }
+.msg-body.markdown code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  font: 12px/1.5 "Cascadia Code", Consolas, "Courier New", monospace;
+}
+.msg-body.markdown pre {
+  margin: 9px 0 11px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.msg-body.markdown pre code { padding: 0; border: 0; background: transparent; white-space: pre; }
+.msg-body.markdown blockquote {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--accent-border);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface);
+  color: var(--muted);
+}
+.msg-body.markdown blockquote + blockquote { margin-top: -2px; }
+.msg-body.markdown a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.msg-body.markdown hr { margin: 13px 0; border: 0; border-top: 1px solid var(--line); }
 
 .composer {
   padding: 10px 12px;
@@ -1217,19 +1293,23 @@ dialog h2 { margin: 0 0 12px; font-size: 15px; }
 .attach button:hover { color: var(--danger); }
 
 /* Sider 在每条回答下面给复制 / 引用 / 重新生成 */
-.msg-actions { display: flex; gap: 6px; margin-top: 8px; }
+.msg-actions { display: flex; gap: 4px; margin-top: 10px; }
 
 .msg-actions button {
-  padding: 3px 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
   color: var(--muted);
   font-size: 11px;
   cursor: pointer;
 }
 
-.msg-actions button:hover:not([disabled]) { color: var(--accent); border-color: var(--accent); }
+.msg-actions button:hover:not([disabled]) {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
 .msg-actions button[disabled] { opacity: .45; cursor: default; }
 
 .history-list {
@@ -1332,7 +1412,7 @@ button.ico.lg svg { width: 18px; height: 18px; }
 .tools-grid svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
 .tools-grid button:hover svg { color: var(--accent); }
 
-.msg-actions button.ico { width: 27px; height: 24px; }
+.msg-actions button.ico { width: 28px; height: 26px; }
 .msg-actions button.ico svg { width: 14px; height: 14px; }
 
 /* 录音中的麦克风：变红并轻微脉冲，替代文字提示 */
@@ -1460,3 +1540,69 @@ button.ico.recording {
 
 .recharge .tip { margin: 0 0 8px; }
 .recharge input { flex: 1; min-width: 0; }
+
+/* 充值弹窗：套餐卡片 + 支付方式 + 扫码区 */
+.recharge-dialog { width: min(440px, 94vw); }
+.recharge-dialog > .tip { margin: 0 0 4px; }
+.recharge-packages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.recharge-package {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.recharge-package strong { font-size: 13px; }
+.recharge-package .price { font-size: 16px; font-weight: 600; color: var(--accent); }
+.recharge-package .credits { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.recharge-package.active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+.recharge-channels { display: flex; gap: 8px; }
+.recharge-channels button {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.recharge-channels button.active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.recharge-pay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.recharge-pay .tip { margin: 0; text-align: center; }
+.recharge-qr {
+  width: 180px;
+  height: 180px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #fff;
+  image-rendering: pixelated;
+}
