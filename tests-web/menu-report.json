@@ -1,0 +1,122 @@
+{
+  "reload": "已触发重载",
+  "entries": {
+    "railCount": 12,
+    "navCount": 12,
+    "railMissing": [],
+    "navMissing": [],
+    "panesMissing": [],
+    "fallbackIcons": []
+  },
+  "clicks": [
+    {
+      "view": "code",
+      "shown": [
+        "code"
+      ],
+      "activeRail": [
+        "code"
+      ],
+      "activeNav": [
+        "code"
+      ],
+      "emptyText": "Code\n          写代码、解释代码、排查报错，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "hand",
+      "shown": [
+        "hand"
+      ],
+      "activeRail": [
+        "hand"
+      ],
+      "activeNav": [
+        "hand"
+      ],
+      "emptyText": "Hand\n          把手动任务交给助手按步骤执行，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "notes",
+      "shown": [
+        "notes"
+      ],
+      "activeRail": [
+        "notes"
+      ],
+      "activeNav": [
+        "notes"
+      ],
+      "emptyText": "笔记\n          把网页正文和对话整理成笔记，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "create",
+      "shown": [
+        "create"
+      ],
+      "activeRail": [
+        "create"
+      ],
+      "activeNav": [
+        "create"
+      ],
+      "emptyText": "创作\n          文案、脚本等创意内容生成，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "write",
+      "shown": [
+        "write"
+      ],
+      "activeRail": [
+        "write"
+      ],
+      "activeNav": [
+        "write"
+      ],
+      "emptyText": "写作\n          长文起草、续写与润色，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "ocr",
+      "shown": [
+        "ocr"
+      ],
+      "activeRail": [
+        "ocr"
+      ],
+      "activeNav": [
+        "ocr"
+      ],
+      "emptyText": "OCR\n          识别图片和截图里的文字，功能待接入。",
+      "emptyIcon": true
+    },
+    {
+      "view": "pdf",
+      "shown": [
+        "pdf"
+      ],
+      "activeRail": [
+        "pdf"
+      ],
+      "activeNav": [
+        "pdf"
+      ],
+      "emptyText": "PDF\n          读取 PDF 正文、总结与问答，功能待接入。",
+      "emptyIcon": true
+    }
+  ],
+  "rail": {
+    "clientHeight": 908,
+    "scrollHeight": 908,
+    "scrollable": "auto"
+  },
+  "collapsedNav": {
+    "navHidden": true,
+    "ocrShown": true,
+    "view": "ocr"
+  },
+  "backToChat": "chat"
+}
