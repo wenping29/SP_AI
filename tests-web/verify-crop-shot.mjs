@@ -100,7 +100,7 @@ try {
   await panel.open();
   await sleep(3500);
 
-  out.checks.newCodeLoaded = await panel.evaluate(`typeof cropShot === 'function' && typeof selectArea === 'function'`);
+  out.checks.newCodeLoaded = await panel.evaluate(`typeof cropShot === 'function' && typeof annotateImage === 'function' && typeof selectArea === 'function'`);
   const viewport = await fixture.evaluate(`({ w: innerWidth, h: innerHeight, dpr: devicePixelRatio })`);
   out.viewport = viewport;
 
@@ -125,6 +125,39 @@ try {
   await mouse("mouseMoved", x2, y2, 1);
   await mouse("mouseReleased", x2, y2, 0);
   await sleep(3200);
+
+  // 3. 裁剪完成后应弹出标绘窗口，画一个矩形再确认插入
+  out.annotate = await panel.evaluate(`(() => ({
+    open: els.annotateDialog.open,
+    tools: [...els.annotateDialog.querySelectorAll('[data-tool]')].map((b) => b.textContent),
+    colors: els.annotateDialog.querySelectorAll('[data-color]').length,
+    before: els.annotateCanvas.toDataURL('image/png'),
+    box: (() => { const r = els.annotateCanvas.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; })(),
+  }))()`);
+  out.checks.annotateShown = out.annotate?.open === true
+    && JSON.stringify(out.annotate?.tools) === JSON.stringify(["矩形", "圆圈", "画笔", "马赛克"])
+    && out.annotate?.colors === 7;
+
+  const box = out.annotate?.box;
+  if (box?.w > 20 && box?.h > 20) {
+    const a = { x: box.x + box.w * 0.2, y: box.y + box.h * 0.2 };
+    const b = { x: box.x + box.w * 0.7, y: box.y + box.h * 0.7 };
+    const paint = (type, p, buttons) => panel.send("Input.dispatchMouseEvent", {
+      type, x: p.x, y: p.y, button: "left", buttons, clickCount: 1,
+    });
+    await paint("mouseMoved", a, 0);
+    await paint("mousePressed", a, 1);
+    await paint("mouseMoved", b, 1);
+    await paint("mouseReleased", b, 0);
+    await sleep(300);
+    out.annotateAfter = await panel.evaluate(`({
+      changed: els.annotateCanvas.toDataURL('image/png') !== ${JSON.stringify(out.annotate?.before || "")},
+      undoEnabled: !els.annotateUndo.disabled,
+    })`);
+    out.checks.annotateDrawWorks = out.annotateAfter?.changed === true && out.annotateAfter?.undoEnabled === true;
+  }
+  await panel.evaluate(`els.annotateConfirm.click()`);
+  await sleep(1200);
 
   out.afterCrop = await panel.evaluate(`(async () => {
     const images = state.attachments.filter((a) => a.kind === 'image');

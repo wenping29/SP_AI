@@ -165,6 +165,15 @@ const els = {
   authTip: document.getElementById("authTip"),
   authSubmit: document.getElementById("authSubmit"),
   authCancel: document.getElementById("authCancel"),
+  annotateDialog: document.getElementById("annotateDialog"),
+  annotateStage: document.getElementById("annotateStage"),
+  annotateCanvas: document.getElementById("annotateCanvas"),
+  annotateColor: document.getElementById("annotateColor"),
+  annotateWidth: document.getElementById("annotateWidth"),
+  annotateUndo: document.getElementById("annotateUndo"),
+  annotateClear: document.getElementById("annotateClear"),
+  annotateCancel: document.getElementById("annotateCancel"),
+  annotateConfirm: document.getElementById("annotateConfirm"),
 };
 
 const state = {
@@ -1348,6 +1357,288 @@ async function cropShot(dataUrl, meta) {
   return canvas.toDataURL("image/png");
 }
 
+// 截图标注：矩形、圆圈、自由画笔和马赛克都画在同一张画布上，确认后转成 PNG 附件。
+// 每次下笔前保存一张快照，撤销和预览都靠它恢复，避免橡皮反复重放所有笔画。
+function annotateImage(dataUrl) {
+  return new Promise((resolve) => {
+    const dialog = els.annotateDialog;
+    const stage = els.annotateStage;
+    const canvas = els.annotateCanvas;
+    const ctx = canvas.getContext("2d");
+    const image = new Image();
+    const cleanups = [];
+    let settled = false;
+    let tool = "rect";
+    let color = "#e5484d";
+    let lineWidth = 4;
+    let viewScale = 1;
+    let drawing = false;
+    let undoing = false;
+    let start = null;
+    let points = null;
+    let snapshot = null;
+    const undos = [];
+
+    const on = (target, type, fn, options) => {
+      target.addEventListener(type, fn, options);
+      cleanups.push(() => target.removeEventListener(type, fn, options));
+    };
+    const cleanup = () => {
+      while (cleanups.length) cleanups.pop()();
+    };
+    const clampNum = (value, min, max) => Math.min(max, Math.max(min, value));
+    const close = (value) => {
+      if (settled) return;
+      settled = true;
+      dialog.close();
+      resolve(value);
+    };
+    const updateButtons = () => {
+      els.annotateUndo.disabled = !undos.length || undoing;
+      els.annotateClear.disabled = !undos.length || undoing;
+    };
+    const strokeWidth = () => Math.max(1, lineWidth * viewScale);
+    const mosaicBlock = () => Math.max(6, Math.round(10 * viewScale));
+
+    function fitCanvas() {
+      if (!canvas.width) return;
+      const maxWidth = Math.max(120, stage.clientWidth - 16);
+      const maxHeight = Math.max(180, Math.min(window.innerHeight * 0.6, 560));
+      const ratio = Math.min(1, maxWidth / canvas.width, maxHeight / canvas.height);
+      canvas.style.width = `${Math.round(canvas.width * ratio)}px`;
+      canvas.style.height = `${Math.round(canvas.height * ratio)}px`;
+      const box = canvas.getBoundingClientRect();
+      viewScale = canvas.width / Math.max(1, box.width);
+    }
+
+    function pointOf(event) {
+      const box = canvas.getBoundingClientRect();
+      return {
+        x: clampNum((event.clientX - box.left) * (canvas.width / box.width), 0, canvas.width),
+        y: clampNum((event.clientY - box.top) * (canvas.height / box.height), 0, canvas.height),
+      };
+    }
+
+    function takeSnapshot() {
+      const copy = document.createElement("canvas");
+      copy.width = canvas.width;
+      copy.height = canvas.height;
+      copy.getContext("2d").drawImage(canvas, 0, 0);
+      return copy;
+    }
+
+    function drawRect(a, b) {
+      ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+    }
+
+    function drawEllipse(a, b) {
+      const rx = Math.abs(b.x - a.x) / 2;
+      const ry = Math.abs(b.y - a.y) / 2;
+      if (rx < 0.5 || ry < 0.5) return;
+      ctx.beginPath();
+      ctx.ellipse((a.x + b.x) / 2, (a.y + b.y) / 2, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    function drawPen(list) {
+      if (list.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(list[0].x, list[0].y);
+      for (let i = 1; i < list.length; i += 1) ctx.lineTo(list[i].x, list[i].y);
+      ctx.stroke();
+    }
+
+    // 从快照取像素做缩略再放大，天然获得马赛克块；source 必须是当前笔画的起点快照
+    function drawMosaic(a, b, source) {
+      const x = Math.min(a.x, b.x);
+      const y = Math.min(a.y, b.y);
+      const w = Math.abs(b.x - a.x);
+      const h = Math.abs(b.y - a.y);
+      const block = mosaicBlock();
+      if (w < block || h < block) return;
+      const tmp = document.createElement("canvas");
+      tmp.width = Math.max(1, Math.round(w / block));
+      tmp.height = Math.max(1, Math.round(h / block));
+      const tmpCtx = tmp.getContext("2d");
+      tmpCtx.imageSmoothingEnabled = true;
+      tmpCtx.drawImage(source, x, y, w, h, 0, 0, tmp.width, tmp.height);
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, x, y, w, h);
+      ctx.restore();
+    }
+
+    function drawOp(op, source) {
+      ctx.save();
+      ctx.lineWidth = strokeWidth();
+      ctx.strokeStyle = color;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (op.type === "rect") drawRect(op.start, op.end);
+      else if (op.type === "ellipse") drawEllipse(op.start, op.end);
+      else if (op.type === "pen") drawPen(op.points);
+      else if (op.type === "mosaic") drawMosaic(op.start, op.end, source || snapshot);
+      ctx.restore();
+    }
+
+    function preview(op) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (snapshot) ctx.drawImage(snapshot, 0, 0);
+      if (op) drawOp(op, snapshot);
+    }
+
+    function pushUndo(source) {
+      undos.push((source || canvas).toDataURL("image/png"));
+      if (undos.length > 20) undos.shift();
+      updateButtons();
+    }
+
+    function onPointerDown(event) {
+      if (event.button !== 0 || undoing) return;
+      event.preventDefault();
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch {
+        // 指针已经抬起时忽略
+      }
+      drawing = true;
+      start = pointOf(event);
+      points = [start];
+      snapshot = takeSnapshot();
+      preview({ type: tool, start, end: start, points });
+    }
+
+    function onPointerMove(event) {
+      if (!drawing) return;
+      event.preventDefault();
+      const point = pointOf(event);
+      if (tool === "pen") {
+        const last = points[points.length - 1];
+        const step = Math.max(1, 1.5 * viewScale);
+        if (Math.hypot(point.x - last.x, point.y - last.y) >= step) points.push(point);
+        preview({ type: "pen", points });
+        return;
+      }
+      preview({ type: tool, start, end: point });
+    }
+
+    function onPointerUp(event) {
+      if (!drawing) return;
+      drawing = false;
+      const point = pointOf(event);
+      const moved = start
+        && (Math.abs(point.x - start.x) >= 2 * viewScale || Math.abs(point.y - start.y) >= 2 * viewScale);
+      let op = null;
+      if (tool === "pen" && points.length >= 2) op = { type: "pen", points };
+      else if (tool === "mosaic" && start) {
+        const w = Math.abs(point.x - start.x);
+        const h = Math.abs(point.y - start.y);
+        if (w >= mosaicBlock() && h >= mosaicBlock()) op = { type: "mosaic", start, end: point };
+      } else if (moved) op = { type: tool, start, end: point };
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (snapshot) ctx.drawImage(snapshot, 0, 0);
+      if (op) {
+        pushUndo(snapshot);
+        drawOp(op, snapshot);
+      }
+      points = null;
+      updateButtons();
+    }
+
+    function onPointerCancel() {
+      drawing = false;
+      points = null;
+      preview(null);
+      updateButtons();
+    }
+
+    async function undo() {
+      if (undoing || !undos.length) return;
+      undoing = true;
+      const url = undos.pop();
+      updateButtons();
+      try {
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      } finally {
+        undoing = false;
+        updateButtons();
+      }
+    }
+
+    function clearAll() {
+      if (undoing || !undos.length) return;
+      pushUndo();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0);
+    }
+
+    function selectTool(name) {
+      tool = name;
+      for (const button of dialog.querySelectorAll("[data-tool]")) {
+        button.classList.toggle("active", button.dataset.tool === name);
+      }
+    }
+
+    function selectColor(value) {
+      color = value;
+      els.annotateColor.value = value;
+      for (const button of dialog.querySelectorAll("[data-color]")) {
+        button.classList.toggle("active", button.dataset.color.toLowerCase() === value.toLowerCase());
+      }
+    }
+
+    on(els.annotateCancel, "click", () => close(null));
+    on(els.annotateConfirm, "click", () => close(canvas.toDataURL("image/png")));
+    on(els.annotateUndo, "click", () => undo());
+    on(els.annotateClear, "click", clearAll);
+    on(els.annotateWidth, "change", () => { lineWidth = Number(els.annotateWidth.value) || 4; });
+    on(els.annotateColor, "input", () => selectColor(els.annotateColor.value));
+    for (const button of dialog.querySelectorAll("[data-tool]")) {
+      on(button, "click", () => selectTool(button.dataset.tool));
+    }
+    for (const button of dialog.querySelectorAll("[data-color]")) {
+      on(button, "click", () => selectColor(button.dataset.color));
+    }
+    on(canvas, "pointerdown", onPointerDown);
+    on(canvas, "pointermove", onPointerMove);
+    on(canvas, "pointerup", onPointerUp);
+    on(canvas, "pointercancel", onPointerCancel);
+    on(window, "resize", fitCanvas);
+    on(dialog, "close", () => {
+      cleanup();
+      if (!settled) {
+        settled = true;
+        resolve(null);
+      }
+    });
+
+    image.onload = () => {
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      ctx.drawImage(image, 0, 0);
+      snapshot = takeSnapshot();
+      selectTool("rect");
+      selectColor("#e5484d");
+      lineWidth = Number(els.annotateWidth.value) || 4;
+      undos.length = 0;
+      updateButtons();
+      dialog.showModal();
+      fitCanvas();
+    };
+    image.onerror = () => {
+      cleanup();
+      showError(new UiError("截图读取失败，请重试"));
+      resolve(null);
+    };
+    image.src = dataUrl;
+  });
+}
+
 async function captureScreenshot() {
   if (cropBusy) throw new UiError("正在等待框选，请在网页里拖出区域或按 Esc 取消");
   const tab = await screenshotTab();
@@ -1369,8 +1660,14 @@ async function captureScreenshot() {
 
     const full = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
     const cropped = await cropShot(full, meta);
+    setStatus("可对截图进行标绘，完成后点「插入截图」");
+    const annotated = await annotateImage(cropped);
+    if (!annotated) {
+      setStatus("已取消标绘截图");
+      return false;
+    }
     const name = `框选截图 ${state.attachments.filter((a) => a.kind === "image").length + 1}.png`;
-    if (!addImageAttachment(cropped, name)) return false;
+    if (!addImageAttachment(annotated, name)) return false;
     setStatus("已插入框选截图");
     return true;
   } finally {

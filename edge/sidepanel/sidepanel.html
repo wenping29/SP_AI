@@ -324,6 +324,48 @@
     </div>
   </dialog>
 
+  <dialog id="annotateDialog" class="annotate-dialog">
+    <h2>标绘截图</h2>
+    <div class="annotate-toolbar">
+      <div class="annotate-tools" role="group" aria-label="标绘工具">
+        <button type="button" data-tool="rect" class="active">矩形</button>
+        <button type="button" data-tool="ellipse">圆圈</button>
+        <button type="button" data-tool="pen">画笔</button>
+        <button type="button" data-tool="mosaic">马赛克</button>
+      </div>
+      <div class="annotate-colors" role="group" aria-label="线条颜色">
+        <button type="button" data-color="#e5484d" class="active" style="--swatch:#e5484d" aria-label="红色"></button>
+        <button type="button" data-color="#f76b15" style="--swatch:#f76b15" aria-label="橙色"></button>
+        <button type="button" data-color="#f5d90a" style="--swatch:#f5d90a" aria-label="黄色"></button>
+        <button type="button" data-color="#30a46c" style="--swatch:#30a46c" aria-label="绿色"></button>
+        <button type="button" data-color="#2563eb" style="--swatch:#2563eb" aria-label="蓝色"></button>
+        <button type="button" data-color="#111111" style="--swatch:#111111" aria-label="黑色"></button>
+        <button type="button" data-color="#ffffff" style="--swatch:#ffffff" aria-label="白色"></button>
+        <label class="annotate-custom" title="自定义颜色">
+          <input id="annotateColor" type="color" value="#e5484d">
+        </label>
+      </div>
+      <label class="annotate-width">粗细
+        <select id="annotateWidth">
+          <option value="2">细</option>
+          <option value="4" selected>中</option>
+          <option value="7">粗</option>
+        </select>
+      </label>
+    </div>
+    <div id="annotateStage" class="annotate-stage">
+      <canvas id="annotateCanvas"></canvas>
+    </div>
+    <div class="annotate-foot">
+      <button id="annotateUndo" class="ghost" type="button">撤销</button>
+      <button id="annotateClear" class="ghost" type="button">清空</button>
+      <span class="spacer"></span>
+      <span class="tip annotate-hint">拖拽绘制 · Esc 取消</span>
+      <button id="annotateCancel" class="ghost" type="button">取消</button>
+      <button id="annotateConfirm" class="primary" type="button">插入截图</button>
+    </div>
+  </dialog>
+
   <script src="../config.js"></script>
   <script src="sidepanel.js"></script>
 </body>
