@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SpServer.Contracts;
 
@@ -46,3 +47,10 @@ public record ServerSettingsRequest(
     bool? ExposeDevCode,
     string[]? AllowedOrigins);
 public record TestEmailRequest(string? To);
+
+// 语音转写：录音文件以 multipart/form-data 的 file 字段上传，Swagger 需要包一层表单模型才能生成文档
+public class TranscribeRequest
+{
+    [FromForm(Name = "file")]
+    public IFormFile? File { get; set; }
+}

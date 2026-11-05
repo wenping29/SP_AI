@@ -1,5 +1,7 @@
+using System.Reflection;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using SpServer.Data;
 using SpServer.Domain;
 using SpServer.Services;
@@ -50,6 +52,23 @@ builder.Services.AddHttpClient("upstream", client => client.Timeout = TimeSpan.F
 builder.Services.AddControllers();
 builder.Services.AddSingleton<ServerRuntime>();
 
+// Swagger / OpenAPI：本地联调时打开 /swagger 即可浏览全部接口
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "SP Server API",
+        Version = "v1",
+        Description = "SP 助手的服务器接口文档",
+    });
+
+    // 把控制器/方法的 XML 注释带入文档
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
+});
+
 // 允许来源与 SMTP 都存在服务器配置里，后台改完即时生效；留空来源时沿用放开策略
 builder.Services.AddScoped<Microsoft.AspNetCore.Cors.Infrastructure.ICorsPolicyProvider,
     ServerCorsPolicyProvider>();
@@ -58,6 +77,19 @@ builder.Services.AddCors();
 var app = builder.Build();
 var logger = app.Logger;
 app.UseCors();
+
+// Swagger UI：Development 默认开启；生产环境可在 appsettings 设 Swagger:Enabled 显式开启
+var swaggerEnabled = app.Environment.IsDevelopment()
+    || builder.Configuration.GetValue("Swagger:Enabled", false);
+if (swaggerEnabled)
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SP Server API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 using (var scope = app.Services.CreateScope())
 {

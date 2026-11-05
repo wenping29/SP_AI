@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using SpServer.Contracts;
 using SpServer.Services;
 
 namespace SpServer.Controllers;
@@ -11,8 +12,10 @@ public sealed class TranscribeController(CreditService credits, SpeechGateway sp
     IConfiguration config) : ControllerBase
 {
     [HttpPost("transcribe")]
-    public async Task<IActionResult> Transcribe([FromForm] IFormFile? file, CancellationToken ct)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Transcribe([FromForm] TranscribeRequest req, CancellationToken ct)
     {
+        var file = req.File;
         if (!config.GetValue("Transcribe:Enabled", true))
         {
             throw new ApiException(503, "transcribe_disabled", "语音输入当前已关闭");
