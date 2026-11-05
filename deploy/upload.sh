@@ -4,6 +4,7 @@
 set -euo pipefail
 
 # ==================== 配置区 ====================
+# ssh -v -i C:\Users\fuwen\.ssh\uploaddata.pem root@43.142.147.244
 # 服务器信息
 SERVER="root@43.142.147.244"
 PORT="22"
