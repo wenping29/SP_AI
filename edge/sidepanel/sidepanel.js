@@ -37,7 +37,7 @@ const CAPABILITIES = {
     items: [
       { id: "page", name: "网页正文", desc: "带上当前页面正文提问", prompt: "" },
       { id: "selection", name: "划选文字", desc: "带上网页里选中的那段", prompt: "" },
-      { id: "shot", name: "页面截图", desc: "发送时抓取可见区域", prompt: "" },
+      { id: "shot", name: "框选截图", desc: "发送前在网页里框选一块区域", prompt: "" },
     ],
   },
   plan: {
@@ -113,6 +113,13 @@ const els = {
   translateEn: document.getElementById("translateEn"),
   toolsView: document.getElementById("toolsView"),
   tools: document.getElementById("tools"),
+  codeView: document.getElementById("codeView"),
+  handView: document.getElementById("handView"),
+  notesView: document.getElementById("notesView"),
+  createView: document.getElementById("createView"),
+  writeView: document.getElementById("writeView"),
+  ocrView: document.getElementById("ocrView"),
+  pdfView: document.getElementById("pdfView"),
   settingsView: document.getElementById("settingsView"),
   serverInput: document.getElementById("serverInput"),
   labelInput: document.getElementById("labelInput"),
@@ -256,6 +263,13 @@ const ICONS = {
   expand: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/>',
   user: '<circle cx="12" cy="8.2" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/>',
   logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>',
+  code: '<path d="M9 7l-5 5 5 5"/><path d="M15 7l5 5-5 5"/>',
+  hand: '<path d="M8 11V5.6a1.5 1.5 0 0 1 3 0V11"/><path d="M11 11V4.6a1.5 1.5 0 0 1 3 0V11"/><path d="M14 11V6.6a1.5 1.5 0 0 1 3 0V13"/><path d="M8 11l-1.5-2.1a1.6 1.6 0 0 0-2.6 1.8l2.4 5.6A5 5 0 0 0 10.7 21h2.1a4.4 4.4 0 0 0 4.4-4.4V13"/>',
+  notes: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/>',
+  create: '<path d="M4.5 19.5c2.6.6 4.4-1.2 3.9-3.6-.3-1.6-2.4-2.2-3.6-1"/><path d="M8.4 15.9L18.6 5.7a2.1 2.1 0 0 1 3 3L11.4 18.9"/>',
+  write: '<path d="M5 5h13M5 10h8M5 15h5"/><path d="M20.5 13.5L18 21l-2.5-1 1.2-2.4z"/>',
+  ocr: '<path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><path d="M8 10.5h8M8 14h5"/>',
+  pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h2.5M8.5 16.5h5"/>',
 };
 
 const TOOL_ICON_RULES = [
@@ -1051,6 +1065,13 @@ function showView(name, { focusInput = false } = {}) {
   els.askView.hidden = name !== "ask";
   els.translateView.hidden = name !== "translate";
   els.toolsView.hidden = name !== "tools";
+  els.codeView.hidden = name !== "code";
+  els.handView.hidden = name !== "hand";
+  els.notesView.hidden = name !== "notes";
+  els.createView.hidden = name !== "create";
+  els.writeView.hidden = name !== "write";
+  els.ocrView.hidden = name !== "ocr";
+  els.pdfView.hidden = name !== "pdf";
   els.settingsView.hidden = name !== "settings";
 
   if (name === "settings") fillSettings();
@@ -1236,21 +1257,137 @@ function renderTranslatePane() {
   els.translateEn.disabled = state.busy || !state.selection;
 }
 
-async function captureScreenshot() {
+const CROP_SCRIPT = "content/crop.js";
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let cropBusy = false;
+
+// 全页模式下当前标签是扩展页面：挑最近访问的网页标签并激活，用户才能在那儿框选
+async function screenshotTab() {
   const tab = await activeTab();
+  if (tab) return tab;
+  let self = null;
+  try {
+    self = await chrome.tabs.getCurrent();
+  } catch {
+    // 停靠侧边栏不是标签页
+  }
+  if (!self) return null;
+  const candidate = (await chrome.tabs.query({}))
+    .filter((item) => item.id !== self.id && isWebTab(item) && !item.discarded)
+    .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+  if (!candidate) return null;
+  await chrome.tabs.update(candidate.id, { active: true });
+  await chrome.windows.update(candidate.windowId, { focused: true }).catch(() => {});
+  await wait(250);
+  return candidate;
+}
+
+// 注入框选脚本并等待「完成 / 取消」，返回 null 表示用户取消
+function selectArea(tabId) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => finish(null, new UiError("框选超时，请重新截图")), 130_000);
+
+    function finish(value, error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      chrome.runtime.onMessage.removeListener(onMessage);
+      if (error) reject(error);
+      else resolve(value);
+    }
+
+    function onMessage(message, sender) {
+      const type = message?.type;
+      if (type !== "sp-crop-done" && type !== "sp-crop-cancel") return;
+      // 注入脚本在某些浏览器版本里不带 sender.tab，缺失时不做来源过滤，避免把结果丢掉
+      if (sender?.tab?.id && sender.tab.id !== tabId) return;
+      finish(type === "sp-crop-done" ? message.payload : null);
+    }
+
+    chrome.runtime.onMessage.addListener(onMessage);
+    chrome.scripting
+      .executeScript({ target: { tabId }, files: [CROP_SCRIPT] })
+      .then((results) => {
+        const failed = results?.find((item) => item?.error || item?.exceptionInfo);
+        if (failed) throw new Error(String(failed.error || failed.exceptionInfo?.description || "inject failed"));
+      })
+      .catch(() => finish(null, new UiError("无法在这个页面框选，请确认是普通网页且扩展有站点访问权限")));
+  });
+}
+
+// captureVisibleTab 拿到的是物理像素（DPR、页面缩放都可能不同），按图片实际尺寸换算选区
+async function cropShot(dataUrl, meta) {
+  const image = new Image();
+  image.src = dataUrl;
+  await new Promise((resolve, reject) => {
+    if (image.complete && image.naturalWidth) return resolve();
+    image.onload = () => resolve();
+    image.onerror = () => reject(new UiError("截图读取失败，请重试"));
+  });
+
+  const vw = Math.max(1, Number(meta?.viewport?.width) || window.innerWidth);
+  const vh = Math.max(1, Number(meta?.viewport?.height) || window.innerHeight);
+  const scaleX = image.naturalWidth / vw;
+  const scaleY = image.naturalHeight / vh;
+  const rect = meta?.rect || {};
+  const clampNum = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));
+  const x = clampNum(rect.x, 0, vw - 1);
+  const y = clampNum(rect.y, 0, vh - 1);
+  const w = clampNum(rect.w, 1, vw - x);
+  const h = clampNum(rect.h, 1, vh - y);
+  const width = Math.max(1, Math.round(w * scaleX));
+  const height = Math.max(1, Math.round(h * scaleY));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext("2d").drawImage(
+    image,
+    x * scaleX, y * scaleY, w * scaleX, h * scaleY,
+    0, 0, width, height,
+  );
+  return canvas.toDataURL("image/png");
+}
+
+async function captureScreenshot() {
+  if (cropBusy) throw new UiError("正在等待框选，请在网页里拖出区域或按 Esc 取消");
+  const tab = await screenshotTab();
   if (!tab) throw new UiError("请先切到要截图的网页标签页");
-  const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
-  addImageAttachment(dataUrl, `网页截图 ${state.attachments.filter((a) => a.kind === "image").length + 1}.png`);
-  setStatus("已插入截图");
+
+  cropBusy = true;
+  try {
+    setStatus("请在网页中拖拽框选截图区域（Esc 取消）");
+    const meta = await selectArea(tab.id);
+    if (!meta) {
+      setStatus("已取消框选截图");
+      return false;
+    }
+
+    setStatus("正在裁剪截图…");
+    await wait(200); // 等浏览器把遮罩从最新合成帧里去掉
+    const [visible] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
+    if (visible?.id !== tab.id) throw new UiError("截图时切换了标签页，请重新框选");
+
+    const full = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+    const cropped = await cropShot(full, meta);
+    const name = `框选截图 ${state.attachments.filter((a) => a.kind === "image").length + 1}.png`;
+    if (!addImageAttachment(cropped, name)) return false;
+    setStatus("已插入框选截图");
+    return true;
+  } finally {
+    cropBusy = false;
+  }
 }
 
 function addImageAttachment(dataUrl, name) {
   if (dataUrl.length > MAX_ATTACH_CHARS) {
-    setStatus("截图太大，请先缩小窗口或改用图片文件", "error");
-    return;
+    setStatus("截图太大，请框选更小的区域或缩小窗口", "error");
+    return false;
   }
   state.attachments.push({ kind: "image", name, dataUrl });
   renderAttachments();
+  return true;
 }
 
 function addTextAttachment(name, text) {
@@ -2158,11 +2295,14 @@ async function send() {
   const plugins = state.caps.plugins;
 
   if (plugins.includes("shot")) {
+    let shotReady = false;
     try {
-      await captureScreenshot();
+      shotReady = await captureScreenshot();
     } catch (err) {
       showError(err);
     }
+    // 取消或失败时不发送：输入内容和已选的技能/插件都保留，方便直接重试
+    if (!shotReady) return;
   }
 
   const images = state.attachments.filter((a) => a.kind === "image").map((a) => a.dataUrl);

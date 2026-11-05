@@ -114,11 +114,19 @@ const creditsExpr = `fetch(state.server + '/api/credits', { headers: { Authoriza
     latest: d.transactions.slice(0, 4).map((t) => t.at + ' ' + t.delta + ' ' + t.reason + ' ' + t.inputTokens + '/' + t.outputTokens) }))`;
 report.creditsAfterHandoff = await docked.evaluate(creditsExpr);
 
-// 5. 停靠面板里截图：正文页就在左侧可见，captureVisibleTab 应直接成功
+// 5. 停靠面板里框选截图：点按钮后在网页里拖出一块区域，面板应插入裁剪后的图片
 await fixture.send('Page.bringToFront');
 await sleep(600);
 await docked.evaluate('els.btnShot.click()');
-await sleep(1600);
+await sleep(900);
+const drag = (type, x, y, buttons) => fixture.send('Input.dispatchMouseEvent', {
+  type, x, y, button: 'left', buttons, clickCount: 1,
+});
+await drag('mouseMoved', 60, 80, 0);
+await drag('mousePressed', 60, 80, 1);
+await drag('mouseMoved', 360, 260, 1);
+await drag('mouseReleased', 360, 260, 0);
+await sleep(1800);
 report.shotInDock = await docked.evaluate(await fromFile('expr-ui-shot.js'));
 
 // 6. 非视觉模型 + 图片 -> 拦截，且附件不丢
