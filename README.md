@@ -39,9 +39,12 @@ sp/
 │  ├─ shared/            # 正文提取等共享脚本
 │  └─ background.js      # 右键菜单、划词入口、打开侧边栏
 ├─ server/               # ASP.NET Core 10 + EF Core + SQLite
-│  ├─ Program.cs         # 路由、鉴权、启动迁移
-│  ├─ Domains/           # 实体
-│  ├─ Services/          # 计费、模型网关、密钥解析、管理员鉴权
+│  ├─ Program.cs         # 服务注册、中间件与启动迁移（HTTP 接口已迁至 Controllers）
+│  ├─ Controllers/       # 按业务域分组的 API：公开接口 / 后台接口各自成类
+│  ├─ Contracts/         # 请求体 DTO（按域被各控制器引用）
+│  ├─ Filters/           # 后台统一鉴权与权限过滤
+│  ├─ Domain/            # 实体
+│  ├─ Services/          # 计费、模型网关、密钥解析、邮件、管理员鉴权
 │  ├─ Data/              # DbContext 与种子
 │  ├─ wwwroot/admin/     # 后台构建产物（gitignore）
 │  └─ appsettings.json
