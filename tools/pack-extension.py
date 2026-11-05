@@ -14,7 +14,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-DEFAULT_SERVER_LINE = 'const DEFAULT_SERVER = "http://127.0.0.1:5080";'
+DEFAULT_SERVER_LINE = 'const SERVER_URL = "http://127.0.0.1:5080";'
 DEFAULT_PROD_SERVER = "http://43.142.147.244:7788"
 
 
@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument(
         "--server",
         default=DEFAULT_PROD_SERVER,
-        help="打进包里的默认服务器地址（用户仍可在侧边栏设置里改）",
+        help="打进包里的后端服务器地址（写死在 config.js，用户不可改）",
     )
     parser.add_argument("--out-dir", default=str(root / "deploy" / "dist"))
     args = parser.parse_args()
@@ -44,13 +44,13 @@ def main() -> int:
         shutil.rmtree(stage)
     shutil.copytree(edge, stage)
 
-    sidepanel = stage / "sidepanel" / "sidepanel.js"
-    text = sidepanel.read_text(encoding="utf-8")
+    config = stage / "config.js"
+    text = config.read_text(encoding="utf-8")
     if DEFAULT_SERVER_LINE not in text:
-        print("sidepanel.js 里找不到默认服务器常量，请确认代码是否改过", file=sys.stderr)
+        print("config.js 里找不到服务器地址常量，请确认代码是否改过", file=sys.stderr)
         return 1
-    sidepanel.write_text(
-        text.replace(DEFAULT_SERVER_LINE, f'const DEFAULT_SERVER = "{server}";', 1),
+    config.write_text(
+        text.replace(DEFAULT_SERVER_LINE, f'const SERVER_URL = "{server}";', 1),
         encoding="utf-8",
     )
 

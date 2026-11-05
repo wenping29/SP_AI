@@ -211,7 +211,7 @@ function setStatus(text, kind = "") {
 function showError(err) {
   if (err instanceof TypeError) {
     setStatus(`连不上服务器：${state.server}`, "error");
-    toast(`无法连接后端 ${state.server}，请在右侧「设置」里检查服务器地址。`);
+    toast(`无法连接后端 ${state.server}，请检查网络后重试。`);
     return;
   }
   setStatus(err.message || "出错了", "error");
@@ -680,7 +680,7 @@ async function selectModel(modelId) {
 
 async function loadState() {
   const saved = await chrome.storage.local.get(STORE_KEYS);
-  state.server = (saved.server || DEFAULT_SERVER).replace(/\/+$/, "");
+  state.server = SERVER_URL;
   state.token = saved.token || "";
   state.deviceId = saved.deviceId || "";
   state.label = saved.label || "";
@@ -1123,7 +1123,6 @@ async function pickView(name) {
 }
 
 function fillSettings() {
-  els.serverInput.value = state.server;
   els.labelInput.value = state.label;
   els.deviceInput.value = state.deviceId;
   els.tokenInput.value = state.token;
@@ -1983,7 +1982,7 @@ async function ask({ label, content, images = [], note = "" }) {
       }
     } else {
       const detail = err instanceof TypeError
-        ? `连不上后端 ${state.server}，请在右侧「设置」检查服务器地址`
+        ? `连不上后端 ${state.server}，请检查网络后重试`
         : err.message || "生成失败";
       setStatus(detail, "error");
       if (answer) {
@@ -2654,32 +2653,9 @@ async function loadCreditsList() {
 }
 
 els.saveSettings.addEventListener("click", async () => {
-  const server = els.serverInput.value.trim().replace(/\/+$/, "");
-  if (!/^https?:\/\//i.test(server)) {
-    setStatus("服务器地址要以 http:// 或 https:// 开头", "error");
-    return;
-  }
-  const oldServer = state.server;
-  state.server = server;
   state.label = els.labelInput.value.trim();
   state.pageCache = null;
-  if (server !== oldServer) {
-    // 换服务器后旧令牌无效，账号态一起清掉，重新走匿名注册；删除标记只对旧服务器有效
-    state.token = "";
-    state.user = null;
-    state.accountDeviceId = "";
-    state.deleted = {};
-    clearTimeout(historyPushTimer);
-    historyPushTimer = 0;
-    syncedVersions.clear();
-  }
-  await saveState({
-    server,
-    label: state.label,
-    token: state.token,
-    user: state.user,
-    deletedConversations: state.deleted,
-  });
+  await saveState({ label: state.label });
   const ok = await boot();
   if (ok) setStatus("已保存设置");
 });

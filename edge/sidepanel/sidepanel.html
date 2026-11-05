@@ -196,9 +196,6 @@
             <option value="follow">跟随浏览器</option>
           </select>
         </label>
-        <label>服务器地址
-          <input id="serverInput" type="text" spellcheck="false">
-        </label>
         <label>设备备注
           <input id="labelInput" type="text">
         </label>
@@ -217,7 +214,7 @@
           <button id="reregister" class="ghost">重新注册</button>
           <button id="openCredits" class="ghost">积分明细</button>
         </div>
-        <p class="tip">换服务器地址后旧令牌失效，会自动重新注册；服务器由后台统一配置，普通用户不需要动这一页。</p>
+        <p class="tip">服务器由后台统一配置；「重新注册」会生成新设备并退出当前账号。</p>
       </section>
     </div>
 
@@ -327,6 +324,7 @@
     </div>
   </dialog>
 
+  <script src="../config.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>
