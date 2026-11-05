@@ -23,7 +23,9 @@ rm -rf "$DIST"
 mkdir -p "$DIST"
 
 echo "== 构建后台静态页 =="
-(cd "$ROOT/admin" && npx tsc -b && npx vite build --outDir "$ADMIN_OUT" --emptyOutDir)
+# 后台独立挂在 7789 根路径，必须用 standalone 配置（base '/'）；
+# 默认配置的 base './' 会让路由 basename 变成 '.'，页面渲染空白且不报错
+(cd "$ROOT/admin" && npx tsc -b && npx vite build --config vite.config.standalone.ts --outDir "$ADMIN_OUT" --emptyOutDir)
 
 echo "== 发布 linux-x64 =="
 dotnet publish "$ROOT/server/SpServer.csproj" -c Release -r linux-x64 --self-contained true -o "$STAGE"

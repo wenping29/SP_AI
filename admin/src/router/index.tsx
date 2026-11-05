@@ -27,7 +27,10 @@ function RequirePermission({ permission, children }: { permission: string; child
   return can(permission) ? children : <Navigate to="/forbidden" replace />;
 }
 
-const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+// base './' 时 BASE_URL 是 './'，去掉尾斜杠会得到 '.'，路由一条都匹配不上（页面空白且不报错）；
+// 相对 base 无法表达子路径，按根路径处理。
+const rawBase = import.meta.env.BASE_URL;
+const basename = rawBase.startsWith('/') ? rawBase.replace(/\/$/, '') : '';
 
 export const router = createBrowserRouter(
   [
