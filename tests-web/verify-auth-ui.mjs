@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 
 const PORT = 9333;
-const TEST_SERVER = "http://127.0.0.1:5099";
+// 面板的服务器地址来自 edge/config.js 的 SERVER_URL（boot 时会覆盖 storage），这里保持一致
+const TEST_SERVER = "http://127.0.0.1:5080";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function list() {
@@ -236,7 +237,7 @@ if (!found) {
       out.restored = await found.s.evaluate(`({
         server: document.getElementById("serverInput")?.value || null,
         status: document.getElementById("status")?.textContent,
-        authLabel: document.getElementById("popAuthLabel")?.textContent,
+        popAuthHidden: document.getElementById("popAuth")?.hidden,
         balance: document.getElementById("popBalance")?.textContent,
       })`);
       found.s.close();

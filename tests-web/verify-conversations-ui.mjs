@@ -152,7 +152,7 @@ if (!s) {
     !(await s.evaluate(`document.getElementById("authCodeRow").hidden`)),
     await s.evaluate(`document.getElementById("authError")?.hidden ? "ok" : document.getElementById("authError").textContent`));
   await s.evaluate(`document.getElementById("authSubmit").click()`);
-  const registered = await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`);
+  const registered = await waitFor(s, `document.getElementById("logoutBtn")?.hidden === false`);
   check("注册成功", !!registered, await s.evaluate(`document.getElementById("authError")?.textContent`));
   await waitFor(s, `document.getElementById("status")?.textContent.includes("聊天记录已同步")`, 15000);
   const regStatus = await s.evaluate(`document.getElementById("status")?.textContent || ""`);
@@ -192,7 +192,7 @@ if (!s) {
     document.getElementById("authPassword").value = ${JSON.stringify(password)};
     document.getElementById("authSubmit").click();
   })()`);
-  await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`);
+  await waitFor(s, `document.getElementById("logoutBtn")?.hidden === false`);
   const syncedB = await waitFor(s, `document.getElementById("status")?.textContent.includes("聊天记录已同步")`);
 
   const restored = await s.evaluate(`(async () => {
@@ -271,12 +271,13 @@ if (!s) {
   check("面板删除同步到云端", !!deletedRemote, deletedRemote);
   check("删除留下墓碑", !!tomb.deletedConversations?.[convId], tomb.deletedConversations);
 
-  // 账号隔离：退出后注册账号 B，本机不应保留 A 的记录
+  // 账号隔离：退出后注册账号 B，本机不应保留 A 的记录（退出走设置页 + 确认框）
   await s.evaluate(`(() => {
-    document.getElementById("avatarDock").classList.add("open");
-    document.getElementById("popAuth").click();
+    document.querySelector('#rail [data-view="settings"]').click();
+    document.getElementById("logoutBtn").click();
+    document.getElementById("logoutConfirm").click();
   })()`);
-  await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "登录 / 注册"`);
+  await waitFor(s, `document.getElementById("logoutBtn")?.hidden === true`);
   await s.evaluate(`(() => {
     document.getElementById("avatarDock").classList.add("open");
     document.getElementById("popAuth").click();
@@ -287,7 +288,7 @@ if (!s) {
   })()`);
   await waitFor(s, `document.getElementById("authCode")?.value.length === 6`, 15000);
   await s.evaluate(`document.getElementById("authSubmit").click()`);
-  await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`);
+  await waitFor(s, `document.getElementById("logoutBtn")?.hidden === false`);
   await waitFor(s, `document.getElementById("status")?.textContent.includes("聊天记录已同步")`);
   const afterSwitch = await s.evaluate(`(async () => {
     const { sessions, historyOwner } = await chrome.storage.local.get(["sessions", "historyOwner"]);
@@ -303,7 +304,7 @@ if (!s) {
   await sleep(1200);
   out.restoredBackup = await s.evaluate(`({
     server: document.getElementById("serverInput")?.value || null,
-    authLabel: document.getElementById("popAuthLabel")?.textContent,
+    popAuthHidden: document.getElementById("popAuth")?.hidden,
     status: document.getElementById("status")?.textContent,
   })`);
   s.close();
