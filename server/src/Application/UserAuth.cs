@@ -96,7 +96,7 @@ public class UserAuth(AppDbContext db, EmailVerification verification, ILogger<U
 
         var anon = await EnsureAnonAccountAsync(deviceId, now, ct);
         await db.SaveChangesAsync(ct);
-        var merged = MergeCredits(anon, account, now);
+        var merged = await MergeCreditsAsync(anon, account, now, ct);
         var session = await BindSessionAsync(anon, account, label, now, ct);
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
@@ -158,7 +158,7 @@ public class UserAuth(AppDbContext db, EmailVerification verification, ILogger<U
 
         var anon = await EnsureAnonAccountAsync(deviceId, now, ct);
         await db.SaveChangesAsync(ct);
-        var merged = MergeCredits(anon, account, now);
+        var merged = await MergeCreditsAsync(anon, account, now, ct);
         user.LastLoginAt = now;
         var session = await BindSessionAsync(anon, account, label, now, ct);
         await db.SaveChangesAsync(ct);
@@ -230,14 +230,24 @@ public class UserAuth(AppDbContext db, EmailVerification verification, ILogger<U
     }
 
     // 把设备匿名账号的余额并入登录账号；匿名账号保留，退出后回落到它
-    private int MergeCredits(Account anon, Account target, DateTime now)
+    private async Task<int> MergeCreditsAsync(Account anon, Account target, DateTime now, CancellationToken ct)
     {
         if (anon.Id == target.Id || anon.UserId is not null) return 0;
 
         var moved = anon.Balance;
         if (moved <= 0) return 0;
 
-        anon.Balance = 0;
+        // 体验额度按账号只认一次：插件重装或换浏览器会换一个新的 deviceId，服务端把它当新机器再发一笔，
+        // 若照单全收就等于同一账号反复领；被排除的那部分留在匿名账号里，不写流水
+        var countedTrial = await db.Transactions.AnyAsync(
+            t => t.AccountId == target.Id && t.Reason == "device_merge" && t.Delta > 0, ct);
+        if (countedTrial)
+        {
+            moved -= Math.Min(CreditService.TrialCredits, moved);
+            if (moved <= 0) return 0;
+        }
+
+        anon.Balance -= moved;
         target.Balance += moved;
         db.Transactions.Add(new CreditTransaction
         {

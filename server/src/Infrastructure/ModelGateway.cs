@@ -93,7 +93,10 @@ public class ModelGateway(IHttpClientFactory httpFactory, IConfiguration config,
                 fromUpstream = inputTokens > 0 || outputTokens > 0;
             }
 
-            var deltaNode = node["choices"]?[0]?["delta"] as JsonObject;
+            // 通义等上游会在最后一个事件里只带 usage，choices 是空数组；直接取 [0] 会抛索引越界，
+            // 正文已经流完了却在收尾处断掉，前端就看到“已中断”
+            var choice = (node["choices"] as JsonArray)?.FirstOrDefault() as JsonObject;
+            var deltaNode = choice?["delta"] as JsonObject;
             var text = AsText(deltaNode?["content"]);
             if (!string.IsNullOrEmpty(text))
             {

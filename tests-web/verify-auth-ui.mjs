@@ -1,4 +1,4 @@
-// 扩展 UI 验证：头像浮层「登录 / 注册」入口、注册合并、退出、再登录
+// 扩展 UI 验证：头像浮层「登录 / 注册」入口、注册合并、退出（设置页 + 确认框）、再登录
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 
@@ -105,7 +105,8 @@ if (!found) {
 
     out.start = await s.evaluate(`(() => ({
       balance: document.getElementById("popBalance")?.textContent,
-      authLabel: document.getElementById("popAuthLabel")?.textContent,
+      popAuthHidden: document.getElementById("popAuth")?.hidden,
+      logoutHidden: document.getElementById("logoutBtn")?.hidden,
       device: document.getElementById("popDevice")?.textContent,
       hasAuthItem: !!document.getElementById("popAuth"),
     }))()`);
@@ -148,13 +149,13 @@ if (!found) {
     })`);
 
     await s.evaluate(`document.getElementById("authSubmit").click()`);
-    await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`, 15000);
+    await waitFor(s, `document.getElementById("logoutBtn")?.hidden === false`, 15000);
 
     out.afterRegister = await s.evaluate(`(async () => {
       const stored = await chrome.storage.local.get(["token", "user", "server"]);
       return {
         dialogOpen: document.getElementById("authDialog").open,
-        authLabel: document.getElementById("popAuthLabel").textContent,
+        popAuthHidden: document.getElementById("popAuth").hidden,
         accountName: document.getElementById("popDevice").textContent,
         balance: document.getElementById("popBalance").textContent,
         status: document.getElementById("status").textContent,
@@ -171,15 +172,32 @@ if (!found) {
       return res.json();
     })()`);
 
-    // 退出登录
-    await s.evaluate(`(() => {
-      document.getElementById("avatarDock").classList.add("open");
-      document.getElementById("popAuth").click();
+    // 退出登录：设置页（二级）点「退出登录」→ 确认框（三级）再确认
+    out.logoutFirstClick = await s.evaluate(`(() => {
+      document.querySelector('#rail [data-view="settings"]').click();
+      document.getElementById("logoutBtn").click();
+      return {
+        settingsVisible: !document.getElementById("settingsView").hidden,
+        accountEmail: document.getElementById("accountEmail").value,
+        dialogOpen: document.getElementById("logoutDialog").open,
+        stillLoggedIn: document.getElementById("popAuth").hidden,
+      };
     })()`);
-    await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "登录 / 注册"`, 10000);
+    await sleep(200);
+    await s.evaluate(`document.getElementById("logoutCancel").click()`);
+    await sleep(200);
+    out.logoutCancel = await s.evaluate(`({
+      dialogOpen: document.getElementById("logoutDialog").open,
+      popAuthHidden: document.getElementById("popAuth").hidden,
+      accountName: document.getElementById("popDevice").textContent,
+    })`);
+    await s.evaluate(`document.getElementById("logoutBtn").click()`);
+    await sleep(200);
+    await s.evaluate(`document.getElementById("logoutConfirm").click()`);
+    await waitFor(s, `document.getElementById("logoutBtn")?.hidden === true`, 10000);
 
     out.afterLogout = await s.evaluate(`(async () => ({
-      authLabel: document.getElementById("popAuthLabel").textContent,
+      popAuthHidden: document.getElementById("popAuth").hidden,
       accountName: document.getElementById("popDevice").textContent,
       balance: document.getElementById("popBalance").textContent,
       status: document.getElementById("status").textContent,
@@ -200,9 +218,9 @@ if (!found) {
       document.getElementById("authPassword").value = ${JSON.stringify(password)};
       document.getElementById("authSubmit").click();
     })()`);
-    await waitFor(s, `document.getElementById("popAuthLabel")?.textContent === "退出登录"`, 12000);
+    await waitFor(s, `document.getElementById("logoutBtn")?.hidden === false`, 12000);
     out.afterRelogin = await s.evaluate(`({
-      authLabel: document.getElementById("popAuthLabel").textContent,
+      popAuthHidden: document.getElementById("popAuth").hidden,
       accountName: document.getElementById("popDevice").textContent,
       balance: document.getElementById("popBalance").textContent,
       status: document.getElementById("status").textContent,

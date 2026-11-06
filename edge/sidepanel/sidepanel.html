@@ -205,6 +205,9 @@
         <label>访问令牌
           <input id="tokenInput" type="text" readonly>
         </label>
+        <label id="accountRow" hidden>当前账号
+          <input id="accountEmail" type="text" readonly>
+        </label>
         <label class="switch">
           <input id="launcherToggle" type="checkbox">
           <span>在网页右侧显示悬浮快捷按钮</span>
@@ -213,6 +216,7 @@
           <button id="saveSettings" class="primary">保存并重连</button>
           <button id="reregister" class="ghost">重新注册</button>
           <button id="openCredits" class="ghost">积分明细</button>
+          <button id="logoutBtn" class="ghost" hidden>退出登录</button>
         </div>
         <p class="tip">服务器由后台统一配置；「重新注册」会生成新设备并退出当前账号。</p>
       </section>
@@ -343,6 +347,17 @@
       <button id="authCancel" class="ghost">取消</button>
       <span class="spacer"></span>
       <button id="authSubmit" class="primary">登录</button>
+    </div>
+  </dialog>
+
+  <!-- 退出登录放在「设置」里，再经此确认框，避免头像浮层误点 -->
+  <dialog id="logoutDialog">
+    <h2>退出登录</h2>
+    <p class="tip">退出后本机回到匿名账号，余额按匿名账号显示；积分和聊天记录仍保存在云端，重新登录同一账号即可继续使用。</p>
+    <div class="row">
+      <button id="logoutCancel" class="ghost">取消</button>
+      <span class="spacer"></span>
+      <button id="logoutConfirm" class="primary danger">确认退出</button>
     </div>
   </dialog>
 

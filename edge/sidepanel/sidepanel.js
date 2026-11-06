@@ -174,6 +174,12 @@ const els = {
   popAuth: document.getElementById("popAuth"),
   popAuthIcon: document.getElementById("popAuthIcon"),
   popAuthLabel: document.getElementById("popAuthLabel"),
+  accountRow: document.getElementById("accountRow"),
+  accountEmail: document.getElementById("accountEmail"),
+  logoutBtn: document.getElementById("logoutBtn"),
+  logoutDialog: document.getElementById("logoutDialog"),
+  logoutCancel: document.getElementById("logoutCancel"),
+  logoutConfirm: document.getElementById("logoutConfirm"),
   authDialog: document.getElementById("authDialog"),
   authTitle: document.getElementById("authTitle"),
   authEmail: document.getElementById("authEmail"),
@@ -1043,10 +1049,13 @@ function renderAccountCard() {
   const user = state.user;
   els.popDevice.textContent = user ? (user.displayName || user.email) : (state.label || "本机设备");
   els.popDevice.title = user ? user.email : "";
-  const authLabel = user ? "退出登录" : "登录 / 注册";
-  els.popAuthLabel.textContent = authLabel;
-  els.popAuth.dataset.pop = "auth";
-  els.popAuthIcon.innerHTML = iconSvg(user ? "logout" : "user");
+  // 浮层里只留「登录 / 注册」；退出登录挪到设置页并加确认，避免误点丢会话
+  els.popAuth.hidden = !!user;
+  els.popAuthLabel.textContent = "登录 / 注册";
+  els.popAuthIcon.innerHTML = iconSvg("user");
+  els.accountRow.hidden = !user;
+  els.accountEmail.value = user ? user.email : "";
+  els.logoutBtn.hidden = !user;
   els.popVersion.textContent = `v${chrome.runtime.getManifest().version}`;
   els.rechargeDevice.value = state.accountDeviceId || state.deviceId || "";
 }
@@ -2874,10 +2883,7 @@ els.accountPop.addEventListener("click", (event) => {
   if (item.dataset.pop === "credits") openCreditsDialog().catch(showError);
   else if (item.dataset.pop === "history") openHistoryDialog();
   else if (item.dataset.pop === "settings") showView("settings");
-  else if (item.dataset.pop === "auth") {
-    if (state.user) logoutAccount().catch(showError);
-    else openAuthDialog("login");
-  }
+  else if (item.dataset.pop === "auth") openAuthDialog("login");
 });
 
 els.popRecharge.addEventListener("click", () => {
@@ -3477,6 +3483,16 @@ els.reregister.addEventListener("click", async () => {
   } catch (err) {
     showError(err);
   }
+});
+
+// 退出登录入口在设置页，点一次只出确认框，避免头像浮层误点直接掉登录态
+els.logoutBtn.addEventListener("click", () => {
+  if (!els.logoutDialog.open) els.logoutDialog.showModal();
+});
+els.logoutCancel.addEventListener("click", () => els.logoutDialog.close());
+els.logoutConfirm.addEventListener("click", () => {
+  els.logoutDialog.close();
+  logoutAccount().catch(showError);
 });
 
 // 悬浮快捷栏开关：值只存在 storage 里给内容脚本读，面板这边负责显示当前值和写回

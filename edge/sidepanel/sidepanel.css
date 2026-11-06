@@ -620,6 +620,8 @@ textarea {
 .primary { border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); }
 .primary[disabled] { opacity: .55; cursor: default; }
 .ghost { border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+/* 破坏性操作的确认按钮：和同一行的「取消」拉开颜色 */
+.primary.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
 
 .tools, .settings {
   padding: 12px;
