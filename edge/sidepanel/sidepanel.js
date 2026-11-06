@@ -2837,6 +2837,21 @@ els.copyRechargeDevice.addEventListener("click", async () => {
 });
 
 // 头像浮层：悬浮即出（CSS），点击/键盘也能开，离开或选中菜单后收起
+// 浮层挂在功能栏里，功能栏是滚动容器会裁掉左侧溢出，所以按头像位置算 fixed 坐标
+function positionAccountPop() {
+  const rect = els.avatar.getBoundingClientRect();
+  const gap = 10;
+  const width = els.accountPop.offsetWidth || 240;
+  els.accountPop.style.bottom = `${Math.max(gap, innerHeight - rect.bottom)}px`;
+  if (rect.left - gap - width < 0) {
+    els.accountPop.style.left = `${gap}px`;
+    els.accountPop.style.right = "auto";
+  } else {
+    els.accountPop.style.right = `${innerWidth - rect.left + gap}px`;
+    els.accountPop.style.left = "auto";
+  }
+}
+
 function closeAccountPop() {
   els.avatarDock.classList.remove("open");
   els.avatar.setAttribute("aria-expanded", "false");
@@ -2845,7 +2860,12 @@ function closeAccountPop() {
 els.avatar.addEventListener("click", () => {
   const open = els.avatarDock.classList.toggle("open");
   els.avatar.setAttribute("aria-expanded", String(open));
+  if (open) positionAccountPop();
 });
+
+els.avatarDock.addEventListener("mouseenter", positionAccountPop);
+document.getElementById("rail")?.addEventListener("scroll", positionAccountPop, { passive: true });
+addEventListener("resize", positionAccountPop);
 
 els.accountPop.addEventListener("click", (event) => {
   const item = event.target.closest("[data-pop]");

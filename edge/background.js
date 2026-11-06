@@ -76,16 +76,44 @@ async function toggleChat(tab) {
   const windowId = tab?.windowId;
   if (typeof windowId !== "number") return { ok: false, error: "缺少窗口信息" };
 
-  const panel = await probePanel(windowId);
-  if (panel && panel.view === "chat") {
+  // Service Worker 里 await 过任何东西，用户手势就没了，之后的 sidePanel.open() 会被拒绝。
+  // 所以先把探针和 pending 启动起来，再同步调 open()（本来就在聊天视图时它只是空操作），
+  // 等探针回来再决定是否 close() 把它收回去。
+  const pending = {
+    actionId: null,
+    view: "chat",
+    selection: "",
+    title: tab?.title || "",
+    url: tab?.url || "",
+    windowId,
+    at: Date.now(),
+  };
+  const written = chrome.storage.local.set({ pending });
+  const panel = probePanel(windowId);
+  chrome.sidePanel.open({ windowId }).catch((err) => {
+    console.warn("打开侧边栏失败", err?.message || err);
+  });
+
+  const open = await panel;
+  if (open && open.view === "chat") {
+    // 面板本来就停在聊天视图，这次点击是“关上”：撤掉刚写的 pending，别留给下次
+    await written;
+    await chrome.storage.local.remove("pending");
     if (typeof chrome.sidePanel.close !== "function") {
       return { ok: false, error: "当前 Chrome 不支持用代码关闭侧边栏" };
     }
     await chrome.sidePanel.close({ windowId });
     return { ok: true, open: false };
   }
+
   // 没开就打开；开在别的视图上就切回聊天，而不是关掉
-  await launchAction({ view: "chat", tab });
+  await written;
+  try {
+    await chrome.runtime.sendMessage({ type: "pending-ready" });
+  } catch (err) {
+    // 面板还没起来，boot() 会自己读 pending
+    console.warn("通知面板失败", err?.message || err);
+  }
   return { ok: true, open: true };
 }
 

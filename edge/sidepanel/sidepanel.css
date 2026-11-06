@@ -1468,10 +1468,12 @@ button.ico.recording {
 .avatar-dock:hover .avatar,
 .avatar-dock.open .avatar { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
+/* 功能栏是滚动容器，左侧溢出会被裁掉且滚不回来，所以浮层改用 fixed 定位，
+   具体位置由 sidepanel.js 按头像实时量；这里的默认值只兜底 */
 .account-pop {
-  position: absolute;
-  right: calc(100% + 10px);
-  bottom: 0;
+  position: fixed;
+  right: calc(var(--rail-width) + 16px);
+  bottom: 10px;
   z-index: 50;
   display: none;
   flex-direction: column;
@@ -1515,6 +1517,7 @@ button.ico.recording {
 .rail .pop-item {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   padding: 7px 8px;
   border: 0;
